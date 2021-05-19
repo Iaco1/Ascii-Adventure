@@ -7,7 +7,7 @@ using namespace std;
 
 /*
 initscr();
-	printw("HELLO FREAK BITCHES!!!");
+	printw("HELLO");
 	refresh();
 	getch();
 	endwin();
