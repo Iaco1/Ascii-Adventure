@@ -1,6 +1,7 @@
 #include <iostream>
 #include <ncurses.h>
 #include "Menu.hpp"
+#include "LinkedList.cpp"
 #include <unistd.h>
 
 using namespace std;
