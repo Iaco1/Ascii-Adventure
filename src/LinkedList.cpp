@@ -5,6 +5,8 @@
 #include <cstdlib>
 #include "LinkedList.hpp"
 
+using namespace std;
+
 template<class T>
 LinkedList<T>::LinkedList() {
 	head = NULL;
@@ -105,7 +107,7 @@ void LinkedList<T>::remove(T val) {
 		return;
 	}
 	if (size == 1) return;
-	node<T> iter = head->next;
+	node<T>* iter = head->next;
 	while (iter != tail) {
 		if (val == iter->data) {
 			(iter->prev)->next = iter->next;
@@ -125,7 +127,7 @@ void LinkedList<T>::reverse() {
 	node<T>* temp = head;
 	head = tail;
 	tail = temp;
-	node<T> iter = tail;
+	node<T>* iter = tail;
 	while (iter != NULL) {
 		temp = iter->next;
 		iter->next = iter->prev;
@@ -154,7 +156,6 @@ T& LinkedList<T>::operator[](int index) {
 
 template <class T>
 void LinkedList<T>::printList() {
-	using namespace std;
 	if (typeid(T).name() == typeid(int).name()) {
 		node<T>* iter = head;
 		cout << "[ prev<->(data, index)<->next ]" << endl << "NULL<->";
