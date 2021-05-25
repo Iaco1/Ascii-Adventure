@@ -43,6 +43,24 @@ void LinkedList<T>::pushTail(T val) {
 }
 
 template<class T>
+void LinkedList<T>::pushIndex(T val, int index) {
+	if (index <= 0)
+		pushHead(val);
+	else if (index >= size)
+		pushTail(val);
+	else {
+		size++;
+		node<T>* point = findNode(index);
+		node<T>* temp = new node<T>;
+		temp->data = val;
+		temp->next = point;
+		temp->prev = point->prev;
+		(point->prev)->next = temp;
+		point->prev = temp;
+	}
+}
+
+template<class T>
 T LinkedList<T>::popHead() {
 	if (size <= 0) {
 		cout << "Error: can't pop head, list is empty" << endl;
@@ -84,6 +102,14 @@ T LinkedList<T>::popTail() {
 	return val;
 }
 
+template<class T>
+T LinkedList<T>::popIndex(int index) {
+	node<T>* temp = findNode(index);
+	T val = temp->data;
+	remove(temp);
+	return val;
+}
+
 template <class T>
 void LinkedList<T>::remove(node<T>* n) {
 	if (n == NULL) return;
@@ -120,6 +146,24 @@ void LinkedList<T>::remove(T val) {
 	}
 	if (val == tail->data)
 		popTail();
+}
+
+template<class T>
+node<T>* LinkedList<T>::findNode(int index) {
+	if (index >= size || index < 0) {
+		cout << "Error: index out of bounds" << endl;
+		exit(EXIT_FAILURE);
+	}
+	node<T>* iter;
+	if (index + 1 <= size / 2) {
+		iter = head;
+		for (int i = 0; i < index; i++, iter = iter->next);
+	}
+	else {
+		iter = tail;
+		for (int i = size - 1; i > index; i--, iter = iter->prev);
+	}
+	return iter;
 }
 
 template <class T>
