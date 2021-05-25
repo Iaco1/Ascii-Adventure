@@ -1,27 +1,28 @@
-/*
-template<class T>
+template<class S>
 struct node {
-    T data;
-    node<T>* prev;
-    node<T>* next;
+    S data;
+    node<S>* prev;
+    node<S>* next;
 };
 
 template<class T>
 class LinkedList {
 protected:
-    node<T>* head, tail;
+    node<T>* head;
+    node<T>* tail;
     int size;
 public:
     LinkedList();
-    LinkedList(int length, bool randomizeData);
     void pushHead(T val); // inserts data at the beginning/end of the list
     void pushTail(T val);
-    T* popHead(); // removes first/last node from list and returns a pointer to it
-    T* popTail(); // (if the pointer is unused then use the delete function in conjunction with popHead/Tail)
+    node<T>* popHead(); // removes first/last node from list and returns a pointer to it
+    node<T>* popTail(); // (if the pointer is unused then use the delete function in conjunction with popHead/Tail)
     void remove(node<T>* n);
     void remove(T n);
     void reverse(); // inverts the order of the nodes
     T& operator[](int index); // overloads the array index operator "[]"
-    char* toString(); // currently empty
+    void printList(); // prints a list of ints
+
+    int getSize();
+    void randGenInt(int length, int lowBound, int upBound); //generates a random list of ints
 };
-*/

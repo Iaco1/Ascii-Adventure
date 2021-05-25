@@ -14,7 +14,9 @@ initscr();
 	endwin();
 */
 
-int main(int argc, char *argv[]){
+int main(){
+	srand(time(NULL));
+	
 	initscr();
 
 	Menu menu;
