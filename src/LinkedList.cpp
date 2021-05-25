@@ -11,6 +11,7 @@ LinkedList<T>::LinkedList() {
 	tail = NULL;
 	size = 0;
 }
+
 template<class T>
 void LinkedList<T>::pushHead(T val) {
 	size++;
@@ -24,6 +25,7 @@ void LinkedList<T>::pushHead(T val) {
 	if (tail == NULL)
 		tail = head;
 }
+
 template<class T>
 void LinkedList<T>::pushTail(T val) {
 	size++;
@@ -37,6 +39,7 @@ void LinkedList<T>::pushTail(T val) {
 	if (head == NULL)
 		head = tail;
 }
+
 template<class T>
 node<T>* LinkedList<T>::popHead() {
 	node<T>* temp = head;
@@ -52,6 +55,7 @@ node<T>* LinkedList<T>::popHead() {
 	}
 	return temp;
 }
+
 template<class T>
 node<T>* LinkedList<T>::popTail() {
 	node<T>* temp = tail;
@@ -67,6 +71,7 @@ node<T>* LinkedList<T>::popTail() {
 	}
 	return temp;
 }
+
 template <class T>
 void LinkedList<T>::remove(node<T>* n) {
 	if (n->prev == NULL)
@@ -80,6 +85,7 @@ void LinkedList<T>::remove(node<T>* n) {
 	size--;
 	delete n;
 }
+
 template <class T>
 void LinkedList<T>::remove(T val) {
 	if (size <= 0) return;
@@ -104,6 +110,7 @@ void LinkedList<T>::remove(T val) {
 		return;
 	}
 }
+
 template <class T>
 void LinkedList<T>::reverse() {
 	node<T>* temp = head;
@@ -117,6 +124,7 @@ void LinkedList<T>::reverse() {
 		temp = temp->prev;
 	}
 }
+
 template<class T>
 T& LinkedList<T>::operator[](int index) {
 	node<T>* iter;
@@ -138,27 +146,28 @@ T& LinkedList<T>::operator[](int index) {
 	}
 	return iter->data;
 }
+
 template <class T>
 void LinkedList<T>::printList() {
 	using namespace std;
-	if(typeid(T).name() == typeid(int).name()){
+	if (typeid(T).name() == typeid(int).name()) {
 		node<T>* iter = head;
-		cout<<endl<<"[ prev<->(data, index)<->next ]"<<endl<<"NULL<->";
-		for(int i=0; i<size; i++, iter = iter->next){
-			cout << "("<< iter->data <<", " << i << ")<->";
-		}
+		cout << endl << "[ prev<->(data, index)<->next ]" << endl << "NULL<->";
+		for (int i = 0; i < size; i++, iter = iter->next)
+			cout << "(" << iter->data << ", " << i << ")<->";
 		cout << "NULL" << endl;
-	}else printf("\n%s UNSUPPORTED_TYPE\n", typeid(T).name());
+	}
+	else
+		printf("\n%s UNSUPPORTED_TYPE\n", typeid(T).name());
 }
+
 template <class T>
 int LinkedList<T>::getSize() { return size; }
+
 template <class T>
-void LinkedList<T>::randGenInt(int size, int lowBound, int upBound){
-	if(typeid(T).name() == typeid(int).name()){
-		while(size-->0){
-			pushTail(rand()%upBound + lowBound);
-		}
+void LinkedList<T>::randGenInt(int size, int lowBound, int upBound) {
+	if (typeid(T).name() == typeid(int).name()) {
+		while (size-- > 0)
+			pushTail(rand() % upBound + lowBound);
 	}
 }
-
-
