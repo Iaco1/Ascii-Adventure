@@ -1,8 +1,8 @@
-#pragma once
 #include <cstddef>
 #include <iostream>
 #include <cstring>
 #include <typeinfo>
+#include <cstdlib>
 #include "LinkedList.hpp"
 
 template<class T>
@@ -41,39 +41,50 @@ void LinkedList<T>::pushTail(T val) {
 }
 
 template<class T>
-node<T>* LinkedList<T>::popHead() {
-	node<T>* temp = head;
-	if (size == 1) {
-		size--;
+T LinkedList<T>::popHead() {
+	if (size <= 0) {
+		cout << "Error: can't pop head, list is empty" << endl;
+		exit(EXIT_FAILURE);
+	}
+	T val = head->data;
+	size--;
+	if (size == 0) {
+		delete head;
 		head = NULL;
 		tail = NULL;
 	}
-	else if (size > 1) {
-		size--;
+	else {
 		head = head->next;
+		delete head->prev;
 		head->prev = NULL;
 	}
-	return temp;
+	return val;
 }
 
 template<class T>
-node<T>* LinkedList<T>::popTail() {
-	node<T>* temp = tail;
-	if (size == 1) {
-		size--;
+T LinkedList<T>::popTail() {
+	if (size <= 0) {
+		cout << "Error: can't pop tail, list is empty" << endl;
+		exit(EXIT_FAILURE);
+	}
+	T val = tail->data;
+	size--;
+	if (size == 0) {
+		delete tail;
 		head = NULL;
 		tail = NULL;
 	}
-	else if (size > 1) {
-		size--;
+	else {
 		tail = tail->prev;
+		delete tail->next;
 		tail->next = NULL;
 	}
-	return temp;
+	return val;
 }
 
 template <class T>
 void LinkedList<T>::remove(node<T>* n) {
+	if (n == NULL) return;
 	if (n->prev == NULL)
 		head = n->next;
 	else
@@ -90,7 +101,7 @@ template <class T>
 void LinkedList<T>::remove(T val) {
 	if (size <= 0) return;
 	if (val == head->data) {
-		delete popHead();
+		popHead();
 		return;
 	}
 	if (size == 1) return;
@@ -105,10 +116,8 @@ void LinkedList<T>::remove(T val) {
 		}
 		iter = iter->next;
 	}
-	if (val == tail->data) {
-		delete popTail();
-		return;
-	}
+	if (val == tail->data)
+		popTail();
 }
 
 template <class T>
@@ -121,28 +130,24 @@ void LinkedList<T>::reverse() {
 		temp = iter->next;
 		iter->next = iter->prev;
 		iter->prev = temp;
-		temp = temp->prev;
+		iter = iter->prev;
 	}
 }
 
 template<class T>
 T& LinkedList<T>::operator[](int index) {
+	if (index >= size || index < 0) {
+		cout << "Error: index out of bounds" << endl;
+		exit(EXIT_FAILURE);
+	}
 	node<T>* iter;
 	if (index + 1 <= size / 2) {
 		iter = head;
-		int i = 0;
-		while (i < index) {
-			iter = iter->next;
-			i++;
-		}
+		for (int i = 0; i < index; i++, iter = iter->next);
 	}
 	else {
 		iter = tail;
-		int i = size - 1;
-		while (i > index) {
-			iter = iter->prev;
-			i--;
-		}
+		for (int i = size - 1; i > index; i--, iter = iter->prev);
 	}
 	return iter->data;
 }
@@ -152,22 +157,22 @@ void LinkedList<T>::printList() {
 	using namespace std;
 	if (typeid(T).name() == typeid(int).name()) {
 		node<T>* iter = head;
-		cout << endl << "[ prev<->(data, index)<->next ]" << endl << "NULL<->";
+		cout << "[ prev<->(data, index)<->next ]" << endl << "NULL<->";
 		for (int i = 0; i < size; i++, iter = iter->next)
 			cout << "(" << iter->data << ", " << i << ")<->";
 		cout << "NULL" << endl;
 	}
 	else
-		printf("\n%s UNSUPPORTED_TYPE\n", typeid(T).name());
+		cout << typeid(T).name() << " UNSUPPORTED TYPE" << endl;
 }
 
 template <class T>
 int LinkedList<T>::getSize() { return size; }
 
 template <class T>
-void LinkedList<T>::randGenInt(int size, int lowBound, int upBound) {
+void LinkedList<T>::randGenInt(int length, int lowBound, int upBound) {
 	if (typeid(T).name() == typeid(int).name()) {
-		while (size-- > 0)
-			pushTail(rand() % upBound + lowBound);
+		while (length-- > 0)
+			pushTail(rand() % (upBound - lowBound + 1) + lowBound);
 	}
 }
