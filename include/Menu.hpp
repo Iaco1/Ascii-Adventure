@@ -1,3 +1,6 @@
+#define WINDOW_WIDTH 128
+#define WINDOW_HEIGHT 32
+
 class Menu{
     protected:
     int windowWidth, windowHeight;
