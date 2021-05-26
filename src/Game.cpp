@@ -12,7 +12,10 @@ initscr();
 	endwin();
 */
 
-Game::Game(){}
+Game::Game(){
+    gameOver = false;
+    score = 0;
+}
 void Game::mainLoop(){
     srand(time(NULL));
 	
