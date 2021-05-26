@@ -1,3 +1,2 @@
-src/main.o
-src/Menu.o
+src/*.o
 output/main

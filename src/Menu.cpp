@@ -6,8 +6,8 @@
 using namespace std;
 
 Menu::Menu(){
-    windowWidth = 128;
-    windowHeight = 32;
+    windowWidth = WINDOW_WIDTH;
+    windowHeight = WINDOW_HEIGHT;
     title = "Project-X";
     for(titleWidth = 0; title[titleWidth]!='\0'; titleWidth++);
     titleHeight = 1;
