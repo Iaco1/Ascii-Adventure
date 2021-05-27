@@ -29,3 +29,5 @@ public:
     int getSize();
     void randGenInt(int length, int lowBound, int upBound); //generates a random list of ints
 };
+
+#include "LinkedList.cpp"
