@@ -14,6 +14,12 @@ LinkedList<T>::LinkedList() {
 }
 
 template<class T>
+LinkedList<T>::~LinkedList() {
+	while (head != NULL)
+		popHead();
+}
+
+template<class T>
 void LinkedList<T>::pushHead(T val) {
 	size++;
 	node<T>* temp = new node<T>;
