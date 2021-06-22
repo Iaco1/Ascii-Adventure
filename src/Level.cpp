@@ -14,6 +14,14 @@ Level::Level(double fillPercentage) {
     //tba
 }
 
+TileType* Level::operator[](int rowIndex) {
+    if (rowIndex < 0 || rowIndex >= WINDOW_HEIGHT) {
+        cout << "Error: row index out of bounds" << endl;
+        exit(EXIT_FAILURE);
+    }
+    else return Board[rowIndex];
+}
+
 char* Level::to_string() {
     char* levelOutput = new char[WINDOW_HEIGHT * (WINDOW_WIDTH + 1)];
     int count = 0;

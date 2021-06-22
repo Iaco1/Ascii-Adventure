@@ -10,5 +10,6 @@ protected:
 public:
     Level();                    //fills the board of TileType::EMPTY enums
     Level(double fillPercentage);  //fills fillPercentage % of the board randomly with TileTypes enums
+    TileType* operator[](int rowIndex); //overloads [] operator; use [][] to access tile
     char* to_string();          //returns a char* representing how the map looks like
 };
