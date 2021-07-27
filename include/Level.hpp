@@ -7,6 +7,7 @@ const char TileChar[]{ ' ', '#', 'H', 'E', 'B', 'M' };
 class Level {
 protected:
     TileType Board[WINDOW_HEIGHT][WINDOW_WIDTH];
+
 public:
     Level();                    //fills the board of TileType::EMPTY enums
     Level(double fillPercentage);  //fills fillPercentage % of the board randomly with TileTypes enums
