@@ -4,8 +4,16 @@
 class Map {
 protected:
     LinkedList<Level> map;
+    WINDOW* lvlWin;
+    int windowHeight, windowWidth;
+    int currentLvl;
 
 public:
-    Map(int size);      //generates a map list of size levels
-    void printMap();    //prints each level  
+    Map();
+    void mapLoop();
+    void generateLvl();
+    void nextLvl();
+    void prevLvl();
+    void refreshMap();
+    char* to_string();
 };
