@@ -1,0 +1,96 @@
+#include <iostream>
+#include <list>
+#include <string>
+#include "LinkedList.hpp"
+
+using namespace std;
+
+enum class Tile { EMPTY, TERRAIN, HERO, ENEMY, BONUS, MALUS };
+const int TILE_MEMBERS = 6;
+const int BOARD_HEIGHT = 40, BOARD_WIDTH = 128;
+
+class Board {
+public:
+    Tile board[BOARD_HEIGHT][BOARD_WIDTH];
+public:
+    Board() {
+        for (int i = 0; i < BOARD_HEIGHT; i++) {
+            for (int j = 0; j < BOARD_WIDTH; j++) {
+                if (rand() % 10 == 1) board[i][j] = static_cast<Tile>(rand() % TILE_MEMBERS);
+                else board[i][j] = Tile::EMPTY;
+            }
+        }
+    }
+    string toString() {
+        string str;
+        for (int i = 0; i < BOARD_HEIGHT; i++) {
+            for (int j = 0; j < BOARD_WIDTH; j++) {
+                switch (board[i][j]) {
+                case Tile::EMPTY:
+                    str += " ";
+                    break;
+                case Tile::TERRAIN:
+                    str += "#";
+                    break;
+                case Tile::HERO:
+                    str += "H";
+                    break;
+                case Tile::ENEMY:
+                    str += "E";
+                    break;
+                case Tile::BONUS:
+                    str += "b";
+                    break;
+                case Tile::MALUS:
+                    str += "*";
+                    break;
+                default:
+                    str += "0";
+                }
+            }
+            str += "\n";
+        }
+        return str;
+    }
+};
+
+class Map {
+public:
+    list<Board> map;
+    Map(int size) {
+        while (size-- > 0) {
+            Board board;
+            map.push_back(board);
+            if (size == 1 || size == 512 || size == 256 || size == 768) {
+                continue;
+            }
+        }
+    }
+    void printMap() {
+        int i = 0;
+        list<Board>::iterator it = map.begin();
+
+        while (it != map.end()) {
+            Board currentBoard = *it;
+            string str = currentBoard.toString();
+            cout << str << endl << "<--->" << i << endl;
+            ++it;
+            ++i;
+        }
+    }
+};
+
+int main() {
+    /*
+    cout << "sizeof(board)  //size of a board object containing a board array:  " << sizeof(Board) << endl;
+    cout << "sizeof(list<Board>):                                               " << sizeof(list<Board>) << endl;
+    cout << "sizeof(map)    //contains a list<Board> map:                       " << sizeof(Map) << endl;
+    int mapSize = 4096;
+    int byteMapSize = sizeof(list<Board>) + sizeof(Board) * mapSize;
+    cout << "thus sizeof(list<map>) which has "<< mapSize <<" boards in it is:                      " << byteMapSize << "B == " << byteMapSize/1024 << "KB == " << byteMapSize/1024/1024 << "MB";
+    */
+    
+    Map map = Map(1024);
+    map.printMap();
+    return 0;
+}

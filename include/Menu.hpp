@@ -5,7 +5,7 @@ class Menu{
     Window window;
     Title title;
 
-    public:
+public:
     Menu();
     void printTitle(); //prints the titleString at the center of the window 
     void printStartScreen();

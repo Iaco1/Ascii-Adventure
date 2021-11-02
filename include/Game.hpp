@@ -1,5 +1,5 @@
-class Game{
-    protected:
+class Game {
+protected:
     bool gameOver;
     //Map map;
     //Hero hero
@@ -8,7 +8,7 @@ class Game{
     //LinkedList<Malus> Maluses
     int score;
 
-    public:
+public:
     Game();
     void mainLoop();
     void updateMap();

@@ -3,7 +3,6 @@
 #include <cstring>
 #include <typeinfo>
 #include <cstdlib>
-#include "LinkedList.hpp"
 
 using namespace std;
 
@@ -12,6 +11,12 @@ LinkedList<T>::LinkedList() {
 	head = NULL;
 	tail = NULL;
 	size = 0;
+}
+
+template<class T>
+LinkedList<T>::~LinkedList() {
+	while (head != NULL)
+		popHead();
 }
 
 template<class T>
