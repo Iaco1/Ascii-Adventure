@@ -6,43 +6,43 @@
 using namespace std;
 
 Menu::Menu(){
-    windowWidth = WINDOW_WIDTH;
-    windowHeight = WINDOW_HEIGHT;
-    title = "Project-X";
-    for(titleWidth = 0; title[titleWidth]!='\0'; titleWidth++);
-    titleHeight = 1;
+    window = Window();
+    title = Title(window.getCenterX(), window.getCenterY());
 };
-void Menu::printTitle(int x, int y){
-    move(y,x);
-    printw(title);
+void Menu::printTitle(){
+    move(title.getNWy(), title.getNWx());
+    for(int i=0; i<title.getHeight(); i++){
+        printw(title.getTitleString(i));
+        move(title.getNWy()+(i+1), title.getNWx());
+    }
 }
-void Menu::printStartScreen(char &choice){
+void Menu::printStartScreen(){
     clear();
-    printTitle(windowWidth/2 - titleWidth/2, windowHeight/2 - titleHeight/2);
+    printTitle();
     printFrame();
     curs_set(0);    
     sleep(3);
-    mvprintw(windowHeight/2 - titleHeight/2 + 2, windowWidth/2 - titleWidth/2, "Press 1 to enter the Menu");
+    mvprintw(title.getNWy() + title.getHeight() + 1, title.getNWx() , "Press space to enter the Menu");
     refresh();
 }
 void Menu::printFrame(){
     const char frameChar1 = '-', frameChar2 = ':';
-    for(int i=0; i <= windowWidth; i++) {
+    for(int i=0; i <= window.getWidth(); i++) {
         mvaddch(0,i,frameChar1);
-        mvaddch(windowHeight,i,frameChar1);
+        mvaddch(window.getHeight(),i,frameChar1);
         refresh();
     }
-    for(int i=1; i<=windowHeight-1; i++){
+    for(int i=1; i<=window.getHeight()-1; i++){
         mvaddch(i, 0, frameChar2);
-        mvaddch(i, windowWidth, frameChar2);
+        mvaddch(i, window.getWidth(), frameChar2);
         refresh();
     }
-    move(windowHeight, windowWidth);
+    move(window.getHeight(), window.getWidth());
     refresh();
 }
 void Menu::printMenu(){
     clear();
-    mvprintw(0,0, "Project-X");
+    mvprintw(0,0, "B2DAP");
     mvprintw(2,0, "1. PLAY");
     mvprintw(3,0, "0. QUIT");
     refresh();
@@ -62,12 +62,12 @@ void Menu::initGame(){
 }
 void Menu::menuLoop(){
     char choice;
-    printStartScreen(choice);
+    printStartScreen();
     do{
-        move(windowHeight-1, windowWidth-1);
+        move(window.getHeight()-1, window.getWidth()-1);
         choice = getch();
-    }while(choice != '1');
-    choice = ' ';
+    }while(choice != ' ');
+    choice = '_';
 
     while(choice != '0' && choice != '1'){
         printMenu();
@@ -87,5 +87,5 @@ void Menu::menuLoop(){
         default:
             cout<<"you're not supposed to be here";
     }
-        sleep(3);
+    sleep(3);
 }

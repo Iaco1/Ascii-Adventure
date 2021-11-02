@@ -1,16 +1,14 @@
-#define WINDOW_WIDTH 128
-#define WINDOW_HEIGHT 32
-
+#include "Window.hpp"
+#include "Title.hpp"
 class Menu{
     protected:
-    int windowWidth, windowHeight;
-    const char *title;
-    int titleWidth, titleHeight;
+    Window window;
+    Title title;
 
     public:
     Menu();
-    void printTitle(int x, int y);
-    void printStartScreen(char &choice);
+    void printTitle(); //prints the titleString at the center of the window 
+    void printStartScreen();
     void menuLoop();
     void printFrame();
     void printMenu();
