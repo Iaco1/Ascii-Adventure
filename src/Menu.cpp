@@ -8,6 +8,14 @@ using namespace std;
 Menu::Menu(){
     window = Window();
     title = Title(window.getCenterX(), window.getCenterY());
+}
+Menu::Menu(int w, int h){
+    if(w>0 && h>0){
+        window = Window(w, h);
+        title = Title(window.getCenterX(), window.getCenterY());
+    }else{
+        Menu();
+    }
 };
 void Menu::printTitle(){
     move(title.getNWy(), title.getNWx());
@@ -53,6 +61,7 @@ void Menu::printMenu() {
 void Menu::printEndScreen() {
     mvprintw(0, 0, "Bon Voyage");
     refresh();
+    option = MenuOption::EXIT;
     sleep(2);
     system("reset");
 }
@@ -63,6 +72,7 @@ void Menu::initGame() {
     sleep(1);
     mvprintw(1, 0, "freak bitches");
     refresh();
+    option = MenuOption::PLAY;
 }
 
 void Menu::menuLoop() {
@@ -91,6 +101,10 @@ void Menu::menuLoop() {
 
     default:
         cout << "you're not supposed to be here";
+
     }
     sleep(3);
 }
+
+MenuOption Menu::getOption() { return option; }
+

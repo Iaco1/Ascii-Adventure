@@ -1,11 +1,11 @@
+#include "Menu.hpp"
+#include "Map.hpp"
+
 class Game {
 protected:
     bool gameOver;
-    //Map map;
-    //Hero hero
-    //LinkedList<Enemy> Enemies
-    //LinkedList<Bonus> Bonuses
-    //LinkedList<Malus> Maluses
+    Menu menu;
+    Map map;
     int score;
 
 public:
@@ -15,4 +15,5 @@ public:
     void draw();
     void input();
     void logic();
+    Menu getMenu();
 };

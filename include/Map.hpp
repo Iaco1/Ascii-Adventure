@@ -1,19 +1,11 @@
 #include "LinkedList.hpp"
 #include "Level.hpp"
 
-class Map {
-protected:
+class Map{
+    protected:
     LinkedList<Level> map;
-    WINDOW* lvlWin;
-    int windowHeight, windowWidth;
-    int currentLvl;
-
-public:
+    int currentLevel;
+    public:
     Map();
-    void mapLoop();
-    void generateLvl();
-    void nextLvl();
-    void prevLvl();
-    void refreshMap();
-    char* to_string();
+    Map(int w, int h);
 };
