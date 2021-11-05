@@ -15,3 +15,6 @@ Object::Object(int x, int y, TileType tiletype){
             Object();
         }
     }
+void Object::toString(char str[24]){
+		sprintf(str, "((%d,%d),%s)", x, y, TileTypeStr[(int)tiletype]);
+	}
