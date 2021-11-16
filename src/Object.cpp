@@ -15,6 +15,15 @@ Object::Object(int x, int y, TileType tiletype){
             Object();
         }
     }
+
+Object::Object(bool random){
+    if(random==true){
+			x = rand()%100;
+			y = rand()%20;
+			tiletype = static_cast<TileType>(rand()%(static_cast<int>(TileType::SIZE)));
+	}else Object();
+}
+
 void Object::toString(char str[24]){
 		sprintf(str, "((%d,%d),%s)", x, y, TileTypeStr[(int)tiletype]);
 	}
