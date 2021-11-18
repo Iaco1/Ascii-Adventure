@@ -5,17 +5,16 @@ enum class MenuOption{ PLAY, EXIT };
 
 class Menu{
     protected:
-    Window window;
     Title title;
     MenuOption option;
 
 public:
     Menu();
-    Menu(int w, int h);
+    Menu(Window window);
     void printTitle(); //prints the titleString at the center of the window 
-    void printStartScreen();
-    void menuLoop();
-    void printFrame();
+    void printStartScreen(Window window);
+    void menuLoop(Window window);
+    void printFrame(Window window);
     void printMenu();
     void printEndScreen();
     void initGame();

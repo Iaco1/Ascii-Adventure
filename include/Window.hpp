@@ -12,5 +12,6 @@ class Window{
     int getCenterY();
     int getWidth();
     int getHeight();
+    void printFrame();
 
 };

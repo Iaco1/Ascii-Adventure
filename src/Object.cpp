@@ -27,5 +27,6 @@ Object::Object(bool random){
 }
 
 void Object::toString(char str[24]){
-		sprintf(str, "((%d,%d),%s)", x, y, TileTypeStr[(int)tiletype]);
+		const char* tileTypeStr[] = {"Empty", "Terrain", "Hero", "Enemy", "Bonus", "Malus"};
+        sprintf(str, "((%d,%d),%s)", x, y, tileTypeStr[(int)tiletype]);
 	}

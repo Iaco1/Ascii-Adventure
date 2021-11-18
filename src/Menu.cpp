@@ -6,16 +6,11 @@
 using namespace std;
 
 Menu::Menu(){
-    window = Window();
+    Window window = Window();
     title = Title(window.getCenterX(), window.getCenterY());
 }
-Menu::Menu(int w, int h){
-    if(w>0 && h>0){
-        window = Window(w, h);
-        title = Title(window.getCenterX(), window.getCenterY());
-    }else{
-        Menu();
-    }
+Menu::Menu(Window window){
+    title = Title(window.getCenterX(), window.getCenterY());
 };
 void Menu::printTitle(){
     move(title.getNWy(), title.getNWx());
@@ -24,29 +19,13 @@ void Menu::printTitle(){
         move(title.getNWy()+(i+1), title.getNWx());
     }
 }
-void Menu::printStartScreen(){
+void Menu::printStartScreen(Window window){
     clear();
     printTitle();
-    printFrame();
+    window.printFrame();
     curs_set(0);
     sleep(3);
     mvprintw(title.getNWy() + title.getHeight() + 1, title.getNWx() , "Press space to enter the Menu");
-    refresh();
-}
-
-void Menu::printFrame() {
-    const char frameChar1 = '-', frameChar2 = ':';
-    for(int i=0; i <= window.getWidth(); i++) {
-        mvaddch(0,i,frameChar1);
-        mvaddch(window.getHeight(),i,frameChar1);
-        refresh();
-    }
-    for(int i=1; i<=window.getHeight()-1; i++){
-        mvaddch(i, 0, frameChar2);
-        mvaddch(i, window.getWidth(), frameChar2);
-        refresh();
-    }
-    move(window.getHeight(), window.getWidth());
     refresh();
 }
 
@@ -75,9 +54,9 @@ void Menu::initGame() {
     option = MenuOption::PLAY;
 }
 
-void Menu::menuLoop() {
+void Menu::menuLoop(Window window) {
     char choice;
-    printStartScreen();
+    printStartScreen(window);
     do{
         move(window.getHeight()-1, window.getWidth()-1);
         choice = getch();

@@ -1,5 +1,4 @@
 enum class TileType{ EMPTY, TERRAIN, HERO, ENEMY, BONUS, MALUS, SIZE};
-const char* TileTypeStr[] = {"Empty", "Terrain", "Hero", "Enemy", "Bonus", "Malus"};
 
 class Object{
     protected:

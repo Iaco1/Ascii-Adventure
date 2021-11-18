@@ -6,6 +6,7 @@ protected:
     bool gameOver;
     Menu menu;
     Map map;
+    Window window;
     int score;
 
 public:

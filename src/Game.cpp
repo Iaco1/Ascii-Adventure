@@ -17,6 +17,14 @@ Game::Game() {
 	score = 0;
 }
 
+void Game::draw(){
+	clear();
+	window.printFrame();
+	mvprintw(5,5,"X");
+	refresh();
+	getch();
+}
+
 void Game::mainLoop() {
 	srand(time(NULL));
 
@@ -24,19 +32,17 @@ void Game::mainLoop() {
 
 	int w, h;
 	getmaxyx(stdscr, h, w);
-	w-=2;h-=2; //adjusts the size of the screen to include the borders being drawn
-	
-	menu = Menu(w, h);
-	menu.menuLoop();
+	window = Window(w,h);
+
+	menu = Menu(window);
+	menu.menuLoop(window);
 
 	if(menu.getOption() == MenuOption::PLAY){
 		getmaxyx(stdscr, h, w);
+		window = Window(w,h);
+
 		map = Map(w,h);
-		/*
-		LinkedList<Level> list;
-		list.pushTail(new Node<Level>(Level(w,h)));
-		list.pushTail(new Node<Level>(Level(w,h)));
-		*/
+		draw();
 	}
 
 	endwin();
