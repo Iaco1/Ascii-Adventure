@@ -2,5 +2,5 @@
 
 Level::Level(){}
 Level::Level(int w, int h){
-    terrain.pushHead(Object(w/2, h/2, TileType::TERRAIN));
+    terrain.pushHead(new Node<Object>(Object(w/2, h/2, TileType::TERRAIN)));
 }

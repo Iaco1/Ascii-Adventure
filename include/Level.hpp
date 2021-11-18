@@ -1,7 +1,7 @@
-#include "LinkedList.hpp"
 #include "Hero.hpp"
+#include "LinkedList.hpp"
 
-const char TileChar[]{ ' ', '#', 'H', 'E', 'B', 'M' };
+const char tileChar[]{ ' ', '#', 'H', 'E', 'B', 'M' };
 
 class Level{
     protected:

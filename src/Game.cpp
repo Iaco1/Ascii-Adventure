@@ -1,5 +1,4 @@
 #include "Game.hpp"
-#include "LinkedList.hpp"
 #include <iostream>
 #include <ncurses.h>
 
@@ -32,10 +31,12 @@ void Game::mainLoop() {
 
 	if(menu.getOption() == MenuOption::PLAY){
 		getmaxyx(stdscr, h, w);
-		//map = Map(w,h);
+		map = Map(w,h);
+		/*
 		LinkedList<Level> list;
-		list.pushTail(Level(w,h));
-		list.pushTail(Level(w,h));
+		list.pushTail(new Node<Level>(Level(w,h)));
+		list.pushTail(new Node<Level>(Level(w,h)));
+		*/
 	}
 
 	endwin();

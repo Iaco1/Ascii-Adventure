@@ -1,4 +1,6 @@
 #include "Object.hpp"
+#include <cstdlib>
+#include <cstdio>
 
 Object::Object(){
         x=0;
