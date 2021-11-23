@@ -169,6 +169,22 @@ class LinkedList{
 		}else return -1;
 	}
 	int getSize(){ return size; }
+	T& operator[](int index) {
+		if (index >= size || index < 0) {
+			cout << "Error: index out of bounds" << endl;
+			exit(EXIT_FAILURE);
+		}
+		Node<T>* iter;
+		if (index + 1 <= size / 2) {
+			iter = head;
+			for (int i = 0; i < index; i++, iter = iter->next);
+		}
+		else {
+			iter = tail;
+			for (int i = size - 1; i > index; i--, iter = iter->prev);
+		}
+		return iter->data;
+	}
 	~LinkedList(){
 		head = NULL;
 		tail = NULL;
