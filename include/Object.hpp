@@ -10,4 +10,6 @@ class Object{
     Object(int x, int y, TileType tiletype);
     Object(bool random); //creates a random object
     void toString(char str[24]);
+    void getXY(int &x, int &y);
+    char getTileChar();
 };

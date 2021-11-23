@@ -9,17 +9,18 @@ Window::Window(){
         centerY = height/2;
 }
 Window::Window(int w, int h){
-    w-=2;h-=2; //adjusts the size of the screen to include the borders being drawn
-        if(w>0 && h>0){
-            width = w;
-            height = h;
-            centerX = width/2;
-            centerY = height/2;
-        }else{
-            Window();
-        }
-        
+    w-=1;h-=1; //adjusts the size of the screen to include the borders being drawn
+    
+    if(w>0 && h>0){
+        width = w;
+        height = h;
+        centerX = width/2;
+        centerY = height/2;
+    }else{
+        Window();
     }
+        
+}
 
 int Window::getCenterX(){ return centerX; }
 int Window::getCenterY(){ return centerY; }
