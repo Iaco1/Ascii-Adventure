@@ -1,17 +1,20 @@
 #include "Menu.hpp"
-#include "Map.hpp"
+#include "Level.hpp"
 
 class Game {
 protected:
     bool gameOver;
     Menu menu;
-    Map map;
+    LinkedList<Level> map;
+    Hero hero;
+    int currentLevel;
     Window window;
     int score;
 
 public:
     Game();
     void mainLoop();
+    void createMap();
     void updateMap();
     void draw();
     void input();
