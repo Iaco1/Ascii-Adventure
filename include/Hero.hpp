@@ -4,5 +4,5 @@ class Hero : public Entity{
     protected:
     public:
     Hero();
-    Hero(int x, int y, TileType tiletype, Direction direction, int hp, int speed, int basicAttackDP);
+    Hero(int x, int y, int hp, int speed, int basicAttackDP);
 };
