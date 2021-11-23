@@ -12,4 +12,5 @@ class Object{
     void toString(char str[24]);
     void getXY(int &x, int &y);
     char getTileChar();
+    void setXY(int x, int y);
 };
