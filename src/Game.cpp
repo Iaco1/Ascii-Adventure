@@ -17,10 +17,36 @@ Game::Game() {
 	score = 0;
 }
 
+void Game::createMap(){
+	//here we genereate levels and the hero
+	int w = window.getWidth(), h = window.getHeight();
+
+    map.pushHead(new Node<Level>(Level(w,h)));
+	hero = Hero(1,h-1,100,0,100);
+    currentLevel = 0;
+}
+
 void Game::draw(){
 	clear();
-	window.printFrame();
-	mvprintw(5,5,"X");
+
+	//as of now, it draws terrain elements and the hero
+	//hero drawing
+	int x=0, y=0;
+	hero.getXY(x,y);
+	mvaddch(y, x, hero.getTileChar());
+
+	//terrain drawing
+	for(int i=0; i<map[currentLevel].getTerrain().getSize(); i++){
+		map[currentLevel].getTerrain()[i].getXY(x,y);
+		mvaddch(y, x, map[currentLevel].getTerrain()[i].getTileChar());
+	}
+	//enemies drawing
+	//...
+	//bonuses drawing
+	//...
+	//maluses drawing
+	//...
+
 	refresh();
 	getch();
 }
@@ -41,7 +67,7 @@ void Game::mainLoop() {
 		getmaxyx(stdscr, h, w);
 		window = Window(w,h);
 
-		map = Map(w,h);
+		createMap();
 		draw();
 	}
 
