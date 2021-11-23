@@ -24,7 +24,7 @@ void Menu::printStartScreen(Window window){
     printTitle();
     window.printFrame();
     curs_set(0);
-    sleep(3);
+    sleep(2);
     mvprintw(title.getNWy() + title.getHeight() + 1, title.getNWx() , "Press space to enter the Menu");
     refresh();
 }
