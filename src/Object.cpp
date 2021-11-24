@@ -42,3 +42,9 @@ char Object::getTileChar(){
     return tileChar[(int)tiletype];
 }
 
+void Object::setXY(int x, int y){
+    if(x>=0 && y>=0){
+        this->x = x;
+        this->y = y;
+    }
+}
