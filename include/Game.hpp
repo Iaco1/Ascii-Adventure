@@ -20,7 +20,7 @@ public:
     void drawHero();
     template <class T>
     void drawLevelElements(LinkedList<T> list);
-    Direction input();
-    void logic(Direction proposedDirection);
+    Action input();
+    void logic(Action proposedAction);
     Menu getMenu();
 };

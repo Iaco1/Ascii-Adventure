@@ -13,7 +13,7 @@ Level::Level(int w, int h){
     for(int i=0; i<6; i++) terrain.pushHead(new Node<Object>(Object(1+i, h-3, TileType::TERRAIN)));
 
     //one enemy standing at the opposite side of the map with respect to the hero
-    enemies.pushHead(new Node<Entity>(Entity(w-1,h-1, TileType::ENEMY, Direction::STILL, 100, 30 )));
+    enemies.pushHead(new Node<Entity>(Entity(w-1,h-1, TileType::ENEMY, Action::STILL, 100, 30 )));
      
 }
 LinkedList <Object> Level::getTerrain(){ return terrain; }

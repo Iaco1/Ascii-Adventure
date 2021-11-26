@@ -47,13 +47,13 @@ void Game::drawHero(){
 	hero.getXY(x,y);
 
 	//this should hide the previous' hero's position with a ' ' char
-	if(hero.getDirection() != Direction::STILL){
-		switch(hero.getDirection()){
-			case Direction::LEFT:
+	if(hero.getAction() != Action::STILL){
+		switch(hero.getAction()){
+			case Action::LEFT:
 			mvaddch(y, x+1, ' ');
 			break;
 
-			case Direction::RIGHT:
+			case Action::RIGHT:
 			mvaddch(y, x-1, ' ');
 			break;
 
@@ -73,36 +73,36 @@ void Game::drawLevelElements(LinkedList<T> list){
 	}
 }
 
-Direction Game::input(){
+Action Game::input(){
 	nodelay(stdscr, TRUE);
 	noecho();
 
-	Direction proposedDirection = Direction::STILL;
+	Action proposedAction = Action::STILL;
 
 	char action = '_';
 	if((action = getch()) != ERR){
 		switch(action){
 			case 'w':
 			//maybe we can have the hero climb up a ladder
-			proposedDirection = Direction::CLIMB_UP;
+			proposedAction = Action::CLIMB_UP;
 			break;
 
 			case 'a':
-			proposedDirection = Direction::LEFT;
+			proposedAction = Action::LEFT;
 			break;
 			
 			case 's':
 			//climb down a ladder or no use
-			proposedDirection = Direction::CLIMB_DOWN;
+			proposedAction = Action::CLIMB_DOWN;
 			break;
 			
 			case 'd':
-			proposedDirection = Direction::RIGHT;
+			proposedAction = Action::RIGHT;
 			break;
 			
 			case ' ':
 			//code for having the hero jump
-			proposedDirection = Direction::JUMPING;
+			proposedAction = Action::JUMPING;
 			break;
 
 			case 'x':
@@ -113,60 +113,60 @@ Direction Game::input(){
 			case 'p':
 			//here code to stop all moving entities 
 			//and to display some sort of PAUSE label somewhere
-			proposedDirection = Direction::STILL;
+			proposedAction = Action::STILL;
 			break;
 
 			default:
-			proposedDirection = Direction::STILL;
+			proposedAction = Action::STILL;
 
 		}
 	}
-	return proposedDirection;
+	return proposedAction;
 
 }
 
-void Game::logic(Direction proposedDirection){
+void Game::logic(Action proposedAction){
 	//some collision detection code to avoid having the hero pass through other objects
 	int x, y;
 	hero.getXY(x,y);
 
-	switch(proposedDirection){
-		case Direction::CLIMB_UP:
+	switch(proposedAction){
+		case Action::CLIMB_UP:
 		break;
 
-		case Direction::CLIMB_DOWN:
+		case Action::CLIMB_DOWN:
 		break;
 
-		case Direction::JUMPING:
+		case Action::JUMPING:
 		break;
 		
-		case Direction::FALLING:
+		case Action::FALLING:
 		break;
 
-		case Direction::LEFT:
+		case Action::LEFT:
 		if(x>0 && x <= window.getWidth()) {
 			if(map[currentLevel].elementAt(x-1, y) == TileType::EMPTY){
 				hero.setXY(x-1, y);
-				hero.setDirection(Direction::LEFT);
+				hero.setAction(Action::LEFT);
 			}
 		}
 		break;
 
-		case Direction::RIGHT:
+		case Action::RIGHT:
 		if(x>=0 && x < window.getWidth()) {
 			if(map[currentLevel].elementAt(x+1,y) == TileType::EMPTY){
 				hero.setXY(x+1, y);
-				hero.setDirection(Direction::RIGHT);
+				hero.setAction(Action::RIGHT);
 			}
 		}
 		break;
 
-		case Direction::STILL:
-		hero.setDirection(Direction::STILL);
+		case Action::STILL:
+		hero.setAction(Action::STILL);
 		break;
 
 		default:
-		hero.setDirection(Direction::STILL);
+		hero.setAction(Action::STILL);
 	}
 
 	
