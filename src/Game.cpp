@@ -73,44 +73,36 @@ void Game::drawLevelElements(LinkedList<T> list){
 	}
 }
 
-void Game::input(){
+Direction Game::input(){
 	nodelay(stdscr, TRUE);
 	noecho();
 
-	int x, y;
-	hero.getXY(x,y);
+	Direction proposedDirection = Direction::STILL;
 
 	char action = '_';
 	if((action = getch()) != ERR){
 		switch(action){
 			case 'w':
 			//maybe we can have the hero climb up a ladder
+			proposedDirection = Direction::CLIMB_UP;
 			break;
 
 			case 'a':
-			if(x>0 && x <= window.getWidth()) {
-				if(map[currentLevel].elementAt(x-1, y) == TileType::EMPTY){
-					hero.setXY(x-1, y);
-					hero.setDirection(Direction::LEFT);
-				}
-			}
+			proposedDirection = Direction::LEFT;
 			break;
 			
 			case 's':
 			//climb down a ladder or no use
+			proposedDirection = Direction::CLIMB_DOWN;
 			break;
 			
 			case 'd':
-			if(x>=0 && x < window.getWidth()) {
-				if(map[currentLevel].elementAt(x+1,y) == TileType::EMPTY){
-					hero.setXY(x+1, y);
-					hero.setDirection(Direction::RIGHT);
-				}
-			}
+			proposedDirection = Direction::RIGHT;
 			break;
 			
 			case ' ':
 			//code for having the hero jump
+			proposedDirection = Direction::JUMPING;
 			break;
 
 			case 'x':
@@ -121,19 +113,63 @@ void Game::input(){
 			case 'p':
 			//here code to stop all moving entities 
 			//and to display some sort of PAUSE label somewhere
-			hero.setDirection(Direction::STILL);
+			proposedDirection = Direction::STILL;
 			break;
 
 			default:
-			hero.setDirection(Direction::STILL);
+			proposedDirection = Direction::STILL;
 
 		}
 	}
+	return proposedDirection;
 
 }
 
-void Game::logic(){
+void Game::logic(Direction proposedDirection){
 	//some collision detection code to avoid having the hero pass through other objects
+	int x, y;
+	hero.getXY(x,y);
+
+	switch(proposedDirection){
+		case Direction::CLIMB_UP:
+		break;
+
+		case Direction::CLIMB_DOWN:
+		break;
+
+		case Direction::JUMPING:
+		break;
+		
+		case Direction::FALLING:
+		break;
+
+		case Direction::LEFT:
+		if(x>0 && x <= window.getWidth()) {
+			if(map[currentLevel].elementAt(x-1, y) == TileType::EMPTY){
+				hero.setXY(x-1, y);
+				hero.setDirection(Direction::LEFT);
+			}
+		}
+		break;
+
+		case Direction::RIGHT:
+		if(x>=0 && x < window.getWidth()) {
+			if(map[currentLevel].elementAt(x+1,y) == TileType::EMPTY){
+				hero.setXY(x+1, y);
+				hero.setDirection(Direction::RIGHT);
+			}
+		}
+		break;
+
+		case Direction::STILL:
+		hero.setDirection(Direction::STILL);
+		break;
+
+		default:
+		hero.setDirection(Direction::STILL);
+	}
+
+	
 }
 
 void Game::mainLoop() {
@@ -158,7 +194,7 @@ void Game::mainLoop() {
 		while(!gameOver){
 			//if(levelChanged) newLevel = true;
 			draw(newLevel);
-			input();
+			logic(input());
 			newLevel = false;
 		}
 	}
