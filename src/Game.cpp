@@ -33,18 +33,11 @@ void Game::draw(bool newLevel){
 	//hero drawing
 	drawHero();
 
-	//terrain drawing
-	int x,y;
-	for(int i=0; i<map[currentLevel].getTerrain().getSize(); i++){
-		map[currentLevel].getTerrain()[i].getXY(x,y);
-		mvaddch(y, x, map[currentLevel].getTerrain()[i].getTileChar());
-	}
-	//enemies drawing
-	//...
-	//bonuses drawing
-	//...
-	//maluses drawing
-	//...
+	//terrain, enemies, bonuses and maluses' drawing
+	drawLevelElements(map[currentLevel].getTerrain());
+	drawLevelElements(map[currentLevel].getEnemies());
+	drawLevelElements(map[currentLevel].getBonuses());
+	drawLevelElements(map[currentLevel].getMaluses());
 
 	refresh();
 }
@@ -70,6 +63,14 @@ void Game::drawHero(){
 	
 	mvaddch(y, x, hero.getTileChar());
 
+}
+template <class T>
+void Game::drawLevelElements(LinkedList<T> list){
+	int x,y;
+	for(int i=0; i<list.getSize(); i++){
+		list[i].getXY(x,y);
+		mvaddch(y, x, list[i].getTileChar());
+	}
 }
 
 void Game::input(){

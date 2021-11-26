@@ -18,6 +18,8 @@ public:
     void updateMap();
     void draw(bool newLevel);
     void drawHero();
+    template <class T>
+    void drawLevelElements(LinkedList<T> list);
     void input();
     void logic();
     Menu getMenu();
