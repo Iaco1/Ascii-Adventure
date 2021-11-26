@@ -22,20 +22,19 @@ void Game::createMap(){
 	int w = window.getWidth(), h = window.getHeight();
 
     map.pushHead(new Node<Level>(Level(w,h)));
-	hero = Hero(1,h-1,100,0,100);
+	hero = Hero(1,h-1,100,50);
     currentLevel = 0;
 }
 
-void Game::draw(){
-	clear();
-
+void Game::draw(bool newLevel){
+	if(newLevel) clear();
 	//as of now, it draws terrain elements and the hero
+	
 	//hero drawing
-	int x=0, y=0;
-	hero.getXY(x,y);
-	mvaddch(y, x, hero.getTileChar());
+	drawHero();
 
 	//terrain drawing
+	int x,y;
 	for(int i=0; i<map[currentLevel].getTerrain().getSize(); i++){
 		map[currentLevel].getTerrain()[i].getXY(x,y);
 		mvaddch(y, x, map[currentLevel].getTerrain()[i].getTileChar());
@@ -48,7 +47,88 @@ void Game::draw(){
 	//...
 
 	refresh();
-	getch();
+}
+
+void Game::drawHero(){
+	int x=0, y=0;
+	hero.getXY(x,y);
+
+	//this should hide the previous' hero's position with a ' ' char
+	if(hero.getDirection() != Direction::STILL){
+		switch(hero.getDirection()){
+			case Direction::LEFT:
+			mvaddch(y, x+1, ' ');
+			break;
+
+			case Direction::RIGHT:
+			mvaddch(y, x-1, ' ');
+			break;
+
+			//all other direction cases
+		}
+	}
+	
+	mvaddch(y, x, hero.getTileChar());
+
+}
+
+void Game::input(){
+	nodelay(stdscr, TRUE);
+	noecho();
+
+	int x, y;
+	hero.getXY(x,y);
+
+	char action = '_';
+	if((action = getch()) != ERR){
+		switch(action){
+			case 'w':
+			//maybe we can have the hero climb up a ladder
+			break;
+
+			case 'a':
+			if(x>0 && x <= window.getWidth()) {
+				hero.setXY(x-1, y);
+				hero.setDirection(Direction::LEFT);
+			}
+			break;
+			
+			case 's':
+			//climb down a ladder or no use
+			break;
+			
+			case 'd':
+			if(x>=0 && x < window.getWidth()) {
+				hero.setXY(x+1, y);
+				hero.setDirection(Direction::RIGHT);
+			}
+			break;
+			
+			case ' ':
+			//code for having the hero jump
+			break;
+
+			case 'x':
+			gameOver = true;
+			//still needs overarching loop to detect the gameover and redirect to the main menu
+			break;
+
+			case 'p':
+			//here code to stop all moving entities 
+			//and to display some sort of PAUSE label somewhere
+			hero.setDirection(Direction::STILL);
+			break;
+
+			default:
+			hero.setDirection(Direction::STILL);
+
+		}
+	}
+
+}
+
+void Game::logic(){
+	//some collision detection code to avoid having the hero pass through other objects
 }
 
 void Game::mainLoop() {
@@ -68,7 +148,14 @@ void Game::mainLoop() {
 		window = Window(w,h);
 
 		createMap();
-		draw();
+
+		bool newLevel = true;
+		while(!gameOver){
+			//if(levelChanged) newLevel = true;
+			draw(newLevel);
+			input();
+			newLevel = false;
+		}
 	}
 
 	endwin();

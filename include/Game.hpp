@@ -16,7 +16,8 @@ public:
     void mainLoop();
     void createMap();
     void updateMap();
-    void draw();
+    void draw(bool newLevel);
+    void drawHero();
     void input();
     void logic();
     Menu getMenu();
