@@ -48,3 +48,5 @@ void Object::setXY(int x, int y){
         this->y = y;
     }
 }
+
+TileType Object::getTileType(){ return tiletype; }

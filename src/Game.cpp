@@ -89,8 +89,10 @@ void Game::input(){
 
 			case 'a':
 			if(x>0 && x <= window.getWidth()) {
-				hero.setXY(x-1, y);
-				hero.setDirection(Direction::LEFT);
+				if(map[currentLevel].elementAt(x-1, y) == TileType::EMPTY){
+					hero.setXY(x-1, y);
+					hero.setDirection(Direction::LEFT);
+				}
 			}
 			break;
 			
@@ -100,8 +102,10 @@ void Game::input(){
 			
 			case 'd':
 			if(x>=0 && x < window.getWidth()) {
-				hero.setXY(x+1, y);
-				hero.setDirection(Direction::RIGHT);
+				if(map[currentLevel].elementAt(x+1,y) == TileType::EMPTY){
+					hero.setXY(x+1, y);
+					hero.setDirection(Direction::RIGHT);
+				}
 			}
 			break;
 			

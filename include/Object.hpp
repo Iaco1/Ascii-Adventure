@@ -13,4 +13,5 @@ class Object{
     void getXY(int &x, int &y);
     char getTileChar();
     void setXY(int x, int y);
+    TileType getTileType();
 };
