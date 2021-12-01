@@ -1,8 +1,14 @@
 #include "Game.hpp"
 #include <iostream>
 #include <ncurses.h>
+#include <chrono>
+#include <thread>
 
 using namespace std;
+
+const int JUMP_HEIGHT = 4;
+const int targetFrameRate = 60;
+auto frameDelay =  std::chrono::seconds(1/targetFrameRate);
 
 /* NCURSES TYPICAL USAGE
 initscr();
@@ -40,6 +46,7 @@ void Game::draw(bool newLevel){
 	drawLevelElements(map[currentLevel].getMaluses());
 
 	refresh();
+	if(hero.getPrevMovements()[0] == Action::JUMPING || hero.getPrevMovements()[0] == Action::FALLING) std::this_thread::sleep_for(std::chrono::milliseconds(100));
 }
 
 void Game::drawHero(){
@@ -57,7 +64,20 @@ void Game::drawHero(){
 			mvaddch(y, x-1, ' ');
 			break;
 
-			//all other direction cases
+			case Action::CLIMB_DOWN:
+			//yet to decide a stairs character
+			break;
+
+			case Action::FALLING:
+			mvaddch(y-1,x,' ');
+			break;
+
+			case Action::CLIMB_UP:
+			break;
+
+			case Action::JUMPING:
+			mvaddch(y+1, x, ' ');
+			break;
 		}
 	}
 	
@@ -78,9 +98,13 @@ Action Game::input(){
 	noecho();
 
 	Action proposedAction = Action::STILL;
-
+	
 	char action = '_';
-	if((action = getch()) != ERR){
+	if(hero.getPrevMovements()[0] == Action::JUMPING){
+		if(hero.countMoves(Action::JUMPING) < JUMP_HEIGHT) proposedAction = Action::JUMPING;
+		else proposedAction = Action::FALLING;
+	}
+	else if((action = getch()) != ERR){
 		switch(action){
 			case 'w':
 			//maybe we can have the hero climb up a ladder
@@ -138,9 +162,14 @@ void Game::logic(Action proposedAction){
 		break;
 
 		case Action::JUMPING:
-		break;
-		
-		case Action::FALLING:
+		if(y>0 && y <= window.getHeight()){
+			if(map[currentLevel].elementAt(x,y-1) == TileType::EMPTY){
+				if(hero.countMoves(Action::JUMPING) < JUMP_HEIGHT){
+					hero.setXY(x, y-1);
+					hero.setAction(Action::JUMPING);
+				}
+			}
+		}
 		break;
 
 		case Action::LEFT:
@@ -161,14 +190,30 @@ void Game::logic(Action proposedAction){
 		}
 		break;
 
+		case Action::FALLING:
+		if(y>=0 && y< window.getHeight()){
+			switch(map[currentLevel].elementAt(x,y+1))
+			{
+				case TileType::EMPTY:
+				hero.setXY(x,y+1);
+				hero.setAction(Action::FALLING);
+				break;
+
+				case TileType::TERRAIN:
+				hero.setAction(Action::STILL);
+				break;
+			}
+		}
+		break; 
+
 		case Action::STILL:
-		hero.setAction(Action::STILL);
-		break;
-
 		default:
-		hero.setAction(Action::STILL);
+		if(hero.getAction() == Action::FALLING && map[currentLevel].elementAt(x, y+1) == TileType::EMPTY){ 
+			hero.setXY(x, y+1);
+			hero.setAction(Action::FALLING);
+		}else hero.setAction(Action::STILL);
 	}
-
+	hero.registerMove(hero.getAction());
 	
 }
 
@@ -192,10 +237,24 @@ void Game::mainLoop() {
 
 		bool newLevel = true;
 		while(!gameOver){
+			using namespace std::chrono;
+
+			time_point<system_clock> frameStart;
+			duration<double> frameTime; // frameTime indicates how much time the current frame has taken
+			frameStart = system_clock::now();
+			
 			//if(levelChanged) newLevel = true;
 			draw(newLevel);
 			logic(input());
 			newLevel = false;
+
+			frameTime = system_clock::now() - frameStart;
+			
+			if(frameDelay > frameTime){
+				std::this_thread::sleep_for(frameDelay - frameTime);
+			}
+
+			
 		}
 	}
 

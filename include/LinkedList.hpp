@@ -32,6 +32,8 @@ class LinkedList{
 		tail = NULL;
 		size = 0;
 	}
+	Node<T>* getHead(){ return head; }
+	Node<T>* getTail(){ return tail; }
 	void pushHead(Node<T> *n){
 		if(head == NULL) {
 			head = n;

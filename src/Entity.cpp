@@ -1,4 +1,5 @@
 #include "Entity.hpp"
+#include <cstdio>
 
 Entity::Entity() : Object(){}
 Entity::Entity(int x, int y, TileType tiletype, Action action, int hp, int basicAttackDP) : Object(x,y,tiletype){
@@ -11,4 +12,22 @@ Entity::Entity(int x, int y, TileType tiletype, Action action, int hp, int basic
 
 void Entity::setAction(Action action){ this->action = action; }
 Action Entity::getAction(){ return action; }
+
+bool Entity::isMovementAction(Action action){
+    switch(action){
+        case Action::CLIMB_DOWN:
+        case Action::CLIMB_UP:
+        case Action::FALLING:
+        case Action::JUMPING:
+        case Action::LEFT:
+        case Action::RIGHT:
+        case Action::STILL:
+        return true;
+        break;
+
+        default:
+        return false;
+    }
+}
+
 
