@@ -8,7 +8,7 @@ using namespace std;
 
 const int JUMP_HEIGHT = 4;
 const int targetFrameRate = 60;
-auto frameDelay =  std::chrono::seconds(1/targetFrameRate);
+auto frameDelay =  std::chrono::seconds(1/targetFrameRate); //max duration for a frame
 
 /* NCURSES TYPICAL USAGE
 initscr();
@@ -46,7 +46,7 @@ void Game::draw(bool newLevel){
 	drawLevelElements(map[currentLevel].getMaluses());
 
 	refresh();
-	if(hero.getPrevMovements()[0] == Action::JUMPING || hero.getPrevMovements()[0] == Action::FALLING) std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	if(hero.getActionLog()[0].getAnimation() == Animation::JUMPING || hero.getActionLog()[0].getAnimation() == Animation::FALLING) std::this_thread::sleep_for(std::chrono::milliseconds(100));
 }
 
 void Game::drawHero(){
@@ -54,29 +54,33 @@ void Game::drawHero(){
 	hero.getXY(x,y);
 
 	//this should hide the previous' hero's position with a ' ' char
-	if(hero.getAction() != Action::STILL){
-		switch(hero.getAction()){
-			case Action::LEFT:
+	if(hero.getActionLog()[0].getAnimation() != Animation::STILL){
+		switch(hero.getActionLog()[0].getAnimation()){
+			case Animation::LEFT:
 			mvaddch(y, x+1, ' ');
 			break;
 
-			case Action::RIGHT:
+			case Animation::RIGHT:
 			mvaddch(y, x-1, ' ');
 			break;
 
-			case Action::CLIMB_DOWN:
+			case Animation::CLIMB_DOWN:
 			//yet to decide a stairs character
 			break;
 
-			case Action::FALLING:
+			case Animation::FALLING:
 			mvaddch(y-1,x,' ');
 			break;
 
-			case Action::CLIMB_UP:
+			case Animation::CLIMB_UP:
 			break;
 
-			case Action::JUMPING:
+			case Animation::JUMPING:
 			mvaddch(y+1, x, ' ');
+			break;
+
+			case Animation::STILL:
+			default:
 			break;
 		}
 	}
@@ -97,36 +101,34 @@ Action Game::input(){
 	nodelay(stdscr, TRUE);
 	noecho();
 
-	Action proposedAction = Action::STILL;
+	Animation proposedAnimation = Animation::STILL;
+	Initiator proposedInitiator = Initiator::LOGIC;
 	
-	char action = '_';
-	if(hero.getPrevMovements()[0] == Action::JUMPING){
-		if(hero.countMoves(Action::JUMPING) < JUMP_HEIGHT) proposedAction = Action::JUMPING;
-		else proposedAction = Action::FALLING;
-	}
-	else if((action = getch()) != ERR){
-		switch(action){
+	char userKey = '_';
+	
+	if((userKey = getch()) != ERR){
+		switch(userKey){
 			case 'w':
 			//maybe we can have the hero climb up a ladder
-			proposedAction = Action::CLIMB_UP;
+			proposedAnimation = Animation::CLIMB_UP;
 			break;
 
 			case 'a':
-			proposedAction = Action::LEFT;
+			proposedAnimation = Animation::LEFT;
 			break;
 			
 			case 's':
 			//climb down a ladder or no use
-			proposedAction = Action::CLIMB_DOWN;
+			proposedAnimation = Animation::CLIMB_DOWN;
 			break;
 			
 			case 'd':
-			proposedAction = Action::RIGHT;
+			proposedAnimation = Animation::RIGHT;
 			break;
 			
 			case ' ':
 			//code for having the hero jump
-			proposedAction = Action::JUMPING;
+			proposedAnimation = Animation::JUMPING;
 			break;
 
 			case 'x':
@@ -137,83 +139,142 @@ Action Game::input(){
 			case 'p':
 			//here code to stop all moving entities 
 			//and to display some sort of PAUSE label somewhere
-			proposedAction = Action::STILL;
+			proposedAnimation = Animation::STILL;
 			break;
 
 			default:
-			proposedAction = Action::STILL;
+			proposedAnimation = Animation::STILL;
 
 		}
+		proposedInitiator = Initiator::USER;
 	}
+
+	//keep jumping till you reached JUMP_HEIGHT even if the user presses left or right keys to jump diagonally
+	// (the user initiated a jump some time ago && the hero din't move JUMP_HEIGHT units up yet) && (the user didn't ask to make a new move yet)
+	if(
+		(
+			hero.countMoves(Animation::JUMPING, Initiator::LOGIC) < JUMP_HEIGHT-1
+			&& hero.countMoves(Animation::JUMPING, Initiator::USER) >= 1
+		)
+		&& proposedAnimation == Animation::STILL
+	){
+		if(hero.countMoves(Animation::JUMPING) < JUMP_HEIGHT) {
+			proposedAnimation = Animation::JUMPING;
+			proposedInitiator = Initiator::LOGIC;
+		}else proposedAnimation = Animation::FALLING; // this line may be superfluous
+	}
+
+	//falling mechanic
+	if(proposedAnimation == Animation::STILL && map[currentLevel].elementAt(hero.getX(), hero.getY()+1) == TileType::EMPTY){
+		proposedAnimation = Animation::FALLING;
+		proposedInitiator = Initiator::LOGIC;
+	}
+	
+	//sets the coordinates in which the action will take place and the time delay for it
+	Action proposedAction;
+	switch(proposedAnimation){
+		case Animation::LEFT:
+		proposedAction = Action(proposedAnimation, hero.getX()-1, hero.getY(), AnimationDelay::LEFT, proposedInitiator);
+		break;
+
+		case Animation::RIGHT:
+		proposedAction = Action(proposedAnimation, hero.getX()+1, hero.getY(), AnimationDelay::RIGHT, proposedInitiator);
+		break;
+
+		case Animation::JUMPING:
+		proposedAction = Action(proposedAnimation, hero.getX(), hero.getY()-1, AnimationDelay::JUMPING, proposedInitiator);
+		break;
+
+		case Animation::FALLING:
+		proposedAction = Action(proposedAnimation, hero.getX(), hero.getY()+1, AnimationDelay::FALLING, proposedInitiator);
+		break;
+
+		case Animation::CLIMB_UP:
+		case Animation::CLIMB_DOWN:
+		case Animation::STILL:
+		default:
+		proposedAction = Action(proposedAnimation, hero.getX(), hero.getY(), AnimationDelay::STILL, proposedInitiator);
+		
+	}
+
+	
 	return proposedAction;
 
 }
 
 void Game::logic(Action proposedAction){
-	//some collision detection code to avoid having the hero pass through other objects
-	int x, y;
-	hero.getXY(x,y);
+	Action engagedAction;
 
-	switch(proposedAction){
-		case Action::CLIMB_UP:
+	//enstablishes the legality of the action
+	switch(proposedAction.getAnimation()){
+		case Animation::CLIMB_UP:
 		break;
 
-		case Action::CLIMB_DOWN:
+		case Animation::CLIMB_DOWN:
 		break;
 
-		case Action::JUMPING:
-		if(y>0 && y <= window.getHeight()){
-			if(map[currentLevel].elementAt(x,y-1) == TileType::EMPTY){
-				if(hero.countMoves(Action::JUMPING) < JUMP_HEIGHT){
-					hero.setXY(x, y-1);
-					hero.setAction(Action::JUMPING);
+		case Animation::JUMPING:
+		if(hero.getY()>0 && hero.getY() <= window.getHeight()){
+			if(map[currentLevel].elementAt(hero.getX(), hero.getY()-1) == TileType::EMPTY){
+				if(hero.countMoves(Animation::JUMPING) < JUMP_HEIGHT){
+					hero.setXY(hero.getX(), hero.getY()-1);
+					engagedAction = proposedAction;
 				}
 			}
 		}
 		break;
 
-		case Action::LEFT:
-		if(x>0 && x <= window.getWidth()) {
-			if(map[currentLevel].elementAt(x-1, y) == TileType::EMPTY){
-				hero.setXY(x-1, y);
-				hero.setAction(Action::LEFT);
+		case Animation::LEFT:
+		if(hero.getX()>0 && hero.getX() <= window.getWidth()) {
+			if(map[currentLevel].elementAt(hero.getX()-1, hero.getY()) == TileType::EMPTY){
+				hero.setXY(hero.getX()-1, hero.getY());
+				engagedAction = proposedAction;
 			}
 		}
 		break;
 
-		case Action::RIGHT:
-		if(x>=0 && x < window.getWidth()) {
-			if(map[currentLevel].elementAt(x+1,y) == TileType::EMPTY){
-				hero.setXY(x+1, y);
-				hero.setAction(Action::RIGHT);
+		case Animation::RIGHT:
+		if(hero.getX()>=0 && hero.getX() < window.getWidth()) {
+			if(map[currentLevel].elementAt(hero.getX()+1, hero.getY()) == TileType::EMPTY){
+				hero.setXY(hero.getX()+1, hero.getY());
+				engagedAction = proposedAction;
 			}
 		}
 		break;
 
-		case Action::FALLING:
-		if(y>=0 && y< window.getHeight()){
-			switch(map[currentLevel].elementAt(x,y+1))
+		case Animation::FALLING:
+		if(hero.getY() >= 0 && hero.getY() < window.getHeight()){
+			switch(map[currentLevel].elementAt(hero.getX(), hero.getY()+1))
 			{
 				case TileType::EMPTY:
-				hero.setXY(x,y+1);
-				hero.setAction(Action::FALLING);
+				hero.setXY(hero.getX(), hero.getY()+1);
+				engagedAction = proposedAction;
 				break;
 
 				case TileType::TERRAIN:
-				hero.setAction(Action::STILL);
+				engagedAction = Action(Animation::STILL, hero.getX(), hero.getY(), AnimationDelay::STILL, Initiator::LOGIC);
+				break;
+
+				case TileType::BONUS:
+				case TileType::MALUS:
+				case TileType::ENEMY:
+				case TileType::HERO:
+				case TileType::SIZE:
+				default:
 				break;
 			}
 		}
 		break; 
 
-		case Action::STILL:
-		default:
-		if(hero.getAction() == Action::FALLING && map[currentLevel].elementAt(x, y+1) == TileType::EMPTY){ 
-			hero.setXY(x, y+1);
-			hero.setAction(Action::FALLING);
-		}else hero.setAction(Action::STILL);
+		case Animation::STILL:
+		default: // this if may be useless
+		if(hero.getActionLog()[0].getAnimation() == Animation::FALLING && map[currentLevel].elementAt(hero.getX(), hero.getY()+1) == TileType::EMPTY){ 
+			hero.setXY(hero.getX(), hero.getY()+1);
+			engagedAction = Action(Animation::FALLING, hero.getX(), hero.getY(), AnimationDelay::FALLING, Initiator::LOGIC);
+		}else engagedAction = proposedAction;
 	}
-	hero.registerMove(hero.getAction());
+
+	hero.registerMove(engagedAction);
 	
 }
 
