@@ -1,17 +1,23 @@
 #include "Object.hpp"
+#include "Action.hpp"
 
-enum class Action{CLIMB_UP, CLIMB_DOWN, LEFT, RIGHT, STILL, JUMPING, FALLING};
+
+const int SIGNIFICANT_MOVES = 8;
 
 class Entity : public Object{
     protected:
-    Action action;
+    Action actionLog[SIGNIFICANT_MOVES];
     int hp; //health points
     int basicAttackDP; //Damage points
     
     public:
     Entity();
-    Entity(int x, int y, TileType tiletype, Action action, int hp, int basicAttackDP);
-    void setAction(Action action);
-    Action getAction();
+    Entity(int x, int y, TileType tileType, int hp, int basicAttackDP);
     bool isMovementAction(Action action);
+
+    void registerMove(Action action);
+    int countMoves(Action action);
+    int countMoves(Animation animation);
+    int countMoves(Animation animation, Initiator initiator);
+    Action* getActionLog();
 };
