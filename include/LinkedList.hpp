@@ -20,6 +20,7 @@ public:
 	~Node() {
 		if (prev != NULL) { prev->next = next; }
 		if (next != NULL) { next->prev = prev; }
+		delete data;
 	}
 };
 
@@ -221,12 +222,17 @@ public:
 		return iter->data;
 	}
 
-	~LinkedList() {
+	void clearList() {
 		Node<T>* iter = head;
 		while (iter != NULL) {
 			Node<T>* tmp = iter;
 			iter = iter->next;
 			delete tmp;
 		}
+		head = NULL;
+		tail = NULL;
+		size = 0;
 	}
+
+	~LinkedList() { clearList(); }
 };
