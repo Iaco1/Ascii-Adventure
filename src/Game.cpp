@@ -46,7 +46,7 @@ void Game::draw(bool newLevel){
 	drawLevelElements(map[currentLevel].getMaluses());
 
 	refresh();
-	if(hero.getActionLog()[0].getAnimation() == Animation::JUMPING || hero.getActionLog()[0].getAnimation() == Animation::FALLING) std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	if(hero.getActionLog()[0].getDelay() > 0) std::this_thread::sleep_for(std::chrono::milliseconds(hero.getActionLog()[0].getDelay()));
 }
 
 void Game::drawHero(){
@@ -88,6 +88,7 @@ void Game::drawHero(){
 	mvaddch(y, x, hero.getTileChar());
 
 }
+
 template <class T>
 void Game::drawLevelElements(LinkedList<T> list){
 	int x,y;
@@ -106,46 +107,9 @@ Action Game::input(){
 	
 	char userKey = '_';
 	
+	//key pressing detection mechanism
 	if((userKey = getch()) != ERR){
-		switch(userKey){
-			case 'w':
-			//maybe we can have the hero climb up a ladder
-			proposedAnimation = Animation::CLIMB_UP;
-			break;
-
-			case 'a':
-			proposedAnimation = Animation::LEFT;
-			break;
-			
-			case 's':
-			//climb down a ladder or no use
-			proposedAnimation = Animation::CLIMB_DOWN;
-			break;
-			
-			case 'd':
-			proposedAnimation = Animation::RIGHT;
-			break;
-			
-			case ' ':
-			//code for having the hero jump
-			proposedAnimation = Animation::JUMPING;
-			break;
-
-			case 'x':
-			gameOver = true;
-			//still needs overarching loop to detect the gameover and redirect to the main menu
-			break;
-
-			case 'p':
-			//here code to stop all moving entities 
-			//and to display some sort of PAUSE label somewhere
-			proposedAnimation = Animation::STILL;
-			break;
-
-			default:
-			proposedAnimation = Animation::STILL;
-
-		}
+		proposedAnimation = getCorrespondingAnimation(userKey);
 		proposedInitiator = Initiator::USER;
 	}
 
@@ -170,47 +134,91 @@ Action Game::input(){
 		proposedInitiator = Initiator::LOGIC;
 	}
 	
-	//sets the coordinates in which the action will take place and the time delay for it
-	Action proposedAction;
-	switch(proposedAnimation){
+	//sets the coordinates in which the action will take place, the time delay for it and the initiator of the action
+	
+	return getCorrespondingAction(proposedAnimation, proposedInitiator);
+
+}
+
+Animation Game::getCorrespondingAnimation(char userKey){
+	switch(userKey){
+			case 'w':
+			//maybe we can have the hero climb up a ladder
+			return Animation::CLIMB_UP;
+			break;
+
+			case 'a':
+			return Animation::LEFT;
+			break;
+			
+			case 's':
+			//climb down a ladder or no use
+			return Animation::CLIMB_DOWN;
+			break;
+			
+			case 'd':
+			return Animation::RIGHT;
+			break;
+			
+			case ' ':
+			return Animation::JUMPING;
+			break;
+
+			case 'x':
+			gameOver = true;
+			return Animation::STILL;
+			break;
+
+			case 'p':
+			//here code to stop all moving entities 
+			//and to display some sort of PAUSE label somewhere
+			return Animation::STILL;
+			break;
+
+			default:
+			return Animation::STILL;
+
+		}
+}
+
+Action Game::getCorrespondingAction(Animation animation, Initiator initiator){
+	switch(animation){
 		case Animation::LEFT:
-		proposedAction = Action(proposedAnimation, hero.getX()-1, hero.getY(), AnimationDelay::LEFT, proposedInitiator);
+		return Action(animation, hero.getX()-1, hero.getY(), AnimationDelay::LEFT, initiator);
 		break;
 
 		case Animation::RIGHT:
-		proposedAction = Action(proposedAnimation, hero.getX()+1, hero.getY(), AnimationDelay::RIGHT, proposedInitiator);
+		return Action(animation, hero.getX()+1, hero.getY(), AnimationDelay::RIGHT, initiator);
 		break;
 
 		case Animation::JUMPING:
-		proposedAction = Action(proposedAnimation, hero.getX(), hero.getY()-1, AnimationDelay::JUMPING, proposedInitiator);
+		return Action(animation, hero.getX(), hero.getY()-1, AnimationDelay::JUMPING, initiator);
 		break;
 
 		case Animation::FALLING:
-		proposedAction = Action(proposedAnimation, hero.getX(), hero.getY()+1, AnimationDelay::FALLING, proposedInitiator);
+		return Action(animation, hero.getX(), hero.getY()+1, AnimationDelay::FALLING, initiator);
 		break;
 
 		case Animation::CLIMB_UP:
 		case Animation::CLIMB_DOWN:
 		case Animation::STILL:
+		case Animation::PAUSE:
+		case Animation::QUIT:
 		default:
-		proposedAction = Action(proposedAnimation, hero.getX(), hero.getY(), AnimationDelay::STILL, proposedInitiator);
+		return Action(animation, hero.getX(), hero.getY(), AnimationDelay::STILL, initiator);
 		
 	}
-
-	
-	return proposedAction;
-
 }
 
 void Game::logic(Action proposedAction){
 	Action engagedAction;
 
-	//enstablishes the legality of the action
+	//establishes the legality of the action
 	switch(proposedAction.getAnimation()){
 		case Animation::CLIMB_UP:
-		break;
-
 		case Animation::CLIMB_DOWN:
+		case Animation::PAUSE:
+		case Animation::QUIT:
 		break;
 
 		case Animation::JUMPING:
@@ -250,11 +258,11 @@ void Game::logic(Action proposedAction){
 				hero.setXY(hero.getX(), hero.getY()+1);
 				engagedAction = proposedAction;
 				break;
-
+				/*
 				case TileType::TERRAIN:
 				engagedAction = Action(Animation::STILL, hero.getX(), hero.getY(), AnimationDelay::STILL, Initiator::LOGIC);
 				break;
-
+				*/
 				case TileType::BONUS:
 				case TileType::MALUS:
 				case TileType::ENEMY:
