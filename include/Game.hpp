@@ -22,5 +22,8 @@ public:
     void drawLevelElements(LinkedList<T> list);
     Action input();
     void logic(Action proposedAction);
+    Animation getCorrespondingAnimation(char userKey);
+    Action getCorrespondingAction(Animation animation, Initiator initator);
+    
     Menu getMenu();
 };
