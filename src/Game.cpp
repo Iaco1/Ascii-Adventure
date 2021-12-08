@@ -1,6 +1,5 @@
 #include "Game.hpp"
 #include <iostream>
-#include <ncurses.h>
 #include <chrono>
 #include <thread>
 
@@ -10,13 +9,6 @@ const int JUMP_HEIGHT = 4;
 const int targetFrameRate = 60;
 auto frameDelay =  std::chrono::seconds(1/targetFrameRate); //max duration for a frame
 
-/* NCURSES TYPICAL USAGE
-initscr();
-	printw("HELLO");
-	refresh();
-	getch();
-	endwin();
-*/
 
 Game::Game() {
 	gameOver = false;
@@ -25,7 +17,8 @@ Game::Game() {
 
 void Game::createMap(){
 	//here we genereate levels and the hero
-	int w = window.getWidth(), h = window.getHeight();
+	int h, w;
+	getmaxyx(stdscr, h,w);
 
     map.pushHead(new Node<Level>(Level(w,h)));
 	hero = Hero(1,h-1,100,50);
@@ -96,6 +89,10 @@ void Game::drawLevelElements(LinkedList<T> list){
 		list[i].getXY(x,y);
 		mvaddch(y, x, list[i].getTileChar());
 	}
+}
+
+void Game::drawHUD(){
+	
 }
 
 Action Game::input(){
@@ -212,6 +209,8 @@ Action Game::getCorrespondingAction(Animation animation, Initiator initiator){
 
 void Game::logic(Action proposedAction){
 	Action engagedAction;
+	int h, w;
+	getmaxyx(levelWindow, h, w);
 
 	//establishes the legality of the action
 	switch(proposedAction.getAnimation()){
@@ -222,9 +221,9 @@ void Game::logic(Action proposedAction){
 		break;
 
 		case Animation::JUMPING:
-		if(hero.getY()>0 && hero.getY() <= window.getHeight()){
+		if(hero.getY()>0 && hero.getY() <= h){
 			if(map[currentLevel].elementAt(hero.getX(), hero.getY()-1) == TileType::EMPTY){
-				if(hero.countMoves(Animation::JUMPING) < JUMP_HEIGHT){
+				if(hero.countMoves(Animation::JUMPING) < JUMP_HEIGHT && hero.countMoves(Animation::FALLING) == 0){
 					hero.setXY(hero.getX(), hero.getY()-1);
 					engagedAction = proposedAction;
 				}
@@ -233,7 +232,7 @@ void Game::logic(Action proposedAction){
 		break;
 
 		case Animation::LEFT:
-		if(hero.getX()>0 && hero.getX() <= window.getWidth()) {
+		if(hero.getX()>0 && hero.getX() <= w) {
 			if(map[currentLevel].elementAt(hero.getX()-1, hero.getY()) == TileType::EMPTY){
 				hero.setXY(hero.getX()-1, hero.getY());
 				engagedAction = proposedAction;
@@ -242,7 +241,7 @@ void Game::logic(Action proposedAction){
 		break;
 
 		case Animation::RIGHT:
-		if(hero.getX()>=0 && hero.getX() < window.getWidth()) {
+		if(hero.getX()>=0 && hero.getX() < w) {
 			if(map[currentLevel].elementAt(hero.getX()+1, hero.getY()) == TileType::EMPTY){
 				hero.setXY(hero.getX()+1, hero.getY());
 				engagedAction = proposedAction;
@@ -251,7 +250,7 @@ void Game::logic(Action proposedAction){
 		break;
 
 		case Animation::FALLING:
-		if(hero.getY() >= 0 && hero.getY() < window.getHeight()){
+		if(hero.getY() >= 0 && hero.getY() < h){
 			switch(map[currentLevel].elementAt(hero.getX(), hero.getY()+1))
 			{
 				case TileType::EMPTY:
@@ -292,15 +291,13 @@ void Game::mainLoop() {
 	initscr();
 
 	int w, h;
-	getmaxyx(stdscr, h, w);
-	window = Window(w,h);
 
-	menu = Menu(window);
-	menu.menuLoop(window);
+	menu = Menu();
+	menu.menuLoop();
 
 	if(menu.getOption() == MenuOption::PLAY){
 		getmaxyx(stdscr, h, w);
-		window = Window(w,h);
+		levelWindow = newwin(h,w,0,0); //later it wil have a different begx and begy to accomodate the hud
 
 		createMap();
 
