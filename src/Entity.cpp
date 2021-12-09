@@ -66,9 +66,10 @@ int Entity::countMoves(Animation animation, Initiator initiator){
 	return count;
 }
 
-
-
 Action* Entity::getActionLog(){
     Action* p = actionLog;
     return p;
 }
+
+int Entity::getHp(){ return hp; }
+

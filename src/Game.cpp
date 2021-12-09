@@ -18,7 +18,8 @@ Game::Game() {
 void Game::createMap(){
 	//here we genereate levels and the hero
 	int h, w;
-	getmaxyx(stdscr, h,w);
+	getmaxyx(levelWindow, h,w);
+	h--;w--;
 
     map.pushHead(new Node<Level>(Level(w,h)));
 	hero = Hero(1,h-1,100,50);
@@ -26,19 +27,25 @@ void Game::createMap(){
 }
 
 void Game::draw(bool newLevel){
-	if(newLevel) clear();
-	//as of now, it draws terrain elements and the hero
+	if(newLevel) {
+		clear();
+		refresh();
+	}
+	int HUD_h = 1;
+	WINDOW* hud = newwin(HUD_h, getmaxx(levelWindow), 0, 0);
+	drawHUD(hud);
+	delwin(hud);
 	
 	//hero drawing
 	drawHero();
-
+	wrefresh(levelWindow);
 	//terrain, enemies, bonuses and maluses' drawing
 	drawLevelElements(map[currentLevel].getTerrain());
 	drawLevelElements(map[currentLevel].getEnemies());
 	drawLevelElements(map[currentLevel].getBonuses());
 	drawLevelElements(map[currentLevel].getMaluses());
 
-	refresh();
+	wrefresh(levelWindow);
 	if(hero.getActionLog()[0].getDelay() > 0) std::this_thread::sleep_for(std::chrono::milliseconds(hero.getActionLog()[0].getDelay()));
 }
 
@@ -50,11 +57,11 @@ void Game::drawHero(){
 	if(hero.getActionLog()[0].getAnimation() != Animation::STILL){
 		switch(hero.getActionLog()[0].getAnimation()){
 			case Animation::LEFT:
-			mvaddch(y, x+1, ' ');
+			mvwaddch(levelWindow, y, x+1, ' ');
 			break;
 
 			case Animation::RIGHT:
-			mvaddch(y, x-1, ' ');
+			mvwaddch(levelWindow, y, x-1, ' ');
 			break;
 
 			case Animation::CLIMB_DOWN:
@@ -62,14 +69,14 @@ void Game::drawHero(){
 			break;
 
 			case Animation::FALLING:
-			mvaddch(y-1,x,' ');
+			mvwaddch(levelWindow, y-1,x,' ');
 			break;
 
 			case Animation::CLIMB_UP:
 			break;
 
 			case Animation::JUMPING:
-			mvaddch(y+1, x, ' ');
+			mvwaddch(levelWindow, y+1, x, ' ');
 			break;
 
 			case Animation::STILL:
@@ -78,7 +85,7 @@ void Game::drawHero(){
 		}
 	}
 	
-	mvaddch(y, x, hero.getTileChar());
+	mvwaddch(levelWindow, y, x, hero.getTileChar());
 
 }
 
@@ -87,16 +94,17 @@ void Game::drawLevelElements(LinkedList<T> list){
 	int x,y;
 	for(int i=0; i<list.getSize(); i++){
 		list[i].getXY(x,y);
-		mvaddch(y, x, list[i].getTileChar());
+		mvwaddch(levelWindow, y, x, list[i].getTileChar());
 	}
 }
 
-void Game::drawHUD(){
-	
+void Game::drawHUD(WINDOW* hud){
+	mvwprintw(hud, 0,0, "HP: %d/100 - SCORE: %d - LEVEL: %d", hero.getHp(), score, currentLevel);
+	wrefresh(hud);
 }
 
 Action Game::input(){
-	nodelay(stdscr, TRUE);
+	nodelay(levelWindow, TRUE);
 	noecho();
 
 	Animation proposedAnimation = Animation::STILL;
@@ -105,7 +113,7 @@ Action Game::input(){
 	char userKey = '_';
 	
 	//key pressing detection mechanism
-	if((userKey = getch()) != ERR){
+	if((userKey = wgetch(levelWindow)) != ERR){
 		proposedAnimation = getCorrespondingAnimation(userKey);
 		proposedInitiator = Initiator::USER;
 	}
@@ -297,8 +305,10 @@ void Game::mainLoop() {
 
 	if(menu.getOption() == MenuOption::PLAY){
 		getmaxyx(stdscr, h, w);
-		levelWindow = newwin(h,w,0,0); //later it wil have a different begx and begy to accomodate the hud
-
+		int HUD_h = 1;
+		h = h - HUD_h;
+		levelWindow = newwin(h,w, HUD_h,0); //later it wil have a different begx and begy to accomodate the hud
+		
 		createMap();
 
 		bool newLevel = true;
