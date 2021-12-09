@@ -20,4 +20,5 @@ class Entity : public Object{
     int countMoves(Animation animation);
     int countMoves(Animation animation, Initiator initiator);
     Action* getActionLog();
+    int getHp();
 };

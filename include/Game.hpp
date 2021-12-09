@@ -18,7 +18,7 @@ public:
     void updateMap();
     void draw(bool newLevel);
     void drawHero();
-    void drawHUD();
+    void drawHUD(WINDOW* hud);
     template <class T>
     void drawLevelElements(LinkedList<T> list);
     Action input();
