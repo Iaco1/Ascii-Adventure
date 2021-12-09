@@ -20,6 +20,7 @@ public:
 	~Node() {
 		if (prev != NULL) { prev->next = next; }
 		if (next != NULL) { next->prev = prev; }
+		delete data;
 	}
 };
 
@@ -86,29 +87,41 @@ public:
 		cout << "->NULL" << endl;
 	}
 
-	Node<T>* popHead() {
+	Node<T>* popHead(bool cleanup = true) {
 		size--;
 		Node<T>* tmp = head;
 		head = head->next;
 		if (head != NULL) head->prev = NULL;
 		else tail = NULL;
-		tmp->prev = NULL;
-		tmp->next = NULL;
-		return tmp;
+		if (cleanup) {
+			delete n;
+			return NULL;
+		}
+		else {
+			tmp->prev = NULL;
+			tmp->next = NULL;
+			return tmp;
+		}
 	}
 
-	Node<T>* popTail() {
+	Node<T>* popTail(bool cleanup = true) {
 		size--;
 		Node<T>* tmp = tail;
 		tail = tail->prev;
 		if (tail != NULL) tail->next = NULL;
 		else head = NULL;
-		tmp->prev = NULL;
-		tmp->next = NULL;
-		return tmp;
+		if (cleanup) {
+			delete n;
+			return NULL;
+		}
+		else {
+			tmp->prev = NULL;
+			tmp->next = NULL;
+			return tmp;
+		}
 	}
 
-	Node<T>* popIndex(int i) {
+	Node<T>* popIndex(int i, bool cleanup = true) {
 		Node<T>* iter = head;
 		if (size > 0) {
 			if (i == 0) popHead();
@@ -121,24 +134,36 @@ public:
 				iter->prev->next = iter->next;
 				iter->next->prev = iter->prev;
 				size--;
-				iter->prev = NULL;
-				iter->next = NULL;
-				return iter;
+				if (cleanup) {
+					delete n;
+					return NULL;
+				}
+				else {
+					iter->prev = NULL;
+					iter->next = NULL;
+					return iter;
+				}
 			}
 		}
 		else return NULL;
 	}
 
-	Node<T>* popNode(Node<T>* n) {
+	Node<T>* popNode(Node<T>* n, bool cleanup = true) {
 		if (contains(n)) {
 			if (n->next != NULL) n->next->prev = n->prev;
 			else head = n->next;
 			if (n->prev != NULL) n->prev->next = n->next;
 			else tail = n->prev;
 			size--;
-			n->prev = NULL;
-			n->next = NULL;
-			return n;
+			if (cleanup) {
+				delete n;
+				return NULL;
+			}
+			else {
+				n->prev = NULL;
+				n->next = NULL;
+				return n;
+			}
 		}
 		else return NULL;
 	}
