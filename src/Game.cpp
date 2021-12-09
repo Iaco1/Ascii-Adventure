@@ -1,6 +1,5 @@
 #include "Game.hpp"
 #include <iostream>
-#include <ncurses.h>
 #include <chrono>
 #include <thread>
 
@@ -10,13 +9,6 @@ const int JUMP_HEIGHT = 4;
 const int targetFrameRate = 60;
 auto frameDelay =  std::chrono::seconds(1/targetFrameRate); //max duration for a frame
 
-/* NCURSES TYPICAL USAGE
-initscr();
-	printw("HELLO");
-	refresh();
-	getch();
-	endwin();
-*/
 
 Game::Game() {
 	gameOver = false;
@@ -25,7 +17,9 @@ Game::Game() {
 
 void Game::createMap(){
 	//here we genereate levels and the hero
-	int w = window.getWidth(), h = window.getHeight();
+	int h, w;
+	getmaxyx(levelWindow, h,w);
+	h--;w--;
 
     map.pushHead(new Node<Level>(Level(w,h)));
 	hero = Hero(1,h-1,100,50);
@@ -33,20 +27,26 @@ void Game::createMap(){
 }
 
 void Game::draw(bool newLevel){
-	if(newLevel) clear();
-	//as of now, it draws terrain elements and the hero
+	if(newLevel) {
+		clear();
+		refresh();
+	}
+	int HUD_h = 1;
+	WINDOW* hud = newwin(HUD_h, getmaxx(levelWindow), 0, 0);
+	drawHUD(hud);
+	delwin(hud);
 	
 	//hero drawing
 	drawHero();
-
+	wrefresh(levelWindow);
 	//terrain, enemies, bonuses and maluses' drawing
 	drawLevelElements(map[currentLevel].getTerrain());
 	drawLevelElements(map[currentLevel].getEnemies());
 	drawLevelElements(map[currentLevel].getBonuses());
 	drawLevelElements(map[currentLevel].getMaluses());
 
-	refresh();
-	if(hero.getActionLog()[0].getAnimation() == Animation::JUMPING || hero.getActionLog()[0].getAnimation() == Animation::FALLING) std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	wrefresh(levelWindow);
+	if(hero.getActionLog()[0].getDelay() > 0) std::this_thread::sleep_for(std::chrono::milliseconds(hero.getActionLog()[0].getDelay()));
 }
 
 void Game::drawHero(){
@@ -57,11 +57,11 @@ void Game::drawHero(){
 	if(hero.getActionLog()[0].getAnimation() != Animation::STILL){
 		switch(hero.getActionLog()[0].getAnimation()){
 			case Animation::LEFT:
-			mvaddch(y, x+1, ' ');
+			mvwaddch(levelWindow, y, x+1, ' ');
 			break;
 
 			case Animation::RIGHT:
-			mvaddch(y, x-1, ' ');
+			mvwaddch(levelWindow, y, x-1, ' ');
 			break;
 
 			case Animation::CLIMB_DOWN:
@@ -69,14 +69,14 @@ void Game::drawHero(){
 			break;
 
 			case Animation::FALLING:
-			mvaddch(y-1,x,' ');
+			mvwaddch(levelWindow, y-1,x,' ');
 			break;
 
 			case Animation::CLIMB_UP:
 			break;
 
 			case Animation::JUMPING:
-			mvaddch(y+1, x, ' ');
+			mvwaddch(levelWindow, y+1, x, ' ');
 			break;
 
 			case Animation::STILL:
@@ -85,20 +85,26 @@ void Game::drawHero(){
 		}
 	}
 	
-	mvaddch(y, x, hero.getTileChar());
+	mvwaddch(levelWindow, y, x, hero.getTileChar());
 
 }
+
 template <class T>
 void Game::drawLevelElements(LinkedList<T> list){
 	int x,y;
 	for(int i=0; i<list.getSize(); i++){
 		list[i].getXY(x,y);
-		mvaddch(y, x, list[i].getTileChar());
+		mvwaddch(levelWindow, y, x, list[i].getTileChar());
 	}
 }
 
+void Game::drawHUD(WINDOW* hud){
+	mvwprintw(hud, 0,0, "HP: %d/100 - SCORE: %d - LEVEL: %d", hero.getHp(), score, currentLevel);
+	wrefresh(hud);
+}
+
 Action Game::input(){
-	nodelay(stdscr, TRUE);
+	nodelay(levelWindow, TRUE);
 	noecho();
 
 	Animation proposedAnimation = Animation::STILL;
@@ -106,46 +112,9 @@ Action Game::input(){
 	
 	char userKey = '_';
 	
-	if((userKey = getch()) != ERR){
-		switch(userKey){
-			case 'w':
-			//maybe we can have the hero climb up a ladder
-			proposedAnimation = Animation::CLIMB_UP;
-			break;
-
-			case 'a':
-			proposedAnimation = Animation::LEFT;
-			break;
-			
-			case 's':
-			//climb down a ladder or no use
-			proposedAnimation = Animation::CLIMB_DOWN;
-			break;
-			
-			case 'd':
-			proposedAnimation = Animation::RIGHT;
-			break;
-			
-			case ' ':
-			//code for having the hero jump
-			proposedAnimation = Animation::JUMPING;
-			break;
-
-			case 'x':
-			gameOver = true;
-			//still needs overarching loop to detect the gameover and redirect to the main menu
-			break;
-
-			case 'p':
-			//here code to stop all moving entities 
-			//and to display some sort of PAUSE label somewhere
-			proposedAnimation = Animation::STILL;
-			break;
-
-			default:
-			proposedAnimation = Animation::STILL;
-
-		}
+	//key pressing detection mechanism
+	if((userKey = wgetch(levelWindow)) != ERR){
+		proposedAnimation = getCorrespondingAnimation(userKey);
 		proposedInitiator = Initiator::USER;
 	}
 
@@ -170,53 +139,99 @@ Action Game::input(){
 		proposedInitiator = Initiator::LOGIC;
 	}
 	
-	//sets the coordinates in which the action will take place and the time delay for it
-	Action proposedAction;
-	switch(proposedAnimation){
+	//sets the coordinates in which the action will take place, the time delay for it and the initiator of the action
+	
+	return getCorrespondingAction(proposedAnimation, proposedInitiator);
+
+}
+
+Animation Game::getCorrespondingAnimation(char userKey){
+	switch(userKey){
+			case 'w':
+			//maybe we can have the hero climb up a ladder
+			return Animation::CLIMB_UP;
+			break;
+
+			case 'a':
+			return Animation::LEFT;
+			break;
+			
+			case 's':
+			//climb down a ladder or no use
+			return Animation::CLIMB_DOWN;
+			break;
+			
+			case 'd':
+			return Animation::RIGHT;
+			break;
+			
+			case ' ':
+			return Animation::JUMPING;
+			break;
+
+			case 'x':
+			gameOver = true;
+			return Animation::STILL;
+			break;
+
+			case 'p':
+			//here code to stop all moving entities 
+			//and to display some sort of PAUSE label somewhere
+			return Animation::STILL;
+			break;
+
+			default:
+			return Animation::STILL;
+
+		}
+}
+
+Action Game::getCorrespondingAction(Animation animation, Initiator initiator){
+	switch(animation){
 		case Animation::LEFT:
-		proposedAction = Action(proposedAnimation, hero.getX()-1, hero.getY(), AnimationDelay::LEFT, proposedInitiator);
+		return Action(animation, hero.getX()-1, hero.getY(), AnimationDelay::LEFT, initiator);
 		break;
 
 		case Animation::RIGHT:
-		proposedAction = Action(proposedAnimation, hero.getX()+1, hero.getY(), AnimationDelay::RIGHT, proposedInitiator);
+		return Action(animation, hero.getX()+1, hero.getY(), AnimationDelay::RIGHT, initiator);
 		break;
 
 		case Animation::JUMPING:
-		proposedAction = Action(proposedAnimation, hero.getX(), hero.getY()-1, AnimationDelay::JUMPING, proposedInitiator);
+		return Action(animation, hero.getX(), hero.getY()-1, AnimationDelay::JUMPING, initiator);
 		break;
 
 		case Animation::FALLING:
-		proposedAction = Action(proposedAnimation, hero.getX(), hero.getY()+1, AnimationDelay::FALLING, proposedInitiator);
+		return Action(animation, hero.getX(), hero.getY()+1, AnimationDelay::FALLING, initiator);
 		break;
 
 		case Animation::CLIMB_UP:
 		case Animation::CLIMB_DOWN:
 		case Animation::STILL:
+		case Animation::PAUSE:
+		case Animation::QUIT:
 		default:
-		proposedAction = Action(proposedAnimation, hero.getX(), hero.getY(), AnimationDelay::STILL, proposedInitiator);
+		return Action(animation, hero.getX(), hero.getY(), AnimationDelay::STILL, initiator);
 		
 	}
-
-	
-	return proposedAction;
-
 }
 
 void Game::logic(Action proposedAction){
 	Action engagedAction;
+	int h, w;
+	getmaxyx(levelWindow, h, w);
 
-	//enstablishes the legality of the action
+	//establishes the legality of the action
 	switch(proposedAction.getAnimation()){
 		case Animation::CLIMB_UP:
-		break;
-
 		case Animation::CLIMB_DOWN:
+		case Animation::PAUSE:
+		case Animation::QUIT:
 		break;
 
 		case Animation::JUMPING:
-		if(hero.getY()>0 && hero.getY() <= window.getHeight()){
+		if(hero.getY()>0 && hero.getY() <= h){
 			if(map[currentLevel].elementAt(hero.getX(), hero.getY()-1) == TileType::EMPTY){
-				if(hero.countMoves(Animation::JUMPING) < JUMP_HEIGHT){
+				if(hero.countMoves(Animation::JUMPING) < JUMP_HEIGHT && hero.countMoves(Animation::FALLING) == 0){
 					hero.setXY(hero.getX(), hero.getY()-1);
 					engagedAction = proposedAction;
 				}
@@ -225,7 +240,7 @@ void Game::logic(Action proposedAction){
 		break;
 
 		case Animation::LEFT:
-		if(hero.getX()>0 && hero.getX() <= window.getWidth()) {
+		if(hero.getX()>0 && hero.getX() <= w) {
 			if(map[currentLevel].elementAt(hero.getX()-1, hero.getY()) == TileType::EMPTY){
 				hero.setXY(hero.getX()-1, hero.getY());
 				engagedAction = proposedAction;
@@ -234,7 +249,7 @@ void Game::logic(Action proposedAction){
 		break;
 
 		case Animation::RIGHT:
-		if(hero.getX()>=0 && hero.getX() < window.getWidth()) {
+		if(hero.getX()>=0 && hero.getX() < w) {
 			if(map[currentLevel].elementAt(hero.getX()+1, hero.getY()) == TileType::EMPTY){
 				hero.setXY(hero.getX()+1, hero.getY());
 				engagedAction = proposedAction;
@@ -243,18 +258,18 @@ void Game::logic(Action proposedAction){
 		break;
 
 		case Animation::FALLING:
-		if(hero.getY() >= 0 && hero.getY() < window.getHeight()){
+		if(hero.getY() >= 0 && hero.getY() < h){
 			switch(map[currentLevel].elementAt(hero.getX(), hero.getY()+1))
 			{
 				case TileType::EMPTY:
 				hero.setXY(hero.getX(), hero.getY()+1);
 				engagedAction = proposedAction;
 				break;
-
+				/*
 				case TileType::TERRAIN:
 				engagedAction = Action(Animation::STILL, hero.getX(), hero.getY(), AnimationDelay::STILL, Initiator::LOGIC);
 				break;
-
+				*/
 				case TileType::BONUS:
 				case TileType::MALUS:
 				case TileType::ENEMY:
@@ -284,16 +299,16 @@ void Game::mainLoop() {
 	initscr();
 
 	int w, h;
-	getmaxyx(stdscr, h, w);
-	window = Window(w,h);
 
-	menu = Menu(window);
-	menu.menuLoop(window);
+	menu = Menu();
+	menu.menuLoop();
 
 	if(menu.getOption() == MenuOption::PLAY){
 		getmaxyx(stdscr, h, w);
-		window = Window(w,h);
-
+		int HUD_h = 1;
+		h = h - HUD_h;
+		levelWindow = newwin(h,w, HUD_h,0); //later it wil have a different begx and begy to accomodate the hud
+		
 		createMap();
 
 		bool newLevel = true;
