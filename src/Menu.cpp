@@ -6,34 +6,37 @@
 using namespace std;
 
 Menu::Menu(){
-    Window window = Window();
-    title = Title(window.getCenterX(), window.getCenterY());
+    
 }
-Menu::Menu(Window window){
-    title = Title(window.getCenterX(), window.getCenterY());
-};
-void Menu::printTitle(){
-    move(title.getNWy(), title.getNWx());
-    for(int i=0; i<title.getHeight(); i++){
-        printw(title.getTitleString(i));
-        move(title.getNWy()+(i+1), title.getNWx());
-    }
-}
-void Menu::printStartScreen(Window window){
-    clear();
-    printTitle();
-    window.printFrame();
+
+WINDOW* Menu::printStartScreen(){
+    int title_w = 24;
+    int h, w;
+    getmaxyx(stdscr, h, w);
+    WINDOW* title = newwin(3, title_w+2, (h/2)-3,w/2 - title_w/2);
+    //wborder(title, '|','|','-','-','+','+','+','+');
+    WINDOW* belowTitle = newwin(3,30+2, h-4,w/2-16); // used to write the press space to play
+    //wborder(belowTitle, '|','|','-','-','+','+','+','+');
+    
+
+    mvwprintw(title,1,1, "Basic 2D ASCII Platform");
+    wrefresh(title);
+    
     curs_set(0);
     sleep(2);
-    mvprintw(title.getNWy() + title.getHeight() + 1, title.getNWx() , "Press space to enter the Menu");
-    refresh();
+
+    w = getmaxx(belowTitle);
+    mvwprintw(belowTitle, 1, 1, "Press space to enter the Menu");
+    wrefresh(belowTitle);
+
+    return belowTitle;
 }
 
 void Menu::printMenu() {
     clear();
     mvprintw(0,0, "B2DAP");
-    mvprintw(2,0, "1. PLAY");
-    mvprintw(3,0, "0. QUIT");
+    mvprintw(1,0, "1. PLAY");
+    mvprintw(2,0, "0. QUIT");
     refresh();
 }
 
@@ -54,12 +57,12 @@ void Menu::initGame() {
     option = MenuOption::PLAY;
 }
 
-void Menu::menuLoop(Window window) {
+void Menu::menuLoop() {
     char choice;
-    printStartScreen(window);
+    WINDOW* bt = printStartScreen();
     do{
-        move(window.getHeight()-1, window.getWidth()-1);
-        choice = getch();
+        
+        choice = wgetch(bt);
     }while(choice != ' ');
     choice = '_';
 

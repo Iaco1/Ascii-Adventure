@@ -8,7 +8,7 @@ protected:
     LinkedList<Level> map;
     Hero hero;
     int currentLevel;
-    Window window;
+    WINDOW* levelWindow; //the window in which we display the currentLevel
     int score;
 
 public:
@@ -18,6 +18,7 @@ public:
     void updateMap();
     void draw(bool newLevel);
     void drawHero();
+    void drawHUD();
     template <class T>
     void drawLevelElements(LinkedList<T> list);
     Action input();
