@@ -2,14 +2,17 @@
 #include <cstdio>
 
 Entity::Entity() : Object(){}
-Entity::Entity(int x, int y, TileType tileType, int hp, int basicAttackDP) : Object(x,y,tileType){
+Entity::Entity(int x, int y, TileType tileType, int hp, int basicAttackDP, Direction direction) : Object(x,y,tileType){
     for(int i=0; i<SIGNIFICANT_MOVES; i++){
         actionLog[i] = (Action(Animation::STILL, 0,0, 0, Initiator::LOGIC));
     }
-    this->hp = hp;
+    if(hp>=0) this->hp = hp;
+    else this->hp = 100;
     
     if(basicAttackDP>0 || basicAttackDP==0) this->basicAttackDP = basicAttackDP;
     else this->basicAttackDP = 0;
+    
+    this->direction = direction;
 }
 
 bool Entity::isMovementAction(Action action){
@@ -36,6 +39,12 @@ void Entity::registerMove(Action action){
             actionLog[i] = actionLog[i-1]; 
         }
         actionLog[0] = action;
+    }
+
+    
+    if(action.getInitiator() == Initiator::USER){
+        if(action.getAnimation() == Animation::RIGHT) direction = Direction::RIGHT;
+        else if(action.getAnimation() == Animation::LEFT) direction = Direction::LEFT;
     }
 }
 
@@ -72,4 +81,6 @@ Action* Entity::getActionLog(){
 }
 
 int Entity::getHp(){ return hp; }
+
+Direction Entity::getDirection(){ return direction; }
 

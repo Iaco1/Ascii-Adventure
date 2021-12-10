@@ -187,6 +187,11 @@ class LinkedList{
 		}
 		return iter->data;
 	}
+	
+	bool isEmpty(){
+		return head == NULL;
+	}
+	
 	~LinkedList(){
 		head = NULL;
 		tail = NULL;

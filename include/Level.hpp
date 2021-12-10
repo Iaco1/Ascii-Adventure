@@ -7,6 +7,7 @@ class Level{
     LinkedList <Entity> enemies;
     LinkedList <Entity> bonuses;
     LinkedList <Entity> maluses;
+    LinkedList <Entity> bullets;
     
     public:
     Level();
@@ -15,6 +16,8 @@ class Level{
     LinkedList <Entity> getEnemies();
     LinkedList <Entity> getBonuses();
     LinkedList <Entity> getMaluses();
+    LinkedList <Entity> getBullets();
+    LinkedList <Entity>* getBulletsPtr();
     template <class T>
     TileType elementAtIn(int x, int y, LinkedList<T> list);
     TileType elementAt(int x, int y);

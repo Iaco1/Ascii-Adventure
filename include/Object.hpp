@@ -1,4 +1,4 @@
-enum class TileType{ EMPTY, TERRAIN, HERO, ENEMY, BONUS, MALUS, SIZE};
+enum class TileType{ EMPTY, TERRAIN, HERO, ENEMY, BONUS, MALUS, BULLET, SIZE};
 
 class Object{
     protected:

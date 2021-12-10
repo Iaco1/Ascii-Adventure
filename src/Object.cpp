@@ -28,7 +28,7 @@ Object::Object(bool random){
 }
 
 void Object::toString(char str[24]){
-	const char* tileTypeStr[] = {"Empty", "Terrain", "Hero", "Enemy", "Bonus", "Malus"};
+	const char* tileTypeStr[] = {"Empty", "Terrain", "Hero", "Enemy", "Bonus", "Malus", "Bullet"};
     sprintf(str, "((%d,%d),%s)", x, y, tileTypeStr[(int)tileType]);
 }
 
@@ -38,7 +38,7 @@ void Object::getXY(int &x, int &y){
 }
 
 char Object::getTileChar(){
-    char tileChar[]{ ' ', '#', 'H', 'E', 'B', 'M' };
+    char tileChar[]{ ' ', '#', 'H', 'E', 'B', 'M', 'o'};
     return tileChar[(int)tileType];
 }
 

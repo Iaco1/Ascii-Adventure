@@ -22,7 +22,7 @@ void Game::createMap(){
 	h--;w--;
 
     map.pushHead(new Node<Level>(Level(w,h)));
-	hero = Hero(1,h-1,100,50);
+	hero = Hero(1,h-1,100,50, Weapon(50, 10, 10, WeaponType::HANDGUN));
     currentLevel = 0;
 }
 
@@ -44,9 +44,11 @@ void Game::draw(bool newLevel){
 	drawLevelElements(map[currentLevel].getEnemies());
 	drawLevelElements(map[currentLevel].getBonuses());
 	drawLevelElements(map[currentLevel].getMaluses());
+	drawBullets();
 
 	wrefresh(levelWindow);
 	if(hero.getActionLog()[0].getDelay() > 0) std::this_thread::sleep_for(std::chrono::milliseconds(hero.getActionLog()[0].getDelay()));
+	else if(!map[currentLevel].getBullets().isEmpty()) std::this_thread::sleep_for(std::chrono::milliseconds((int)AnimationDelay::SHOOTING));
 }
 
 void Game::drawHero(){
@@ -99,8 +101,22 @@ void Game::drawLevelElements(LinkedList<T> list){
 }
 
 void Game::drawHUD(WINDOW* hud){
-	mvwprintw(hud, 0,0, "HP: %d/100 - SCORE: %d - LEVEL: %d", hero.getHp(), score, currentLevel);
+	mvwprintw(hud, 0,0, "HP: %d/100 - SCORE: %d - LEVEL: %d - [Weapon: %s | Ammo: %d/%d]", 
+	hero.getHp(), score, currentLevel, 
+	hero.getWeapon().weaponTypeToStr(), hero.getWeapon().getMagazineAmmo(), hero.getWeapon().getMaxAmmo());
 	wrefresh(hud);
+}
+
+void Game::drawBullets(){
+	int x,y;
+	int prevX;
+	for(int i=0; i<map[currentLevel].getBullets().getSize(); i++){
+		map[currentLevel].getBullets()[i].getXY(x,y);
+		mvwaddch(levelWindow, y, x, map[currentLevel].getBullets()[i].getTileChar());
+		if(map[currentLevel].getBullets()[i].getDirection() == Direction::RIGHT) prevX = x-1;
+		else prevX = x+1;
+		mvwaddch(levelWindow, y, prevX, ' ');
+	}
 }
 
 Action Game::input(){
@@ -180,6 +196,10 @@ Animation Game::getCorrespondingAnimation(char userKey){
 			return Animation::STILL;
 			break;
 
+			case 'f':
+			return Animation::SHOOTING;
+			break;
+
 			default:
 			return Animation::STILL;
 
@@ -219,6 +239,23 @@ void Game::logic(Action proposedAction){
 	Action engagedAction;
 	int h, w;
 	getmaxyx(levelWindow, h, w);
+
+	if(!map[currentLevel].getBullets().isEmpty()){
+		int x, y;
+		int nextX;
+		for(int i=0; i<map[currentLevel].getBullets().getSize(); i++){
+			map[currentLevel].getBullets()[i].getXY(x,y);
+			if(map[currentLevel].getBullets()[i].getDirection() == Direction::RIGHT) nextX = x+1;
+			else nextX = x-1;
+			if(nextX >= 0 && nextX<= w){
+				map[currentLevel].getBullets()[i].setXY(nextX,y);
+			}else{
+				map[currentLevel].getBullets().popIndex(i);
+			}
+		}
+		//move the bullet in its current direction until it hits something
+		//then decide what it does to each tileType
+	}
 
 	//establishes the legality of the action
 	switch(proposedAction.getAnimation()){
@@ -279,7 +316,25 @@ void Game::logic(Action proposedAction){
 				break;
 			}
 		}
-		break; 
+		break;
+		
+		case Animation::SHOOTING:
+		if(hero.getWeapon().getMagazineAmmo()>0){
+			switch(hero.getDirection()){
+				case Direction::LEFT:
+				break;
+
+				case Direction::RIGHT:
+				if(map[currentLevel].elementAt(hero.getX()+1, hero.getY()) == TileType::EMPTY){ //replace with a switch telling you what happens to every TileType when you shoot at it  
+					LinkedList<Entity>* bullets = map[currentLevel].getBulletsPtr();
+					bullets->pushHead(new Node<Entity>(Entity(hero.getX()+1, hero.getY(), TileType::BULLET, 0, hero.getWeapon().getDp(), hero.getDirection())));
+					hero.getWeapon().setMagazineAmmo(hero.getWeapon().getMagazineAmmo()-1);
+
+				}
+				break;
+			}
+		}
+		break;
 
 		case Animation::STILL:
 		default: // this if may be useless
@@ -307,7 +362,7 @@ void Game::mainLoop() {
 		getmaxyx(stdscr, h, w);
 		int HUD_h = 1;
 		h = h - HUD_h;
-		levelWindow = newwin(h,w, HUD_h,0); //later it wil have a different begx and begy to accomodate the hud
+		levelWindow = newwin(h,w, HUD_h,0); 
 		
 		createMap();
 

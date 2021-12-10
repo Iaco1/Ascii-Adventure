@@ -19,6 +19,7 @@ public:
     void draw(bool newLevel);
     void drawHero();
     void drawHUD(WINDOW* hud);
+    void drawBullets();
     template <class T>
     void drawLevelElements(LinkedList<T> list);
     Action input();
