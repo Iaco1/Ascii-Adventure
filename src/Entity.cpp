@@ -34,12 +34,10 @@ bool Entity::isMovementAction(Action action){
 
 //registers last SIGNIFICANT_MOVES actions by inserting the last one in actionLog[0] and deleting the oldest one in actionLog[SIGNIFICANT_MOVES-1]
 void Entity::registerMove(Action action){
-    if(isMovementAction(action)){
-        for(int i = SIGNIFICANT_MOVES-1; i>0; i--){
-            actionLog[i] = actionLog[i-1]; 
-        }
-        actionLog[0] = action;
+    for(int i = SIGNIFICANT_MOVES-1; i>0; i--){
+        actionLog[i] = actionLog[i-1]; 
     }
+    actionLog[0] = action;
 
     
     if(action.getInitiator() == Initiator::USER){

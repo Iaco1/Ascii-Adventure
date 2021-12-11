@@ -14,12 +14,11 @@ class Level{
     public:
     Level();
     Level(int w, int h); //creates a level randomly
-    LinkedList<Object> getTerrain();
-    LinkedList<Entity> getEnemies();
-    LinkedList<Entity> getBonuses();
-    LinkedList<Entity> getMaluses();
-    LinkedList <Entity> getBullets();
-    LinkedList <Entity>* getBulletsPtr();
+    LinkedList<Object>* getTerrain();
+    LinkedList<Entity>* getEnemies();
+    LinkedList<Entity>* getBonuses();
+    LinkedList<Entity>* getMaluses();
+    LinkedList<Entity>* getBullets();
     template <class T>
     TileType elementAtIn(int x, int y, LinkedList<T> list);
     TileType elementAt(int x, int y);

@@ -5,4 +5,4 @@ Hero::Hero(int x, int y, int hp, int basicAttackDP, Weapon weapon) : Entity(x,y,
     this->weapon = weapon;
 }
 
-Weapon Hero::getWeapon(){ return weapon; }
+Weapon* Hero::getWeapon(){ return &weapon; }

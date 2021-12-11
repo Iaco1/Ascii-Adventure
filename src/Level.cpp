@@ -20,14 +20,11 @@ Level::Level(int w, int h) {
     enemies.pushHead(new Node<Entity>(Entity(w-1,h-1, TileType::ENEMY, 100, 30, Direction::LEFT)));
      
 }
-LinkedList <Object> Level::getTerrain(){ return terrain; }
-LinkedList <Entity> Level::getEnemies(){ return enemies; }
-LinkedList <Entity> Level::getBonuses(){ return bonuses; }
-LinkedList <Entity> Level::getMaluses(){ return maluses; }
-LinkedList <Entity> Level::getBullets(){ return bullets; }
-LinkedList <Entity>* Level::getBulletsPtr(){
-    return &bullets;
-}
+LinkedList <Object>* Level::getTerrain(){ return &terrain; }
+LinkedList <Entity>* Level::getEnemies(){ return &enemies; }
+LinkedList <Entity>* Level::getBonuses(){ return &bonuses; }
+LinkedList <Entity>* Level::getMaluses(){ return &maluses; }
+LinkedList <Entity>* Level::getBullets(){ return &bullets; }
 template <class T>
 TileType Level::elementAtIn(int x, int y, LinkedList<T> list) {
     int x1, y1;

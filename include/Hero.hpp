@@ -8,6 +8,6 @@ class Hero : public Entity{
     public:
     Hero();
     Hero(int x, int y, int hp, int basicAttackDP, Weapon weapon);
-    Weapon getWeapon();
+    Weapon* getWeapon();
     
 };
