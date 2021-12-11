@@ -26,6 +26,11 @@ public:
     void logic(Action proposedAction);
     Animation getCorrespondingAnimation(char userKey);
     Action getCorrespondingAction(Animation animation, Initiator initator);
+    Action getEngagedAction(Action proposedAction);
+    Action goLeftRight(Action proposedAction);
+    Action jump(Action proposedAction);
+    Action fall(Action proposedAction);
+    Action shoot(Action proposedAction);
     
     Menu getMenu();
 };

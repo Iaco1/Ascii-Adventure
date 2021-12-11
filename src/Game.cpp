@@ -47,6 +47,7 @@ void Game::draw(bool newLevel){
 	drawBullets();
 
 	wrefresh(levelWindow);
+	//this slows down the refresh rate in order for the user to see certain animations
 	if(hero.getActionLog()[0].getDelay() > 0) std::this_thread::sleep_for(std::chrono::milliseconds(hero.getActionLog()[0].getDelay()));
 	else if(!map[currentLevel].getBullets().isEmpty()) std::this_thread::sleep_for(std::chrono::milliseconds((int)AnimationDelay::SHOOTING));
 }
@@ -224,6 +225,10 @@ Action Game::getCorrespondingAction(Animation animation, Initiator initiator){
 		return Action(animation, hero.getX(), hero.getY()+1, AnimationDelay::FALLING, initiator);
 		break;
 
+		case Animation::SHOOTING: //needs adjusting in case you shoot left
+		return Action(animation, hero.getX()+1,hero.getY(), AnimationDelay::SHOOTING, initiator);
+		break;
+
 		case Animation::CLIMB_UP:
 		case Animation::CLIMB_DOWN:
 		case Animation::STILL:
@@ -235,118 +240,143 @@ Action Game::getCorrespondingAction(Animation animation, Initiator initiator){
 	}
 }
 
+Action Game::getEngagedAction(Action proposedAction){
+	int h, w;
+	getmaxyx(levelWindow, h, w);
+	
+	//establishes the legality of the action
+	switch(proposedAction.getAnimation()){
+
+		case Animation::JUMPING:
+		return jump(proposedAction);
+		break;
+
+		case Animation::LEFT:
+		case Animation::RIGHT:
+		return goLeftRight(proposedAction);
+		break;
+
+		case Animation::FALLING:
+		return fall(proposedAction);
+		break;
+		
+		case Animation::SHOOTING:
+		return shoot(proposedAction);
+		break;
+
+		case Animation::CLIMB_UP:
+		case Animation::CLIMB_DOWN:
+		case Animation::PAUSE:
+		case Animation::QUIT:
+		case Animation::STILL:
+		default: // this if may be useless
+		return proposedAction;
+	}
+}
+
+Action Game::goLeftRight(Action proposedAction){
+	int w = getmaxx(levelWindow);
+	w--;
+	
+	//hero will be in the map
+	if(proposedAction.getX() >= 0 && proposedAction.getX() <= w){
+		//this can be replaced with a switch telling you what happens if you wanna "intersect" tiletypes that are not empty
+		if(map[currentLevel].elementAt(proposedAction.getX(), proposedAction.getY()) == TileType::EMPTY){
+			hero.setXY(proposedAction.getX(), proposedAction.getY());
+			return proposedAction;
+		}
+	}
+	return Action(Animation::STILL, hero.getX(), hero.getY(), AnimationDelay::STILL, Initiator::LOGIC);
+}
+
+Action Game::jump(Action proposedAction){
+	int h = getmaxy(levelWindow);
+	if(proposedAction.getY()>0 && proposedAction.getY() <= h){
+		if(map[currentLevel].elementAt(proposedAction.getX(), proposedAction.getY()) == TileType::EMPTY){
+			if(hero.countMoves(Animation::JUMPING) < JUMP_HEIGHT && hero.countMoves(Animation::FALLING) == 0){
+				hero.setXY(proposedAction.getX(), proposedAction.getY());
+				return proposedAction;
+			}
+		}
+	}
+	return Action(Animation::STILL, hero.getX(), hero.getY(), AnimationDelay::STILL, Initiator::LOGIC);
+}
+
+Action Game::fall(Action proposedAction){
+	int h = getmaxy(levelWindow);
+	if(proposedAction.getY() >= 0 && proposedAction.getY() < h){
+		switch(map[currentLevel].elementAt(proposedAction.getX(), proposedAction.getY()))
+		{
+			case TileType::EMPTY:
+			hero.setXY(proposedAction.getX(), proposedAction.getY());
+			return proposedAction;
+			break;
+			
+			case TileType::TERRAIN:
+			case TileType::BONUS: //gets the bonus
+			case TileType::MALUS: //gets the malus
+			case TileType::ENEMY: //damages the enemy
+			case TileType::HERO:  //damages the hero
+			case TileType::SIZE: //ain't happening
+			default:
+			return Action(Animation::STILL, hero.getX(), hero.getY(), AnimationDelay::STILL, Initiator::LOGIC);
+			break;
+		}
+	}
+	return Action(Animation::STILL, hero.getX(), hero.getY(), AnimationDelay::STILL, Initiator::LOGIC);
+}
+
+Action Game::shoot(Action proposedAction){
+	if (hero.getWeapon().getMagazineAmmo() > 0){
+		switch (hero.getDirection()){
+		case Direction::LEFT:
+		break;
+
+		case Direction::RIGHT:
+		if (map[currentLevel].elementAt(hero.getX() + 1, hero.getY()) == TileType::EMPTY){ // replace with a switch telling you what happens to every TileType when you shoot at it
+			map[currentLevel].getBulletsPtr()->pushHead(new Node<Entity>(Entity(hero.getX() + 1, hero.getY(), TileType::BULLET, 0, hero.getWeapon().getDp(), hero.getDirection())));
+			hero.getWeapon().setMagazineAmmo(hero.getWeapon().getMagazineAmmo() - 1);
+			return proposedAction;
+		}
+		break;
+		}
+	}
+	return Action(Animation::STILL, hero.getX(), hero.getY(), AnimationDelay::STILL, Initiator::LOGIC);
+}
+
 void Game::logic(Action proposedAction){
-	Action engagedAction;
 	int h, w;
 	getmaxyx(levelWindow, h, w);
 
+	//flying bullets mechanic
 	if(!map[currentLevel].getBullets().isEmpty()){
 		int x, y;
 		int nextX;
-		for(int i=0; i<map[currentLevel].getBullets().getSize(); i++){
-			map[currentLevel].getBullets()[i].getXY(x,y);
-			if(map[currentLevel].getBullets()[i].getDirection() == Direction::RIGHT) nextX = x+1;
+		Node<Entity>* tmp = map[currentLevel].getBullets().getHead();
+		while(tmp != NULL){
+			tmp->data.getXY(x,y);
+			
+			if(tmp->data.getDirection() == Direction::RIGHT) nextX = x+1;
 			else nextX = x-1;
+			
 			if(nextX >= 0 && nextX<= w){
-				map[currentLevel].getBullets()[i].setXY(nextX,y);
+				tmp->data.setXY(nextX,y);
+				tmp = tmp->next;
 			}else{
-				map[currentLevel].getBullets().popIndex(i);
+				Node<Entity>* n = tmp;
+				tmp = tmp->next;
+				map[currentLevel].getBullets().popNode(n);
 			}
 		}
 		//move the bullet in its current direction until it hits something
 		//then decide what it does to each tileType
 	}
 
-	//establishes the legality of the action
-	switch(proposedAction.getAnimation()){
-		case Animation::CLIMB_UP:
-		case Animation::CLIMB_DOWN:
-		case Animation::PAUSE:
-		case Animation::QUIT:
-		break;
-
-		case Animation::JUMPING:
-		if(hero.getY()>0 && hero.getY() <= h){
-			if(map[currentLevel].elementAt(hero.getX(), hero.getY()-1) == TileType::EMPTY){
-				if(hero.countMoves(Animation::JUMPING) < JUMP_HEIGHT && hero.countMoves(Animation::FALLING) == 0){
-					hero.setXY(hero.getX(), hero.getY()-1);
-					engagedAction = proposedAction;
-				}
-			}
-		}
-		break;
-
-		case Animation::LEFT:
-		if(hero.getX()>0 && hero.getX() <= w) {
-			if(map[currentLevel].elementAt(hero.getX()-1, hero.getY()) == TileType::EMPTY){
-				hero.setXY(hero.getX()-1, hero.getY());
-				engagedAction = proposedAction;
-			}
-		}
-		break;
-
-		case Animation::RIGHT:
-		if(hero.getX()>=0 && hero.getX() < w) {
-			if(map[currentLevel].elementAt(hero.getX()+1, hero.getY()) == TileType::EMPTY){
-				hero.setXY(hero.getX()+1, hero.getY());
-				engagedAction = proposedAction;
-			}
-		}
-		break;
-
-		case Animation::FALLING:
-		if(hero.getY() >= 0 && hero.getY() < h){
-			switch(map[currentLevel].elementAt(hero.getX(), hero.getY()+1))
-			{
-				case TileType::EMPTY:
-				hero.setXY(hero.getX(), hero.getY()+1);
-				engagedAction = proposedAction;
-				break;
-				/*
-				case TileType::TERRAIN:
-				engagedAction = Action(Animation::STILL, hero.getX(), hero.getY(), AnimationDelay::STILL, Initiator::LOGIC);
-				break;
-				*/
-				case TileType::BONUS:
-				case TileType::MALUS:
-				case TileType::ENEMY:
-				case TileType::HERO:
-				case TileType::SIZE:
-				default:
-				break;
-			}
-		}
-		break;
-		
-		case Animation::SHOOTING:
-		if(hero.getWeapon().getMagazineAmmo()>0){
-			switch(hero.getDirection()){
-				case Direction::LEFT:
-				break;
-
-				case Direction::RIGHT:
-				if(map[currentLevel].elementAt(hero.getX()+1, hero.getY()) == TileType::EMPTY){ //replace with a switch telling you what happens to every TileType when you shoot at it  
-					LinkedList<Entity>* bullets = map[currentLevel].getBulletsPtr();
-					bullets->pushHead(new Node<Entity>(Entity(hero.getX()+1, hero.getY(), TileType::BULLET, 0, hero.getWeapon().getDp(), hero.getDirection())));
-					hero.getWeapon().setMagazineAmmo(hero.getWeapon().getMagazineAmmo()-1);
-
-				}
-				break;
-			}
-		}
-		break;
-
-		case Animation::STILL:
-		default: // this if may be useless
-		if(hero.getActionLog()[0].getAnimation() == Animation::FALLING && map[currentLevel].elementAt(hero.getX(), hero.getY()+1) == TileType::EMPTY){ 
-			hero.setXY(hero.getX(), hero.getY()+1);
-			engagedAction = Action(Animation::FALLING, hero.getX(), hero.getY(), AnimationDelay::FALLING, Initiator::LOGIC);
-		}else engagedAction = proposedAction;
-	}
-
-	hero.registerMove(engagedAction);
+	hero.registerMove(getEngagedAction(proposedAction));
 	
 }
+
+
 
 void Game::mainLoop() {
 	srand(time(NULL));
@@ -368,22 +398,26 @@ void Game::mainLoop() {
 
 		bool newLevel = true;
 		while(!gameOver){
+			/*
 			using namespace std::chrono;
 
 			time_point<system_clock> frameStart;
 			duration<double> frameTime; // frameTime indicates how much time the current frame has taken
 			frameStart = system_clock::now();
+			*/
 			
 			//if(levelChanged) newLevel = true;
 			draw(newLevel);
 			logic(input());
 			newLevel = false;
 
+			/*
 			frameTime = system_clock::now() - frameStart;
-			
+	
 			if(frameDelay > frameTime){
 				std::this_thread::sleep_for(frameDelay - frameTime);
 			}
+			*/
 
 			
 		}
