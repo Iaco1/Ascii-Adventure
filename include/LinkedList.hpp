@@ -187,11 +187,30 @@ class LinkedList{
 		}
 		return iter->data;
 	}
-	
 	bool isEmpty(){
 		return head == NULL;
 	}
-	
+	void popNode(Node<T> *n){
+		if(n == head) popHead();
+		else if(n == tail) popTail();
+		else{
+			Node<T>* iter = head;
+			while(iter!=NULL){
+				if(iter == n){
+					Node<T>* iter_prev = iter->prev;
+					Node<T>* iter_next = iter->next;
+					iter_prev->next = iter_next;
+					iter_next->prev = iter_prev;
+					n->prev = NULL;
+					n->next = NULL;
+					delete n;
+					size--;
+					break;
+				}
+				iter = iter->next;
+			}
+		}
+	}	
 	~LinkedList(){
 		head = NULL;
 		tail = NULL;
