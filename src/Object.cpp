@@ -43,7 +43,12 @@ char Object::getTileChar(){
 }
 
 void Object::setXY(int x, int y){
-    if(x>=0 && y>=0){
+    if(this->tileType == TileType::BULLET){
+        if(x>=-1 && y>=0){
+            this->x = x;
+            this->y = y;
+        }
+    }else if(x>=0 && y>=0){
         this->x = x;
         this->y = y;
     }

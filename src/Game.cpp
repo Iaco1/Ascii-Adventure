@@ -22,7 +22,7 @@ void Game::createMap(){
 	h--;w--;
 
     map.pushHead(new Node<Level>(Level(w,h)));
-	hero = Hero(1,h-1,100,50, Weapon(50, 10, 10, WeaponType::HANDGUN));
+	hero = Hero(1,h-1,100,50, Weapon(50, 20, 20, WeaponType::HANDGUN));
     currentLevel = 0;
 }
 
@@ -367,7 +367,7 @@ void Game::logic(Action proposedAction){
 			if(tmp->data.getDirection() == Direction::RIGHT) nextX = x+1;
 			else nextX = x-1;
 			
-			if(nextX >= 0 && nextX<= w){
+			if(nextX >= -1 && nextX<= w){
 				tmp->data.setXY(nextX,y);
 				tmp = tmp->next;
 			}else{
