@@ -25,6 +25,7 @@ double diceThrows(double max, int dice) {
 }
 
 double diceDistribution(double lowerBound, double upperBound, double mode, int throws) {
+    if (upperBound <= lowerBound) return upperBound;
     bool probLower = randBool((mode - lowerBound) / (upperBound - lowerBound));
     double result = abs(diceThrows(2, throws) - 1);
     if (probLower) return mode - result * (mode - lowerBound);
