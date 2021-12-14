@@ -2,7 +2,8 @@
 #include <iostream>
 #include <cmath>
 
-using namespace std;
+namespace Misc
+{
 
 bool randBool(double probabilityOfTrue = 0.5) {
     if (probabilityOfTrue > 1.0) probabilityOfTrue = 1.0;
@@ -34,4 +35,6 @@ double bound(double n, double lowerBound, double upperBound) {
     if (n < lowerBound) return lowerBound;
     else if (n > upperBound) return upperBound;
     else return n;
+}
+
 }
