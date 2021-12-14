@@ -170,7 +170,9 @@ class LinkedList{
 			}
 		}else return -1;
 	}
+
 	int getSize(){ return size; }
+	
 	T& operator[](int index) {
 		if (index >= size || index < 0) {
 			cout << "Error: index out of bounds" << endl;
@@ -187,6 +189,7 @@ class LinkedList{
 		}
 		return iter->data;
 	}
+	
 	bool isEmpty(){
 		return head == NULL;
 	}

@@ -25,22 +25,26 @@ LinkedList <Entity>* Level::getEnemies(){ return &enemies; }
 LinkedList <Entity>* Level::getBonuses(){ return &bonuses; }
 LinkedList <Entity>* Level::getMaluses(){ return &maluses; }
 LinkedList <Entity>* Level::getBullets(){ return &bullets; }
-template <class T>
-TileType Level::elementAtIn(int x, int y, LinkedList<T> list) {
-    int x1, y1;
-    for (int i = 0; i < list.getSize(); i++) {
-        list[i].getXY(x1, y1);
-        if (x == x1 && y == y1) return list[i].getTileType();
-    }
-    return TileType::EMPTY;
+
+
+
+int Level::countObjectsAt(int x, int y){
+    return countObjectsAtIn(x,y, terrain)
+        +countObjectsAtIn(x,y, enemies)
+        +countObjectsAtIn(x,y, bonuses)
+        +countObjectsAtIn(x,y, maluses)
+        +countObjectsAtIn(x,y, bullets);
 }
 
-TileType Level::elementAt(int x, int y) {
-    if (elementAtIn(x, y, terrain) != TileType::EMPTY) return elementAtIn(x, y, terrain);
-    else if (elementAtIn(x, y, enemies) != TileType::EMPTY) return elementAtIn(x, y, enemies);
-    else if (elementAtIn(x, y, bonuses) != TileType::EMPTY) return elementAtIn(x, y, bonuses);
-    else if (elementAtIn(x, y, maluses) != TileType::EMPTY) return elementAtIn(x, y, maluses);
-    else return TileType::EMPTY;
+LinkedList<TileType> Level::getListOfTileTypesAt(int x, int y){
+    LinkedList<TileType> list;
+    for(int i=0; i<countObjectsAtIn(x,y,terrain); i++) list.pushHead(new Node<TileType>(TileType::TERRAIN));
+    for(int i=0; i<countObjectsAtIn(x,y,enemies); i++) list.pushHead(new Node<TileType>(TileType::ENEMY));
+    for(int i=0; i<countObjectsAtIn(x,y,bonuses); i++) list.pushHead(new Node<TileType>(TileType::BONUS));
+    for(int i=0; i<countObjectsAtIn(x,y,maluses); i++) list.pushHead(new Node<TileType>(TileType::MALUS));
+    for(int i=0; i<countObjectsAtIn(x,y,bullets); i++) list.pushHead(new Node<TileType>(TileType::BULLET));
+    
+    return list;
 }
 
 bool Level::checkOverlap(int x1, int y1, int x2, int y2, TileType tile /*= TileType::EMPTY*/) {

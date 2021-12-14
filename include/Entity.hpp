@@ -1,4 +1,3 @@
-#include "Object.hpp"
 #include "Action.hpp"
 
 enum class Direction{ LEFT, RIGHT};
@@ -23,5 +22,6 @@ class Entity : public Object{
     int countMoves(Animation animation, Initiator initiator);
     Action* getActionLog();
     int getHp();
+    void setHp(int hp);
     Direction getDirection();
 };
