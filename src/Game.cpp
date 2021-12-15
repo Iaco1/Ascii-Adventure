@@ -42,7 +42,7 @@ void Game::draw(bool newLevel){
 	wrefresh(levelWindow);
 	//terrain, enemies, bonuses and maluses' drawing
 	drawLevelElements(*map[currentLevel].getTerrain());
-	drawLevelElements(*map[currentLevel].getEnemies());
+	drawEnemies();
 	drawLevelElements(*map[currentLevel].getBonuses());
 	drawLevelElements(*map[currentLevel].getMaluses());
 	drawBullets();
@@ -94,6 +94,21 @@ void Game::drawHero(){
 
 }
 
+//same as drawLevelElements but also deletes the leftover character once the enemy's dead
+void Game::drawEnemies(){
+	int x,y;
+	Node<Entity>* iter = map[currentLevel].getEnemies()->getHead();
+	while(iter != NULL){
+		if(iter->data.getHp()<=0){
+			map[currentLevel].getEnemies()->popNode(iter);
+		}else{
+			iter->data.getXY(x,y);
+			mvwaddch(levelWindow, y, x, iter->data.getTileChar());
+		}
+		iter = iter->next;
+	}
+}
+
 //draws static game elements
 template <class T>
 void Game::drawLevelElements(LinkedList<T> list){
@@ -114,14 +129,29 @@ void Game::drawHUD(WINDOW* hud){
 //draws the current bullet position and hides the previous bullet position
 void Game::drawBullets(){
 	int x,y;
-	int prevX;
+	int prevX, nextX;
 	Node<Entity>* iter = map[currentLevel].getBullets()->getHead();
 	while(iter!=NULL){
 		iter->data.getXY(x,y);
-		mvwaddch(levelWindow, y, x, iter->data.getTileChar());
-		if(iter->data.getDirection() == Direction::RIGHT) prevX = x-1;
-		else prevX = x+1;
+		if(iter->data.getDirection() == Direction::RIGHT){
+			prevX = x-1;
+			nextX = x+1;
+		}else{
+			prevX = x+1;
+			nextX = x-1;
+		}
 		mvwaddch(levelWindow, y, prevX, ' ');
+
+		//popping animation for the bullet hitting something
+		LinkedList<TileType> list = map[currentLevel].getListOfTileTypesAt(nextX, y);
+		if(list.containsData(TileType::ENEMY) || list.containsData(TileType::TERRAIN)) {
+			mvwaddch(levelWindow, y, x, '*');
+			wrefresh(levelWindow);
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		}else{
+			mvwaddch(levelWindow, y, x, iter->data.getTileChar());
+		}
+		
 		iter = iter->next;
 	}
 }
@@ -345,10 +375,14 @@ Action Game::shoot(Action proposedAction){
 				return proposedAction;
 				break;
 
-				case TileType::ENEMY:
-				//hurt the enemy
-				//map[currentLevel].elementAtIn(nextX, hero.getY(), *map[currentLevel].getEnemies()).setHp(-hero.getWeapon()->getDp());
-				break;
+				case TileType::ENEMY:{
+					//hurt the enemy
+					hero.getWeapon()->setMagazineAmmo(hero.getWeapon()->getMagazineAmmo()-1);
+					Node<Entity>* enemy = map[currentLevel].getNodeAtIn(proposedAction.getX(), proposedAction.getY(), map[currentLevel].getEnemies());
+					enemy->data.setHp(enemy->data.getHp()-hero.getWeapon()->getDp());
+					return proposedAction;
+					break;
+				}
 
 				case TileType::TERRAIN:
 				case TileType::MALUS: //maybe destroy the malus
@@ -370,44 +404,65 @@ void Game::moveBullets(){
 		Node<Entity>* iter = map[currentLevel].getBullets()->getHead();
 		while(iter != NULL){
 			iter->data.getXY(x,y);
+			LinkedList<TileType> listAtCurrentXY = map[currentLevel].getListOfTileTypesAt(x,y);
 			if(iter->data.getDirection() == Direction::RIGHT) nextX = x+1;
 			else nextX = x-1;
-			LinkedList<TileType> list = map[currentLevel].getListOfTileTypesAt(nextX, y);
+			LinkedList<TileType> listAtNextXY = map[currentLevel].getListOfTileTypesAt(nextX, y);
 			
+			//this has a bullet and one of {terrain, enemy} intersect for one cycle before being popped so that draw can do it's job right
+			while(!listAtCurrentXY.isEmpty()){
+				switch(listAtCurrentXY.getHead()->data){
+					//this will cause the node to be popped in the following if-else
+					case TileType::ENEMY:
+					case TileType::TERRAIN:
+					nextX = -2; 
+					break;
+
+					defualt:
+					break;
+				}
+				listAtCurrentXY.popHead();
+			}
+
 			if(nextX >= -1 && nextX<= w){
-				if(list.isEmpty()){//i.e. TileType::EMTPY at (x,y)
+				if(listAtNextXY.isEmpty()){//i.e. TileType::EMTPY at (x,y)
 					iter->data.setXY(nextX, y);
+					iter = iter->next;
 				}else{
-					while(!list.isEmpty()){
-						switch(list.getHead()->data){
+					while(!listAtNextXY.isEmpty()){
+						switch(listAtNextXY.getHead()->data){
 							case TileType::BONUS: 
 							case TileType::EMPTY: //ain't happening
 							case TileType::BULLET:
 							iter->data.setXY(nextX, y);
-							iter = iter->next;
 							break;
 							
 							case TileType::TERRAIN:
-							map[currentLevel].getBullets()->popNode(iter);
+							iter->data.setXY(nextX, y);
 							break;
 
-							case TileType::ENEMY:
-							map[currentLevel].getBullets()->popNode(iter);
-							//hurt the enemy
-							break;
+							case TileType::ENEMY:{
+								Node<Entity>* enemy = map[currentLevel].getNodeAtIn(nextX, y, map[currentLevel].getEnemies());
+								enemy->data.setHp(enemy->data.getHp()-hero.getWeapon()->getDp());
+								iter->data.setXY(nextX, y);
+								//hurt the enemy
+								break;
+							}
 					
 							case TileType::MALUS: //maybe we can destroy maluses by shooting them
 							case TileType::HERO: //this ain't happening 
 							default:
 							break;
 						}
-						list.popHead();
+						iter = iter->next;
+						listAtNextXY.popHead();
 					}
 				}
 			}else{
 				map[currentLevel].getBullets()->popNode(iter);
+				iter = iter->next;
 			}
-			iter = iter->next;
+			
 		}
 		
 		//move the bullet in its current direction until it hits something
@@ -455,10 +510,20 @@ int Game::getCorrespondingDelay(Animation animation){
 	return animationDelay[(int)animation];
 }
 
+//deletes the dead entities (currently only Enemies)
+void Game::mortician(){
+	Node<Entity>* iter = map[currentLevel].getEnemies()->getHead();
+	while(iter!=NULL){
+		if(iter->data.getHp()<=0) map[currentLevel].getEnemies()->popNode(iter);
+		iter = iter->next;
+	}
+}
+
 //poses constraints on what the user can do, mainly chosen from our own world
 //and registers the last Action
 void Game::logic(LinkedList<Action> proposedActions){
 	moveBullets();
+	mortician();
 	while(!proposedActions.isEmpty()){
 		hero.registerMove(getEngagedAction(proposedActions.getHead()->data));
 		proposedActions.popHead();

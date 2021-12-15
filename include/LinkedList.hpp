@@ -157,6 +157,14 @@ class LinkedList{
 		}
 		return false;
 	}
+	bool containsData(T data){
+		Node<T> *iter = head;
+		while(iter!=NULL){
+			if(iter->data == data) return true;
+			else iter = iter->next;
+		}
+		return false;
+	}
 	int getIndex(Node<T> *n){
 		int i=0;
 		if(contains(n)){

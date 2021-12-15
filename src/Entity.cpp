@@ -83,7 +83,7 @@ Action* Entity::getActionLog(){
 int Entity::getHp(){ return hp; }
 
 void Entity::setHp(int hp){
-    if(hp > 0 ) this->hp = hp;
+    this->hp = hp;
     // if(hp == 0) call destructor 
 }
 

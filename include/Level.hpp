@@ -45,6 +45,17 @@ class Level{
         return i;
     }
 
+    //doesn't deal with the possibility of having 2 objects of the same TileType intersecting but we can arrange for it to not happen
+    template <class T>
+    Node<T>* getNodeAtIn(int x, int y, LinkedList<T>* list){
+        Node<T>* iter = list->getHead();
+        while(iter!=NULL){
+            if(iter->data.getX() == x && iter->data.getY() == y) return iter;
+            iter = iter->next;
+        }
+        return iter;
+    }
+
     int countObjectsAt(int x, int y);
 
     LinkedList<TileType> getListOfTileTypesAt(int x, int y);

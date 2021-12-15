@@ -20,6 +20,7 @@ public:
     void drawHero();
     void drawHUD(WINDOW* hud);
     void drawBullets();
+    void drawEnemies();
     template <class T>
     void drawLevelElements(LinkedList<T> list);
     LinkedList<Action> input();
@@ -34,5 +35,6 @@ public:
     void moveBullets();
     void nextXyFor(int &x, int &y, Animation animation);
     int getCorrespondingDelay(Animation animation);
+    void mortician();
     Menu getMenu();
 };
