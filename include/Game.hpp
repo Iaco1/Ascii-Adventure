@@ -36,5 +36,8 @@ public:
     void nextXyFor(int &x, int &y, Animation animation);
     int getCorrespondingDelay(Animation animation);
     void mortician();
+    Action fallingAttack(Action proposedAction);
+    void completeJump(Animation &proposedAnimation, Initiator &proposedInitiator);
+    void fallingMechanic(Animation &proposedAnimation, Initiator &proposedInitiator);
     Menu getMenu();
 };

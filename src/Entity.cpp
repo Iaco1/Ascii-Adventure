@@ -2,7 +2,7 @@
 #include <cstdio>
 
 Entity::Entity() : Object(){}
-Entity::Entity(int x, int y, TileType tileType, int hp, int basicAttackDP, Direction direction) : Object(x,y,tileType){
+Entity::Entity(int x, int y, TileType tileType, int hp, int basicAttackDp, Direction direction) : Object(x,y,tileType){
     //initialization for the actionLog with unsignificant Actions 
     for(int i=0; i<SIGNIFICANT_MOVES; i++){
         actionLog[i] = Action(Animation::STILL, 0,0, Initiator::LOGIC, TileType::EMPTY);
@@ -10,8 +10,8 @@ Entity::Entity(int x, int y, TileType tileType, int hp, int basicAttackDP, Direc
     if(hp>=0) this->hp = hp;
     else this->hp = 100;
     
-    if(basicAttackDP>0 || basicAttackDP==0) this->basicAttackDP = basicAttackDP;
-    else this->basicAttackDP = 0;
+    if(basicAttackDp>0 || basicAttackDp==0) this->basicAttackDp = basicAttackDp;
+    else this->basicAttackDp = 0;
     
     this->direction = direction;
 }
@@ -88,4 +88,6 @@ void Entity::setHp(int hp){
 }
 
 Direction Entity::getDirection(){ return direction; }
+
+int Entity::getBasicAttackDp(){ return basicAttackDp; }
 

@@ -156,6 +156,24 @@ void Game::drawBullets(){
 	}
 }
 
+
+void Game::completeJump(Animation &proposedAnimation, Initiator &proposedInitiator){
+	//keep jumping till you reached JUMP_HEIGHT even if the user presses left or right keys to jump diagonally
+	// (the user initiated a jump some time ago && the hero din't move JUMP_HEIGHT units up yet) && (the user didn't ask to make a new move yet)
+	if(
+		(
+			hero.countMoves(Animation::JUMPING, Initiator::LOGIC) < JUMP_HEIGHT-1
+			&& hero.countMoves(Animation::JUMPING, Initiator::USER) >= 1
+		)
+		&& proposedAnimation == Animation::STILL
+	){
+		if(hero.countMoves(Animation::JUMPING) < JUMP_HEIGHT) {
+			proposedAnimation = Animation::JUMPING;
+			proposedInitiator = Initiator::LOGIC;
+		}else proposedAnimation = Animation::FALLING; // this line may be superfluous
+	}
+}
+
 //determines the Action to propose to Game::Logic() 
 LinkedList<Action> Game::input(){
 	nodelay(levelWindow, TRUE);
@@ -172,28 +190,13 @@ LinkedList<Action> Game::input(){
 		proposedInitiator = Initiator::USER;
 	}
 
-	//keep jumping till you reached JUMP_HEIGHT even if the user presses left or right keys to jump diagonally
-	// (the user initiated a jump some time ago && the hero din't move JUMP_HEIGHT units up yet) && (the user didn't ask to make a new move yet)
-	if(
-		(
-			hero.countMoves(Animation::JUMPING, Initiator::LOGIC) < JUMP_HEIGHT-1
-			&& hero.countMoves(Animation::JUMPING, Initiator::USER) >= 1
-		)
-		&& proposedAnimation == Animation::STILL
-	){
-		if(hero.countMoves(Animation::JUMPING) < JUMP_HEIGHT) {
-			proposedAnimation = Animation::JUMPING;
-			proposedInitiator = Initiator::LOGIC;
-		}else proposedAnimation = Animation::FALLING; // this line may be superfluous
-	}
+	//keeps the hero jumping till he moved JUMP_HEIGHT positions up in the Y-axis
+	completeJump(proposedAnimation ,proposedInitiator);
 
-	//falling mechanic
-	if(proposedAnimation == Animation::STILL && map[currentLevel].countObjectsAt(hero.getX(), hero.getY()+1) == 0){
-		proposedAnimation = Animation::FALLING;
-		proposedInitiator = Initiator::LOGIC;
-	}
+	//has the hero fall each time a TileType::EMPTY is beneath him
+	fallingMechanic(proposedAnimation, proposedInitiator);
 	
-	//sets the coordinates in which the action will take place, the time delay for it and the initiator of the action
+	//creation of a list of Actions to for Game::logic() to process
 	int x = hero.getX(), y = hero.getY();
 	nextXyFor(x,y,proposedAnimation);
 	LinkedList<TileType> listOfTileTypesAt = map[currentLevel].getListOfTileTypesAt(x,y);
@@ -288,11 +291,14 @@ Action Game::getEngagedAction(Action proposedAction){
 		return shoot(proposedAction);
 		break;
 
+		case Animation::STILL:{//cause actually hero is STILL and has an ENEMY below him when he's done with his jump
+			return fallingAttack(proposedAction);
+		}
+
 		case Animation::CLIMB_UP:
 		case Animation::CLIMB_DOWN:
 		case Animation::PAUSE:
 		case Animation::QUIT:
-		case Animation::STILL:
 		default: // this if may be useless
 		return proposedAction;
 	}
@@ -344,11 +350,17 @@ Action Game::fall(Action proposedAction){
 					hero.setXY(proposedAction.getX(), proposedAction.getY());
 					return proposedAction;
 					break;
+
+					case TileType::ENEMY:{ //damages the enemy
+						Node<Entity>* enemy = map[currentLevel].getNodeAtIn(proposedAction.getX(), proposedAction.getY(), map[currentLevel].getEnemies());
+						enemy->data.setHp(enemy->data.getHp() - hero.getBasicAttackDp());
+						return Action(Animation::STILL, proposedAction.getX(), proposedAction.getY(), Initiator::LOGIC, TileType::ENEMY);
+						break;
+					}
 			
 					case TileType::TERRAIN:
 					case TileType::BONUS: //gets the bonus
-					case TileType::MALUS: //gets the malus
-					case TileType::ENEMY: //damages the enemy
+					case TileType::MALUS: //gets the malus					
 					case TileType::HERO:  //damages the hero
 					case TileType::SIZE: //ain't happening
 					default:
@@ -450,7 +462,7 @@ void Game::moveBullets(){
 							}
 					
 							case TileType::MALUS: //maybe we can destroy maluses by shooting them
-							case TileType::HERO: //this ain't happening 
+							case TileType::HERO: //this ain't happening (till i get the enemies to shoot)
 							default:
 							break;
 						}
@@ -516,6 +528,22 @@ void Game::mortician(){
 	while(iter!=NULL){
 		if(iter->data.getHp()<=0) map[currentLevel].getEnemies()->popNode(iter);
 		iter = iter->next;
+	}
+}
+
+//decides whether to damage an enemy sitting below the attacker or not
+Action Game::fallingAttack(Action proposedAction){
+	Node<Entity>* enemy = map[currentLevel].getNodeAtIn(proposedAction.getX(), proposedAction.getY()+1, map[currentLevel].getEnemies());
+	if(enemy!=NULL) {
+		enemy->data.setHp(enemy->data.getHp()-hero.getBasicAttackDp());
+		return Action(Animation::STILL, proposedAction.getX(), proposedAction.getY()+1, Initiator::LOGIC, TileType::ENEMY);
+	}else return proposedAction;
+}
+
+void Game::fallingMechanic(Animation &proposedAnimation, Initiator &proposedInitiator){
+	if(proposedAnimation == Animation::STILL && map[currentLevel].countObjectsAt(hero.getX(), hero.getY()+1) == 0){
+		proposedAnimation = Animation::FALLING;
+		proposedInitiator = Initiator::LOGIC;
 	}
 }
 
