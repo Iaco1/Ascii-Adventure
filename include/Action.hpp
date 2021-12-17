@@ -1,3 +1,4 @@
+#pragma once
 #include <chrono>
 
 enum class Animation{CLIMB_UP, CLIMB_DOWN, LEFT, RIGHT, STILL, JUMPING, FALLING, QUIT, PAUSE, SHOOTING};
