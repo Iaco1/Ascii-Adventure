@@ -3,8 +3,9 @@
 
 Entity::Entity() : Object(){}
 Entity::Entity(int x, int y, TileType tileType, int hp, int basicAttackDP, Direction direction) : Object(x,y,tileType){
+    //initialization for the actionLog with unsignificant Actions 
     for(int i=0; i<SIGNIFICANT_MOVES; i++){
-        actionLog[i] = (Action(Animation::STILL, 0,0, 0, Initiator::LOGIC));
+        actionLog[i] = Action(Animation::STILL, 0,0, Initiator::LOGIC, TileType::EMPTY);
     }
     if(hp>=0) this->hp = hp;
     else this->hp = 100;
@@ -32,7 +33,8 @@ bool Entity::isMovementAction(Action action){
     }
 }
 
-//registers last SIGNIFICANT_MOVES actions by inserting the last one in actionLog[0] and deleting the oldest one in actionLog[SIGNIFICANT_MOVES-1]
+//registers last SIGNIFICANT_MOVES actions 
+//by inserting the last one in actionLog[0] and deleting the oldest one in actionLog[SIGNIFICANT_MOVES-1]
 void Entity::registerMove(Action action){
     for(int i = SIGNIFICANT_MOVES-1; i>0; i--){
         actionLog[i] = actionLog[i-1]; 
@@ -79,6 +81,11 @@ Action* Entity::getActionLog(){
 }
 
 int Entity::getHp(){ return hp; }
+
+void Entity::setHp(int hp){
+    this->hp = hp;
+    // if(hp == 0) call destructor 
+}
 
 Direction Entity::getDirection(){ return direction; }
 

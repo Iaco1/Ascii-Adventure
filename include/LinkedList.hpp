@@ -158,6 +158,14 @@ class LinkedList{
 		}
 		return false;
 	}
+	bool containsData(T data){
+		Node<T> *iter = head;
+		while(iter!=NULL){
+			if(iter->data == data) return true;
+			else iter = iter->next;
+		}
+		return false;
+	}
 	int getIndex(Node<T> *n){
 		int i=0;
 		if(contains(n)){
@@ -171,7 +179,9 @@ class LinkedList{
 			}
 		}else return -1;
 	}
+
 	int getSize(){ return size; }
+	
 	T& operator[](int index) {
 		if (index >= size || index < 0) {
 			cout << "Error: index out of bounds" << endl;
@@ -188,6 +198,7 @@ class LinkedList{
 		}
 		return iter->data;
 	}
+	
 	bool isEmpty(){
 		return head == NULL;
 	}

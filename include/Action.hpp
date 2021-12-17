@@ -1,25 +1,23 @@
 #pragma once
 #include <chrono>
+#include "Object.hpp" //or could include a file contaning the enum class TileType
 
 enum class Animation{CLIMB_UP, CLIMB_DOWN, LEFT, RIGHT, STILL, JUMPING, FALLING, QUIT, PAUSE, SHOOTING};
-enum class AnimationDelay{ CLIMB_UP = 0, CLIMB_DOWN = 0, LEFT = 0, RIGHT = 0, STILL = 0, JUMPING = 100, FALLING = 100, 
-                            QUIT = 0, PAUSE = 0, SHOOTING = 10};
 enum class Initiator{ USER, LOGIC};
 
 class Action{
     protected:
     Animation animation;
     int x, y; //affected position
-    std::chrono::milliseconds delay;
     Initiator initiator;
+    TileType ttAffected; //amongst the (possibly) many tiletypes there could be in the same position
 
     public:
     Action();
-    Action(Animation animation, int x, int y, AnimationDelay ec_delay, Initiator initiator);
-    Action(Animation animation, int x, int y, int delay, Initiator initiator);
+    Action(Animation animation, int x, int y, Initiator initiator, TileType ttAffected);
     Animation getAnimation();
     int getX();
     int getY();
-    int getDelay();
     Initiator getInitiator();
+    TileType getTtAffected();
 };

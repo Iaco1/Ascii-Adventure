@@ -21,17 +21,21 @@ public:
     void drawHero();
     void drawHUD(WINDOW* hud);
     void drawBullets();
+    void drawEnemies();
     template <class T>
     void drawLevelElements(LinkedList<T> list);
-    Action input();
-    void logic(Action proposedAction);
+    LinkedList<Action> input();
+    void logic(LinkedList<Action> proposedActions);
     Animation getCorrespondingAnimation(char userKey);
-    Action getCorrespondingAction(Animation animation, Initiator initator);
+    Action getCorrespondingAction(Animation animation, Initiator initator, TileType ttAffected);
     Action getEngagedAction(Action proposedAction);
     Action goLeftRight(Action proposedAction);
     Action jump(Action proposedAction);
     Action fall(Action proposedAction);
     Action shoot(Action proposedAction);
-    
+    void moveBullets();
+    void nextXyFor(int &x, int &y, Animation animation);
+    int getCorrespondingDelay(Animation animation);
+    void mortician();
     Menu getMenu();
 };

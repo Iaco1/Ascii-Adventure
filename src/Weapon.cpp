@@ -1,11 +1,14 @@
 #include "Weapon.hpp"
 
+const int MAXDP = 100;
+const int MAX_MAXAMMO = 20;
+
 Weapon::Weapon(){}
 Weapon::Weapon(int dp, int maxAmmo, int magazineAmmo, WeaponType weaponType){
-    if(dp>0 && dp<100) this->dp = dp;
+    if(dp>0 && dp<MAXDP) this->dp = dp;
     else this->dp = 30;
 
-    if(maxAmmo > 0 && maxAmmo <= 10) this->maxAmmo = maxAmmo;
+    if(maxAmmo > 0 && maxAmmo <= MAX_MAXAMMO) this->maxAmmo = maxAmmo;
     else this->maxAmmo = 10;
 
     if(magazineAmmo >0 && magazineAmmo < this->maxAmmo) this->magazineAmmo = magazineAmmo;
