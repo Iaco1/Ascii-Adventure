@@ -8,4 +8,5 @@ double randDouble(double lowerBound, double upperBound);
 double diceThrows(double max, int dice);
 double diceDistribution(double lowerBound, double upperBound, double mode, int throws);
 double bound(double n, double lowerBound, double upperBound);
+void shuffle(int arr[], int len);
 }

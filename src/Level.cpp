@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cmath>
 #include "Level.hpp"
 #include "MiscFunctions.hpp"
 
@@ -17,14 +18,15 @@ Level::Level(int w, int h) {
     for (int i = 0; i < 6; i++) terrain.pushHead(new Node<Object>(Object(1 + i, h - 3, TileType::TERRAIN)));
 
     //one enemy standing at the opposite side of the map with respect to the hero
-    enemies.pushHead(new Node<Entity>(Entity(w-1,h-1, TileType::ENEMY, 100, 30, Direction::LEFT)));
-     
+    enemies.pushHead(new Node<Entity>(Entity(w - 1, h - 1, TileType::ENEMY, 100, 30, Direction::LEFT)));
+
+    generatePlatforms(vertBound - 4, horBound / 2, 0, horBound, 1);
 }
-LinkedList <Object>* Level::getTerrain(){ return &terrain; }
-LinkedList <Entity>* Level::getEnemies(){ return &enemies; }
-LinkedList <Entity>* Level::getBonuses(){ return &bonuses; }
-LinkedList <Entity>* Level::getMaluses(){ return &maluses; }
-LinkedList <Entity>* Level::getBullets(){ return &bullets; }
+LinkedList <Object>* Level::getTerrain() { return &terrain; }
+LinkedList <Entity>* Level::getEnemies() { return &enemies; }
+LinkedList <Entity>* Level::getBonuses() { return &bonuses; }
+LinkedList <Entity>* Level::getMaluses() { return &maluses; }
+LinkedList <Entity>* Level::getBullets() { return &bullets; }
 template <class T>
 TileType Level::elementAtIn(int x, int y, LinkedList<T> list) {
     int x1, y1;
@@ -44,6 +46,7 @@ TileType Level::elementAt(int x, int y) {
 }
 
 bool Level::checkOverlap(int x1, int y1, int x2, int y2, TileType tile /*= TileType::EMPTY*/) {
+    if (x1 < 0 || y1 < 0 || x2 > horBound || y2 > vertBound || x1 > x2 || y1 > y2) return true;
     if (tile == TileType::EMPTY || tile == TileType::TERRAIN) {
         Node<Object>* iter = terrain.getHead();
         while (iter != NULL) {
@@ -99,50 +102,92 @@ int Level::findClosestTerrain(int height, int xPosition, bool left) {
     else return r;
 }
 
-//work in progress
 void Level::generatePlatforms(int height, int averageXPosition, int leftBound, int rightBound, int currentIteration) {
-    int platformLength = Misc::diceDistribution(2, rightBound - leftBound + 1, 5, round(2 + currentIteration / 3));
-    //reduce platform length in relation to available free space
-    int platformOffset = Misc::randInt(max(0, leftBound - averageXPosition + platformLength - 1), min(platformLength - 1, rightBound - averageXPosition));
-    int xPos1 = averageXPosition - platformLength + 1 + platformOffset;
-    int xPos2 = averageXPosition + platformOffset;
+    if (leftBound > rightBound || leftBound < 0 || rightBound > horBound || height < 0 || height > vertBound) return;
+    int platformLength = Misc::diceDistribution(2, min(20, rightBound - leftBound + 1), 5, round(2 + currentIteration / 3));
+    int minOffset = max(0, averageXPosition - leftBound - platformLength + 1);
+    int maxOffset = min(averageXPosition - leftBound, rightBound - leftBound - platformLength + 1);
+    int platformOffset = Misc::randInt(minOffset, maxOffset);
+    int xPos1 = leftBound + platformOffset;
+    int xPos2 = xPos1 + platformLength - 1;
     placePlatform(height, xPos1, xPos2);
 
-    //tba: randomize order of new platform generation
+    double generateChance = 0.7 - 0.05 * currentIteration;
 
-    //new up-center platform
-    if (Misc::randBool(0.5 /*probability in relation to iteration wip*/)) {
-        int newXPos = xPos1 - 1 + platformLength / 2;
-        if (!checkOverlap(newXPos - 2, height - 3, newXPos + 2, height - 1)) {
-            generatePlatforms(height - 2, newXPos, findClosestTerrain(height - 2, newXPos, true), findClosestTerrain(height - 2, newXPos, false), currentIteration + 1);
-        }
-    }
-    //new up-right platform
-    if (Misc::randBool(0.5 /*probability in relation to iteration wip*/)) {
-        if (!checkOverlap(xPos2 + 2, height - 3, xPos2 + 2, height - 1)) {
-            generatePlatforms(height - 2, xPos2, findClosestTerrain(height - 2, xPos2, true), findClosestTerrain(height - 2, xPos2, false), currentIteration + 1);
-        }
-    }
-    //new up-left platform
-    if (Misc::randBool(0.5 /*probability in relation to iteration wip*/)) {
-        if (!checkOverlap(xPos1 - 2, height - 3, xPos1 + 2, height - 1)) {
-            generatePlatforms(height - 2, xPos1, findClosestTerrain(height - 2, xPos1, true), findClosestTerrain(height - 2, xPos1, false), currentIteration + 1);
-        }
-    }
+    int order[6] = { 1, 2, 3, 4, 5, 6 };
+    Misc::shuffle(order, 6);
 
-    //new right platform
-    if (Misc::randBool(0.5 /*probability in relation to iteration wip*/)) {
-        if (!checkOverlap(xPos2 + 2, height - 1, xPos2 + 4, height + 1)) {
-            generatePlatforms(height, xPos2 + 2, findClosestTerrain(height, xPos2 + 2, true), findClosestTerrain(height, xPos2 + 2, false), currentIteration + 1);
-        }
-    }
+    for (int i = 0; i < 6; i++) {
 
-    //new left platform
-    if (Misc::randBool(0.5 /*probability in relation to iteration wip*/)) {
-        if (!checkOverlap(xPos1 - 2, height - 1, xPos1 - 4, height + 1)) {
-            generatePlatforms(height - 2, xPos1 - 2, findClosestTerrain(height - 2, xPos1 - 2, true), findClosestTerrain(height - 2, xPos2 + 2, false), currentIteration + 1);
-        }
-    }
+        switch (i) {
+        case 1:
+            //new up-left platform
+            if (Misc::randBool(generateChance)) {
+                int hDiff = Misc::randInt(2, 4);
+                if (!checkOverlap(xPos1 - 2, height - hDiff - 1, xPos1 + 2, height - hDiff + 1) && height - hDiff > 0) {
+                    generatePlatforms(height - hDiff, xPos1, findClosestTerrain(height - hDiff, xPos1, true) + 2, min(findClosestTerrain(height - hDiff, xPos1, false) - 2, xPos2 - 1), currentIteration + 1);
+                }
+            }
+            break;
 
-    //possibly new lower platforms
+        case 2:
+            //new up-right platform
+            if (Misc::randBool(generateChance)) {
+                int hDiff = Misc::randInt(2, 4);
+                if (!checkOverlap(xPos2 - 2, height - hDiff - 1, xPos2 + 2, height - hDiff + 1) && height - hDiff > 0) {
+                    generatePlatforms(height - hDiff, xPos2, max(findClosestTerrain(height - hDiff, xPos2, true) + 2, xPos1 + 1), findClosestTerrain(height - hDiff, xPos2, false) - 2, currentIteration + 1);
+                }
+            }
+            break;
+
+        case 3:
+            //new left platform
+            if (Misc::randBool(generateChance)) {
+                int hDiff = Misc::randInt(-1, 1);
+                int dist = Misc::randInt(2, 3);
+                if (!checkOverlap(xPos1 - dist - 4, height + hDiff - 1, xPos1 - dist, height + hDiff + 1) && height + hDiff > 0) {
+                    generatePlatforms(height + hDiff, xPos1 - dist, findClosestTerrain(height + hDiff, xPos1 - dist, true) + 2, xPos1 - dist, currentIteration + 1);
+                }
+            }
+            break;
+
+        case 4:
+            //new right platform
+            if (Misc::randBool(generateChance)) {
+                int hDiff = Misc::randInt(-1, 1);
+                int dist = Misc::randInt(2, 3);
+                if (!checkOverlap(xPos2 + dist, height + hDiff - 1, xPos2 + dist + 4, height + hDiff + 1) && height + hDiff > 0) {
+                    generatePlatforms(height + hDiff, xPos2 + dist, xPos2 + dist, findClosestTerrain(height + hDiff, xPos2 + dist, false) - 2, currentIteration + 1);
+                }
+            }
+            break;
+
+        case 5:
+            //new down-left platform
+            if (Misc::randBool(generateChance)) {
+                int hDiff = Misc::randInt(2, 4);
+                if (!checkOverlap(xPos1 - 2, height + hDiff - 1, xPos1 + 2, height + hDiff + 1)) {
+                    generatePlatforms(height + hDiff, xPos1, findClosestTerrain(height + hDiff, xPos1, true) + 2, findClosestTerrain(height + hDiff, xPos1, false) - 2, currentIteration + 1);
+                }
+            }
+            break;
+
+        case 6:
+            //new down-right platform
+            if (Misc::randBool(generateChance)) {
+                int hDiff = Misc::randInt(2, 4);
+                if (!checkOverlap(xPos2 - 2, height + hDiff - 1, xPos2 + 2, height + hDiff + 1)) {
+                    generatePlatforms(height + hDiff, xPos2, findClosestTerrain(height + hDiff, xPos2, true) + 2, findClosestTerrain(height + hDiff, xPos2 + 2, false) - 2, currentIteration + 1);
+                }
+            }
+            break;
+        }
+
+    }
 }
+
+/*
+void Level::spawnEnemies(int currentLevel) {
+
+}
+*/

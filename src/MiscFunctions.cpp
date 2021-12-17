@@ -37,3 +37,14 @@ double Misc::bound(double n, double lowerBound, double upperBound) {
     else if (n > upperBound) return upperBound;
     else return n;
 }
+
+void Misc::shuffle(int arr[], int len) {
+    for (int i = 0; i < len; i++) {
+        int pick = Misc::randInt(i, len-1);
+        if (pick != i) {
+            int tmp = arr[i];
+            arr[i] = arr[pick];
+            arr[pick] = tmp;
+        }
+    }
+}
