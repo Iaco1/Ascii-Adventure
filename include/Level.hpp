@@ -10,12 +10,14 @@ class Level{
     LinkedList <Entity> bonuses;
     LinkedList <Entity> maluses;
     LinkedList <Entity> bullets;
+    Object prevLevelDoor;
+    Object nextLevelDoor;
     int horBound;
     int vertBound;
 
     public:
     Level();
-    Level(int w, int h); //creates a level randomly
+    Level(int w, int h, int levelIndex); //creates a level randomly
     LinkedList<Object>* getTerrain();
     LinkedList<Entity>* getEnemies();
     LinkedList<Entity>* getBonuses();
@@ -59,9 +61,11 @@ class Level{
     }
 
     int countObjectsAt(int x, int y);
-
     LinkedList<TileType> getListOfTileTypesAt(int x, int y);
-    
+    Object getPrevLevelDoor();
+    Object getNextLevelDoor();
+
+
     bool checkOverlap(int x1, int y1, int x2, int y2, TileType tile = TileType::EMPTY);
     void placePlatform(int height, int leftBound, int rightBound);
     int findClosestTerrain(int height, int xPosition, bool left);

@@ -26,11 +26,12 @@ Object::Object(bool random){
 			tileType = static_cast<TileType>(rand()%(static_cast<int>(TileType::SIZE)));
 	}else Object();
 }
-
+/*
 void Object::toString(char str[24]){
 	const char* tileTypeStr[] = {"Empty", "Terrain", "Hero", "Enemy", "Bonus", "Malus", "Bullet"};
     sprintf(str, "((%d,%d),%s)", x, y, tileTypeStr[(int)tileType]);
 }
+*/
 
 void Object::getXY(int &x, int &y){
     x = this->x;
@@ -38,7 +39,7 @@ void Object::getXY(int &x, int &y){
 }
 
 char Object::getTileChar(){
-    char tileChar[]{ ' ', '#', 'H', 'E', 'B', 'M', 'o'};
+    char tileChar[]{ ' ', '#', 'H', 'E', 'B', 'M', 'o', '&'};
     return tileChar[(int)tileType];
 }
 

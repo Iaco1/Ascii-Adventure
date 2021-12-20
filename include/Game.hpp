@@ -22,6 +22,7 @@ public:
     void drawHUD(WINDOW* hud);
     void drawBullets();
     void drawEnemies();
+    void drawDoors();
     template <class T>
     void drawLevelElements(LinkedList<T> list);
     LinkedList<Action> input();

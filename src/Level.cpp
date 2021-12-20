@@ -4,11 +4,13 @@
 #include "MiscFunctions.hpp"
 
 Level::Level() {}
-Level::Level(int w, int h) {
+Level::Level(int w, int h, int levelIndex) {
     horBound = w;
     vertBound = h;
-    //insert randomly generating level code here
-    //as of now, it contains the 'floor'
+
+    if(levelIndex > 0) prevLevelDoor = Object(0,h-1,TileType::DOOR);
+    else prevLevelDoor = Object(); //this has TileType and thus should not be drawn
+    nextLevelDoor = Object(w,h-1,TileType::DOOR);
 
     //floor generation
     for (int i = 0; i <= w; i++) terrain.pushHead(new Node<Object>(Object(i, h, TileType::TERRAIN)));
@@ -19,20 +21,18 @@ Level::Level(int w, int h) {
 
     bonuses.pushHead(new Node<Entity>(Entity(2, h-4, TileType::BONUS, 100, 0, Direction::LEFT)));
 
-    maluses.pushHead(new Node<Entity>(Entity(w/2, h-1, TileType::MALUS, 100, 20, Direction::RIGHT)));
+    maluses.pushHead(new Node<Entity>(Entity(w/2, h-1, TileType::MALUS, 100, 100, Direction::RIGHT)));
 
     //one enemy standing at the opposite side of the map with respect to the hero
     enemies.pushHead(new Node<Entity>(Entity(w - 1, h - 1, TileType::ENEMY, 100, 30, Direction::LEFT)));
 
-    generatePlatforms(vertBound - 4, horBound / 2, 0, horBound, 1);
+    generatePlatforms(vertBound - 4, horBound / 2, 0, horBound-1, 1);
 }
 LinkedList <Object>* Level::getTerrain(){ return &terrain; }
 LinkedList <Entity>* Level::getEnemies(){ return &enemies; }
 LinkedList <Entity>* Level::getBonuses(){ return &bonuses; }
 LinkedList <Entity>* Level::getMaluses(){ return &maluses; }
 LinkedList <Entity>* Level::getBullets(){ return &bullets; }
-
-
 
 int Level::countObjectsAt(int x, int y){
     return countObjectsAtIn(x,y, terrain)
@@ -52,6 +52,9 @@ LinkedList<TileType> Level::getListOfTileTypesAt(int x, int y){
     
     return list;
 }
+
+Object Level::getPrevLevelDoor(){ return prevLevelDoor; }
+Object Level::getNextLevelDoor(){ return nextLevelDoor; }
 
 bool Level::checkOverlap(int x1, int y1, int x2, int y2, TileType tile /*= TileType::EMPTY*/) {
     if (x1 < 0 || y1 < 0 || x2 > horBound || y2 > vertBound || x1 > x2 || y1 > y2) return true;

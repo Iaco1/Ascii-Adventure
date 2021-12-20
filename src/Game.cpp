@@ -21,7 +21,7 @@ void Game::createMap(){
 	getmaxyx(levelWindow, h,w);
 	h--;w--;
 
-    map.pushHead(new Node<Level>(Level(w,h)));
+    map.pushHead(new Node<Level>(Level(w,h, 0)));
 	hero = Hero(1,h-1,100,50, Weapon(50, 20, 20, WeaponType::HANDGUN));
     currentLevel = 0;
 }
@@ -46,6 +46,7 @@ void Game::draw(bool newLevel){
 	drawLevelElements(*map[currentLevel].getBonuses());
 	drawLevelElements(*map[currentLevel].getMaluses());
 	drawBullets();
+	drawDoors();
 
 	wrefresh(levelWindow);
 	//this slows down the refresh rate in order for the user to see certain animations
@@ -156,6 +157,15 @@ void Game::drawBullets(){
 	}
 }
 
+void Game::drawDoors(){
+	int x,y;
+	Object prevDoor = map[currentLevel].getPrevLevelDoor();
+	Object nextDoor = map[currentLevel].getNextLevelDoor();
+	prevDoor.getXY(x,y);
+	mvwaddch(levelWindow,y,x, prevDoor.getTileChar());
+	nextDoor.getXY(x,y);
+	mvwaddch(levelWindow,y,x,nextDoor.getTileChar());
+}
 
 void Game::completeJump(Animation &proposedAnimation, Initiator &proposedInitiator){
 	//keep jumping till you reached JUMP_HEIGHT even if the user presses left or right keys to jump diagonally
@@ -181,13 +191,26 @@ LinkedList<Action> Game::input(){
 
 	Animation proposedAnimation = Animation::STILL;
 	Initiator proposedInitiator = Initiator::LOGIC;
-	
 	char userKey = '_';
+
+	LinkedList<TileType> listOfTileTypesAt; //this tells us all of the objects that are placed at x,y
+	LinkedList<Action> proposedActions;		//this tells us everything that should happen given the userLog[] and the user-initiated actions
+	int x = hero.getX(), y = hero.getY();
 	
 	//key pressing detection mechanism
+	//this adds the user-initiated actions to proposedActions
 	if((userKey = wgetch(levelWindow)) != ERR){
 		proposedAnimation = getCorrespondingAnimation(userKey);
 		proposedInitiator = Initiator::USER;
+		
+		nextXyFor(x,y, proposedAnimation);
+		listOfTileTypesAt = map[currentLevel].getListOfTileTypesAt(x,y);
+		
+		while(!listOfTileTypesAt.isEmpty()){
+			Action userAction = getCorrespondingAction(proposedAnimation, proposedInitiator, listOfTileTypesAt.getHead()->data);
+			proposedActions.pushHead(new Node<Action>(userAction));
+			listOfTileTypesAt.popHead();
+		}
 	}
 
 	//keeps the hero jumping till he moved JUMP_HEIGHT positions up in the Y-axis
@@ -196,11 +219,10 @@ LinkedList<Action> Game::input(){
 	//has the hero fall each time a TileType::EMPTY is beneath him
 	fallingMechanic(proposedAnimation, proposedInitiator);
 	
-	//creation of a list of Actions to for Game::logic() to process
-	int x = hero.getX(), y = hero.getY();
+	//this adds the logic-initiated actions to proposedActions
+	x = hero.getX(), y = hero.getY();
 	nextXyFor(x,y,proposedAnimation);
-	LinkedList<TileType> listOfTileTypesAt = map[currentLevel].getListOfTileTypesAt(x,y);
-	LinkedList<Action> proposedActions;
+	listOfTileTypesAt = map[currentLevel].getListOfTileTypesAt(x,y);
 	
 	if(listOfTileTypesAt.isEmpty()){
 		proposedActions.pushHead(new Node<Action>(getCorrespondingAction(proposedAnimation, proposedInitiator, TileType::EMPTY)));
@@ -541,12 +563,14 @@ void Game::nextXyFor(int &x, int &y, Animation animation){
 
 int Game::getCorrespondingDelay(Animation animation){
 	//enum class Animation{CLIMB_UP, CLIMB_DOWN, LEFT, RIGHT, STILL, JUMPING, FALLING, QUIT, PAUSE, SHOOTING};
-	int animationDelay[] = {0, 0, 0, 0, 0, 75, 75, 0, 0, 10};
+	int animationDelay[] = {0, 0, 12, 12, 0, 112, 112, 0, 0, 10};
 	return animationDelay[(int)animation];
 }
 
-//deletes the dead entities (currently only Enemies)
+//deletes the dead entities (currently Enemies, Bonuses, Maluses and the Hero if he happens to die)
 void Game::mortician(TileType tt = TileType::ENEMY){
+	if(hero.getHp()<=0) gameOver = true;
+	
 	LinkedList<Entity>* list;
 	
 	switch(tt){
@@ -650,6 +674,8 @@ void Game::mainLoop() {
 	srand(time(NULL));
 
 	initscr();
+	clear();
+	refresh();
 
 	int w, h;
 
@@ -691,6 +717,9 @@ void Game::mainLoop() {
 		}
 	}
 
+	if(hero.getHp()<=0){
+		//insert some "UR DEAD PAL" message here
+	}
 	endwin();
 }
 

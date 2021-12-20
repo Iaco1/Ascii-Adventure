@@ -3,6 +3,8 @@
 using namespace std;
 
 int main() {
-	Game game;
-	game.mainLoop();
+	while(true){
+		Game game;
+		game.mainLoop();
+	}
 }

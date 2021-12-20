@@ -1,6 +1,6 @@
 #pragma once
 
-enum class TileType{ EMPTY, TERRAIN, HERO, ENEMY, BONUS, MALUS, BULLET, SIZE};
+enum class TileType{ EMPTY, TERRAIN, HERO, ENEMY, BONUS, MALUS, BULLET, DOOR, SIZE};
 
 class Object{
     protected:
@@ -11,7 +11,7 @@ class Object{
     Object();
     Object(int x, int y, TileType tileType);
     Object(bool random); //creates a random object
-    void toString(char str[24]);
+    //void toString(char str[24]);
     void getXY(int &x, int &y);
     int getX();
     int getY();
