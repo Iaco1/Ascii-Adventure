@@ -1,5 +1,7 @@
+#pragma once
 #include "Hero.hpp"
 #include "LinkedList.hpp"
+#include "MiscFunctions.hpp"
 
 class Level{
     protected:
@@ -64,4 +66,5 @@ class Level{
     void placePlatform(int height, int leftBound, int rightBound);
     int findClosestTerrain(int height, int xPosition, bool left);
     void generatePlatforms(int height, int averageXPosition, int leftBound, int rightBound, int currentIteration);
+    //void spawnEnemies(int currentLevel);
 };

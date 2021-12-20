@@ -1,3 +1,4 @@
+#pragma once
 #include "Entity.hpp"
 #include "Weapon.hpp"
 

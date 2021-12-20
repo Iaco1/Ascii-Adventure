@@ -1,3 +1,5 @@
+#pragma once
+
 enum class TileType{ EMPTY, TERRAIN, HERO, ENEMY, BONUS, MALUS, BULLET, SIZE};
 
 class Object{

@@ -1,3 +1,4 @@
+#pragma once
 #include "Action.hpp"
 
 enum class Direction{ LEFT, RIGHT};
