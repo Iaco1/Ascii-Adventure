@@ -16,8 +16,14 @@ Level::Level(int w, int h) {
     //creates one 3-character long platform
     for (int i = 0; i < 6; i++) terrain.pushHead(new Node<Object>(Object(1 + i, h - 3, TileType::TERRAIN)));
 
+    bonuses.pushHead(new Node<Entity>(Entity(2, h-4, TileType::BONUS, 100, 0, Direction::LEFT)));
+
+    maluses.pushHead(new Node<Entity>(Entity(w/2, h-1, TileType::MALUS, 100, 20, Direction::RIGHT)));
+
     //one enemy standing at the opposite side of the map with respect to the hero
     enemies.pushHead(new Node<Entity>(Entity(w-1,h-1, TileType::ENEMY, 100, 30, Direction::LEFT)));
+
+    
      
 }
 LinkedList <Object>* Level::getTerrain(){ return &terrain; }

@@ -35,9 +35,12 @@ public:
     void moveBullets();
     void nextXyFor(int &x, int &y, Animation animation);
     int getCorrespondingDelay(Animation animation);
-    void mortician();
-    Action fallingAttack(Action proposedAction);
+    void mortician(TileType tt);
+    void fallingAttack(int x, int y);
     void completeJump(Animation &proposedAnimation, Initiator &proposedInitiator);
     void fallingMechanic(Animation &proposedAnimation, Initiator &proposedInitiator);
+    void grabBonusAt(int x, int y);
+    Action endOfFallingAction(Action proposedAction);
+    void inflictMalusAt(int x, int y);
     Menu getMenu();
 };

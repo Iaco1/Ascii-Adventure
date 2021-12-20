@@ -42,7 +42,7 @@ void Game::draw(bool newLevel){
 	wrefresh(levelWindow);
 	//terrain, enemies, bonuses and maluses' drawing
 	drawLevelElements(*map[currentLevel].getTerrain());
-	drawEnemies();
+	drawLevelElements(*map[currentLevel].getEnemies());//drawEnemies();
 	drawLevelElements(*map[currentLevel].getBonuses());
 	drawLevelElements(*map[currentLevel].getMaluses());
 	drawBullets();
@@ -120,8 +120,8 @@ void Game::drawLevelElements(LinkedList<T> list){
 }
 
 void Game::drawHUD(WINDOW* hud){
-	mvwprintw(hud, 0,0, "HP: %d/100 - SCORE: %d - LEVEL: %d - [Weapon: %s | Ammo: %d/%d]", 
-	hero.getHp(), score, currentLevel, 
+	mvwprintw(hud, 0,0, "HP: %d/%d - SCORE: %d - LEVEL: %d - [Weapon: %s | Ammo: %d/%d]", 
+	hero.getHp(),hero.getMaxHp(), score, currentLevel, 
 	hero.getWeapon()->weaponTypeToStr(), hero.getWeapon()->getMagazineAmmo(), hero.getWeapon()->getMaxAmmo());
 	wrefresh(hud);
 }
@@ -268,8 +268,8 @@ Action Game::getCorrespondingAction(Animation animation, Initiator initiator, Ti
 
 //either accepts the action proposed by the user or forces an action by logic  
 Action Game::getEngagedAction(Action proposedAction){
-	int h, w;
-	getmaxyx(levelWindow, h, w);
+	/*int h, w;
+	getmaxyx(levelWindow, h, w);*/
 	
 	//establishes the legality of the action
 	switch(proposedAction.getAnimation()){
@@ -292,7 +292,7 @@ Action Game::getEngagedAction(Action proposedAction){
 		break;
 
 		case Animation::STILL:{//cause actually hero is STILL and has an ENEMY below him when he's done with his jump
-			return fallingAttack(proposedAction);
+			return endOfFallingAction(proposedAction);
 		}
 
 		case Animation::CLIMB_UP:
@@ -312,12 +312,35 @@ Action Game::goLeftRight(Action proposedAction){
 	//hero will be in the map
 	if(proposedAction.getX() >= 0 && proposedAction.getX() <= w){
 		//this can be replaced with a switch telling you what happens if you wanna "intersect" tiletypes that are not empty
-		if(map[currentLevel].countObjectsAt(proposedAction.getX(), proposedAction.getY()) == 0){
+		switch(proposedAction.getTtAffected()){
+			case TileType::EMPTY:
 			hero.setXY(proposedAction.getX(), proposedAction.getY());
 			return proposedAction;
+			break;
+
+			case TileType::BONUS:{
+				grabBonusAt(proposedAction.getX(), proposedAction.getY());
+				hero.setXY(proposedAction.getX(), proposedAction.getY());
+				return Action(proposedAction.getAnimation(), proposedAction.getX(), proposedAction.getY(), proposedAction.getInitiator(), TileType::BONUS);
+			}
+			break;
+
+			case TileType::MALUS:{
+				inflictMalusAt(proposedAction.getX(), proposedAction.getY());
+				hero.setXY(proposedAction.getX(), proposedAction.getY());
+				return Action(proposedAction.getAnimation(), proposedAction.getX(), proposedAction.getY(), proposedAction.getInitiator(), TileType::MALUS);
+			}
+			break;
+
+			case TileType::ENEMY:
+			case TileType::BULLET:
+			case TileType::HERO:
+			case TileType::TERRAIN:
+			default:
+			return Action(Animation::STILL, hero.getX(), hero.getY(), Initiator::LOGIC, TileType::HERO); 
 		}
-	}
-	return Action(Animation::STILL, hero.getX(), hero.getY(), Initiator::LOGIC, TileType::HERO); 
+	}else return Action(Animation::STILL, hero.getX(), hero.getY(), Initiator::LOGIC, TileType::HERO);
+	
 	//probably need to generalize these functions to take the acting entity as a parameter
 }
 
@@ -430,7 +453,7 @@ void Game::moveBullets(){
 					nextX = -2; 
 					break;
 
-					defualt:
+					default:
 					break;
 				}
 				listAtCurrentXY.popHead();
@@ -523,21 +546,72 @@ int Game::getCorrespondingDelay(Animation animation){
 }
 
 //deletes the dead entities (currently only Enemies)
-void Game::mortician(){
-	Node<Entity>* iter = map[currentLevel].getEnemies()->getHead();
+void Game::mortician(TileType tt = TileType::ENEMY){
+	LinkedList<Entity>* list;
+	
+	switch(tt){
+		case TileType::ENEMY:
+		list = map[currentLevel].getEnemies();
+		break;
+
+		case TileType::BONUS:
+		list = map[currentLevel].getBonuses();
+		break;
+
+		case TileType::MALUS:
+		list = map[currentLevel].getMaluses();
+		break;
+
+		default:
+		return;
+	}
+	
+	Node<Entity>* iter = list->getHead();
 	while(iter!=NULL){
-		if(iter->data.getHp()<=0) map[currentLevel].getEnemies()->popNode(iter);
+		if(iter->data.getHp()<=0) list->popNode(iter);
 		iter = iter->next;
 	}
+
+	switch(tt){
+		case TileType::ENEMY:
+		mortician(TileType::BONUS);
+		break;
+
+		case TileType::BONUS:
+		mortician(TileType::MALUS);
+		break;
+
+		default:
+		return;
+	}
+
+}
+
+//i.e. what do you do when the block underneat you is ...?
+Action Game::endOfFallingAction(Action proposedAction){
+	//be mindful that this will be called when the Hero is still and has something beneath him
+	Node<Entity>* entity = map[currentLevel].getNodeAtIn(proposedAction.getX(), proposedAction.getY()+1, map[currentLevel].getEnemies());
+
+	if(entity!=NULL){
+		//hurt the enemy when falling over him
+		fallingAttack(proposedAction.getX(), proposedAction.getY()+1);
+		return Action(proposedAction.getAnimation(), proposedAction.getX(), proposedAction.getY(), proposedAction.getInitiator(), TileType::ENEMY);
+	}else if((entity = map[currentLevel].getNodeAtIn(proposedAction.getX(), proposedAction.getY()+1, map[currentLevel].getBonuses())) != NULL){
+		//grab the bonus when falling over it
+		grabBonusAt(proposedAction.getX(), proposedAction.getY()+1);
+		return Action(proposedAction.getAnimation(), proposedAction.getX(), proposedAction.getY()+1, proposedAction.getInitiator(), TileType::BONUS);
+	}else if((entity = map[currentLevel].getNodeAtIn(proposedAction.getX(), proposedAction.getY()+1, map[currentLevel].getMaluses())) != NULL){
+		//inflict pain when falling over a malus
+		inflictMalusAt(proposedAction.getX(), proposedAction.getY()+1);
+		return Action(proposedAction.getAnimation(), proposedAction.getX(), proposedAction.getY()+1, proposedAction.getInitiator(), TileType::MALUS);
+	}else return proposedAction; 
+
 }
 
 //decides whether to damage an enemy sitting below the attacker or not
-Action Game::fallingAttack(Action proposedAction){
-	Node<Entity>* enemy = map[currentLevel].getNodeAtIn(proposedAction.getX(), proposedAction.getY()+1, map[currentLevel].getEnemies());
-	if(enemy!=NULL) {
-		enemy->data.setHp(enemy->data.getHp()-hero.getBasicAttackDp());
-		return Action(Animation::STILL, proposedAction.getX(), proposedAction.getY()+1, Initiator::LOGIC, TileType::ENEMY);
-	}else return proposedAction;
+void Game::fallingAttack(int x, int y){
+	Node<Entity>* enemy = map[currentLevel].getNodeAtIn(x,y, map[currentLevel].getEnemies());
+	enemy->data.setHp(enemy->data.getHp()-hero.getBasicAttackDp());
 }
 
 void Game::fallingMechanic(Animation &proposedAnimation, Initiator &proposedInitiator){
@@ -545,6 +619,18 @@ void Game::fallingMechanic(Animation &proposedAnimation, Initiator &proposedInit
 		proposedAnimation = Animation::FALLING;
 		proposedInitiator = Initiator::LOGIC;
 	}
+}
+
+void Game::grabBonusAt(int x, int y){
+	Node<Entity>* bonus = map[currentLevel].getNodeAtIn(x,y, map[currentLevel].getBonuses());
+		hero.setHp(hero.getHp() + bonus->data.getHp());
+		bonus->data.setHp(0);
+}
+
+void Game::inflictMalusAt(int x, int y){
+	Node<Entity>* malus = map[currentLevel].getNodeAtIn(x, y, map[currentLevel].getMaluses());
+	hero.setHp(hero.getHp() - malus->data.getBasicAttackDp());
+	malus->data.setHp(0);
 }
 
 //poses constraints on what the user can do, mainly chosen from our own world
@@ -590,7 +676,7 @@ void Game::mainLoop() {
 			
 			//if(levelChanged) newLevel = true;
 			draw(newLevel);
-			logic(input()); //cascascade-implement processing a list of proposedActions 
+			logic(input());
 			newLevel = false;
 
 			/*
