@@ -39,7 +39,7 @@ void Object::getXY(int &x, int &y){
 }
 
 char Object::getTileChar(){
-    char tileChar[]{ ' ', '#', 'H', 'E', 'B', 'M', 'o', '&'};
+    char tileChar[]{ ' ', '#', 'H', 'E', 'B', 'M', 'o', '&', '$'};
     return tileChar[(int)tileType];
 }
 

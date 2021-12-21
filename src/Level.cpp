@@ -19,27 +19,27 @@ Level::Level(int w, int h, int levelIndex) {
     //creates one 3-character long platform
     for (int i = 0; i < 6; i++) terrain.pushHead(new Node<Object>(Object(1 + i, h - 3, TileType::TERRAIN)));
 
-    bonuses.pushHead(new Node<Item>(Item(2, h-4, TileType::BONUS, 100, 0)));
-
-    maluses.pushHead(new Node<Item>(Item(w/2, h-1, TileType::MALUS, 100, 20)));
-
-    //one enemy standing at the opposite side of the map with respect to the hero
+    bonuses.pushHead(new Node<Bonus>(Bonus(2, h-4, TileType::BONUS, 100, 0, BonusType::HP, 1)));
+    maluses.pushHead(new Node<Malus>(Malus(w/2, h-1, TileType::MALUS, 100, 20, MalusType::THORN, 1)));
     enemies.pushHead(new Node<Entity>(Entity(w - 1, h - 1, TileType::ENEMY, 100, 30, Direction::LEFT)));
+    xps.pushHead(new Node<Object>(Object(5, h-4, TileType::XP)));
 
     generatePlatforms(vertBound - 4, horBound / 2, 0, horBound-1, 1);
 }
 LinkedList <Object>* Level::getTerrain(){ return &terrain; }
 LinkedList <Entity>* Level::getEnemies(){ return &enemies; }
-LinkedList <Item>* Level::getBonuses(){ return &bonuses; }
-LinkedList <Item>* Level::getMaluses(){ return &maluses; }
+LinkedList <Bonus>* Level::getBonuses(){ return &bonuses; }
+LinkedList <Malus>* Level::getMaluses(){ return &maluses; }
 LinkedList <Entity>* Level::getBullets(){ return &bullets; }
+LinkedList <Object>* Level::getXps(){ return &xps; }
 
 int Level::countObjectsAt(int x, int y){
     return countObjectsAtIn(x,y, terrain)
         +countObjectsAtIn(x,y, enemies)
         +countObjectsAtIn(x,y, bonuses)
         +countObjectsAtIn(x,y, maluses)
-        +countObjectsAtIn(x,y, bullets);
+        +countObjectsAtIn(x,y, bullets)
+        +countObjectsAtIn(x,y, xps);
 }
 
 LinkedList<TileType> Level::getListOfTileTypesAt(int x, int y){
@@ -49,6 +49,7 @@ LinkedList<TileType> Level::getListOfTileTypesAt(int x, int y){
     for(int i=0; i<countObjectsAtIn(x,y,bonuses); i++) list.pushHead(new Node<TileType>(TileType::BONUS));
     for(int i=0; i<countObjectsAtIn(x,y,maluses); i++) list.pushHead(new Node<TileType>(TileType::MALUS));
     for(int i=0; i<countObjectsAtIn(x,y,bullets); i++) list.pushHead(new Node<TileType>(TileType::BULLET));
+    for(int i=0; i<countObjectsAtIn(x,y,xps); i++) list.pushHead(new Node<TileType>(TileType::XP));
     
     return list;
 }
@@ -75,7 +76,7 @@ bool Level::checkOverlap(int x1, int y1, int x2, int y2, TileType tile /*= TileT
         }
     }
     if (tile == TileType::EMPTY || tile == TileType::BONUS) {
-        Node<Item>* iter = bonuses.getHead();
+        Node<Bonus>* iter = bonuses.getHead();
         while (iter != NULL) {
             if (iter->data.getX() >= x1 && iter->data.getX() <= x2 && iter->data.getY() >= y1 && iter->data.getY() <= y2)
                 return true;
@@ -83,7 +84,7 @@ bool Level::checkOverlap(int x1, int y1, int x2, int y2, TileType tile /*= TileT
         }
     }
     if (tile == TileType::EMPTY || tile == TileType::MALUS) {
-        Node<Item>* iter = maluses.getHead();
+        Node<Malus>* iter = maluses.getHead();
         while (iter != NULL) {
             if (iter->data.getX() >= x1 && iter->data.getX() <= x2 && iter->data.getY() >= y1 && iter->data.getY() <= y2)
                 return true;

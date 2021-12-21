@@ -13,7 +13,7 @@ class Entity : public Item{
     
     public:
     Entity();
-    Entity(int x, int y, TileType tileType, int hp, int basicAttackDP, Direction direction);
+    Entity(int x, int y, TileType tileType, int hp, int dp, Direction direction);
     bool isMovementAction(Action action);
 
     void registerMove(Action action);

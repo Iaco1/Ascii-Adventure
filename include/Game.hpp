@@ -58,8 +58,8 @@ public:
     void completeJump(Animation &proposedAnimation, Initiator &proposedInitiator);
     void fallingMechanic(Animation &proposedAnimation, Initiator &proposedInitiator);
     void grabBonusAt(int x, int y);
-    
     void inflictMalusAt(int x, int y);
+    void gainXpAt(int x, int y);
 
     void moveEnemies();
     Menu getMenu();

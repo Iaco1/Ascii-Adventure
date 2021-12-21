@@ -2,7 +2,7 @@
 #include <cstdio>
 
 Entity::Entity() : Item(){}
-Entity::Entity(int x, int y, TileType tileType, int hp, int basicAttackDp, Direction direction) : Item(x,y,tileType, hp, basicAttackDp){
+Entity::Entity(int x, int y, TileType tileType, int hp, int dp, Direction direction) : Item(x,y,tileType, hp, dp){
     //initialization for the actionLog with unsignificant Actions 
     for(int i=0; i<SIGNIFICANT_MOVES; i++){
         actionLog[i] = Action(Animation::STILL, 0,0, Initiator::LOGIC, TileType::EMPTY);

@@ -2,16 +2,19 @@
 #include "Hero.hpp"
 #include "LinkedList.hpp"
 #include "MiscFunctions.hpp"
+#include "Bonus.hpp"
+#include "Malus.hpp"
 
 class Level{
     protected:
     LinkedList <Object> terrain;
     LinkedList <Entity> enemies;
-    LinkedList <Item> bonuses;
-    LinkedList <Item> maluses;
+    LinkedList <Bonus> bonuses;
+    LinkedList <Malus> maluses;
     LinkedList <Entity> bullets;
     Object prevLevelDoor;
     Object nextLevelDoor;
+    LinkedList <Object> xps; //experience points
     int horBound;
     int vertBound;
 
@@ -20,9 +23,10 @@ class Level{
     Level(int w, int h, int levelIndex); //creates a level randomly
     LinkedList<Object>* getTerrain();
     LinkedList<Entity>* getEnemies();
-    LinkedList<Item>* getBonuses();
-    LinkedList<Item>* getMaluses();
+    LinkedList<Bonus>* getBonuses();
+    LinkedList<Malus>* getMaluses();
     LinkedList<Entity>* getBullets();
+    LinkedList<Object>* getXps();
     
     /*why this is here
     The implementation of a non-specialized template must be visible to a translation unit that uses it.

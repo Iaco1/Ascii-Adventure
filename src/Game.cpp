@@ -31,6 +31,8 @@ void Game::draw(bool newLevel){
 	if(newLevel) {
 		clear();
 		refresh();
+		drawLevelElements(*map[currentLevel].getTerrain());
+		drawDoors();
 	}
 	int HUD_h = 1;
 	WINDOW* hud = newwin(HUD_h, getmaxx(levelWindow), 0, 0);
@@ -41,12 +43,12 @@ void Game::draw(bool newLevel){
 	drawHero();
 	wrefresh(levelWindow);
 	//terrain, enemies, bonuses and maluses' drawing
-	drawLevelElements(*map[currentLevel].getTerrain());
+	
 	drawLevelElements(*map[currentLevel].getEnemies());//drawEnemies();
 	drawLevelElements(*map[currentLevel].getBonuses());
 	drawLevelElements(*map[currentLevel].getMaluses());
+	drawLevelElements(*map[currentLevel].getXps());
 	drawBullets();
-	drawDoors();
 
 	wrefresh(levelWindow);
 	//this slows down the refresh rate in order for the user to see certain animations
@@ -91,8 +93,10 @@ void Game::drawHero(){
 		}
 	}
 	
+	init_pair(2, COLOR_YELLOW, COLOR_BLACK);
+	wattron(levelWindow, COLOR_PAIR(2));
 	mvwaddch(levelWindow, y, x, hero.getTileChar());
-
+	wattroff(levelWindow, COLOR_PAIR(2));
 }
 
 //draws static game elements
@@ -147,6 +151,7 @@ void Game::drawDoors(){
 	Object prevDoor = map[currentLevel].getPrevLevelDoor();
 	Object nextDoor = map[currentLevel].getNextLevelDoor();
 	prevDoor.getXY(x,y);
+
 	mvwaddch(levelWindow,y,x, prevDoor.getTileChar());
 	nextDoor.getXY(x,y);
 	mvwaddch(levelWindow,y,x,nextDoor.getTileChar());
@@ -319,25 +324,34 @@ Action Game::goLeftRight(Action proposedAction){
 	//if hero will be in the map
 	if(proposedAction.getX() >= 0 && proposedAction.getX() <= w){
 		switch(proposedAction.getTtAffected()){
-			case TileType::EMPTY:
-			hero.setXY(proposedAction.getX(), proposedAction.getY());
-			return proposedAction;
-			break;
+			case TileType::EMPTY:{
+				hero.setXY(proposedAction.getX(), proposedAction.getY());
+				return proposedAction;
+				break;
+			}
 
 			case TileType::BONUS:{
 				grabBonusAt(proposedAction.getX(), proposedAction.getY());
 				hero.setXY(proposedAction.getX(), proposedAction.getY());
 				return Action(proposedAction.getAnimation(), proposedAction.getX(), proposedAction.getY(), proposedAction.getInitiator(), TileType::BONUS);
+				break;
 			}
-			break;
-
+			
 			case TileType::MALUS:{
 				inflictMalusAt(proposedAction.getX(), proposedAction.getY());
 				hero.setXY(proposedAction.getX(), proposedAction.getY());
 				return Action(proposedAction.getAnimation(), proposedAction.getX(), proposedAction.getY(), proposedAction.getInitiator(), TileType::MALUS);
+				break;
 			}
-			break;
 
+			case TileType::XP:{
+				gainXpAt(proposedAction.getX(), proposedAction.getY());
+				hero.setXY(proposedAction.getX(), proposedAction.getY());
+				proposedAction.setTtAffected(TileType::XP);
+				return proposedAction;
+				break;
+			}
+			
 			case TileType::ENEMY:
 			case TileType::BULLET:
 			case TileType::HERO:
@@ -382,7 +396,7 @@ Action Game::fall(Action proposedAction){
 
 					case TileType::ENEMY:{ //damages the enemy
 						Node<Entity>* enemy = map[currentLevel].getNodeAtIn(proposedAction.getX(), proposedAction.getY(), map[currentLevel].getEnemies());
-						enemy->data.setHp(enemy->data.getHp() - hero.getBasicAttackDp());
+						enemy->data.setHp(enemy->data.getHp() - hero.getDp());
 						return Action(Animation::STILL, proposedAction.getX(), proposedAction.getY(), Initiator::LOGIC, TileType::ENEMY);
 						break;
 					}
@@ -408,6 +422,8 @@ Action Game::shoot(Action proposedAction){
 	if (hero.getWeapon()->getMagazineAmmo() > 0){
 		if(proposedAction.getX() >= 0 && proposedAction.getX() <= getmaxx(levelWindow)){
 			switch (proposedAction.getTtAffected()){
+				case TileType::XP:
+				case TileType::MALUS:
 				case TileType::BULLET:
 				case TileType::BONUS:
 				case TileType::EMPTY:
@@ -426,7 +442,6 @@ Action Game::shoot(Action proposedAction){
 				}
 
 				case TileType::TERRAIN:
-				case TileType::MALUS: //maybe destroy the malus
 				default:
 				break;
 			}
@@ -465,24 +480,30 @@ void Game::moveBullets(){
 				listAtCurrentXY.popHead();
 			}
 
+			//if they're in 'legal'-ish positions
 			if(nextX >= -1 && nextX<= w){
 				if(listAtNextXY.isEmpty()){//i.e. TileType::EMTPY at (x,y)
 					iter->data.setXY(nextX, y);
 					iter = iter->next;
 				}else{
+					//what you do when a bullet intersects these TileType's 
 					while(!listAtNextXY.isEmpty()){
 						switch(listAtNextXY.getHead()->data){
+							//just go through them
+							case TileType::XP:
 							case TileType::MALUS: //maybe we can destroy maluses by shooting them
 							case TileType::BONUS: 
 							case TileType::EMPTY: //ain't happening
 							case TileType::BULLET:
 							iter->data.setXY(nextX, y);
 							break;
-							
+
+							//they intersect for a second but then are deleted by the above while(!listAtCurrentXY.isEmpty())
 							case TileType::TERRAIN:
 							iter->data.setXY(nextX, y);
 							break;
 
+							//harm the enemy and intersect for a moment (will be later deleted)
 							case TileType::ENEMY:{
 								Node<Entity>* enemy = map[currentLevel].getNodeAtIn(nextX, y, map[currentLevel].getEnemies());
 								enemy->data.setHp(enemy->data.getHp()-hero.getWeapon()->getDp());
@@ -571,6 +592,11 @@ Action Game::endOfFallingAction(Action proposedAction){
 		//inflict pain when falling over a malus
 		inflictMalusAt(proposedAction.getX(), proposedAction.getY()+1);
 		return Action(proposedAction.getAnimation(), proposedAction.getX(), proposedAction.getY()+1, proposedAction.getInitiator(), TileType::MALUS);
+	}else if(map[currentLevel].getNodeAtIn(proposedAction.getX(), proposedAction.getY()+1, map[currentLevel].getXps()) != NULL){
+		gainXpAt(proposedAction.getX(), proposedAction.getY()+1);
+		proposedAction.setTtAffected(TileType::XP);
+		proposedAction.setY(proposedAction.getY()+1);
+		return proposedAction;
 	}else return proposedAction; 
 
 }
@@ -578,7 +604,7 @@ Action Game::endOfFallingAction(Action proposedAction){
 //decides whether to damage an enemy sitting below the attacker or not
 void Game::fallingAttack(int x, int y){
 	Node<Entity>* enemy = map[currentLevel].getNodeAtIn(x,y, map[currentLevel].getEnemies());
-	enemy->data.setHp(enemy->data.getHp()-hero.getBasicAttackDp());
+	enemy->data.setHp(enemy->data.getHp()-hero.getDp());
 }
 
 void Game::fallingMechanic(Animation &proposedAnimation, Initiator &proposedInitiator){
@@ -590,44 +616,50 @@ void Game::fallingMechanic(Animation &proposedAnimation, Initiator &proposedInit
 
 //gives the player the benefits of the bonus and deletes it
 void Game::grabBonusAt(int x, int y){
-	Node<Item>* bonus = map[currentLevel].getNodeAtIn(x,y, map[currentLevel].getBonuses());
+	Node<Bonus>* bonus = map[currentLevel].getNodeAtIn(x,y, map[currentLevel].getBonuses());
 		hero.setHp(hero.getHp() + bonus->data.getHp());
 		bonus->data.setHp(0);
 }
 
 //inflicts the player the agony of the malus and deletes it
 void Game::inflictMalusAt(int x, int y){
-	Node<Item>* malus = map[currentLevel].getNodeAtIn(x, y, map[currentLevel].getMaluses());
-	hero.setHp(hero.getHp() - malus->data.getBasicAttackDp());
+	Node<Malus>* malus = map[currentLevel].getNodeAtIn(x, y, map[currentLevel].getMaluses());
+	hero.setHp(hero.getHp() - malus->data.getDp());
 	malus->data.setHp(0);
 }
 
-    void Game::mortician(TileType tt /*= TileType::ENEMY*/){
-	    switch(tt){
-		    case TileType::ENEMY:{
-		    	sweepItemsIn(map[currentLevel].getEnemies());
-	    		mortician(TileType::BONUS);
-	    		break;
-	    	}
+void Game::gainXpAt(int x, int y){
+	score++;
+	Node<Object>* p = map[currentLevel].getNodeAtIn(x,y, map[currentLevel].getXps());
+	map[currentLevel].getXps()->popNode(p);
+}
 
-		    case TileType::BONUS:{
-		    	sweepItemsIn(map[currentLevel].getBonuses());
-		    	mortician(TileType::MALUS);
-		    	break;
-		    }
+void Game::mortician(TileType tt /*= TileType::ENEMY*/){
+    switch(tt){
+	    case TileType::ENEMY:{
+	    	sweepItemsIn(map[currentLevel].getEnemies());
+    		mortician(TileType::BONUS);
+    		break;
+    	}
 
-		    case TileType::MALUS:{
-			    sweepItemsIn(map[currentLevel].getMaluses());
-		    	break;
-		    }
-
-		    default:
-		    if(hero.getHp()<=0) {
-            	gameOver = true;
-            	return;
-        	}
+		case TileType::BONUS:{
+	    	sweepItemsIn(map[currentLevel].getBonuses());
+	    	mortician(TileType::MALUS);
+	    	break;
 	    }
-	}
+
+		case TileType::MALUS:{
+		    sweepItemsIn(map[currentLevel].getMaluses());
+	    	break;
+	    }
+
+		default:
+		if(hero.getHp()<=0) {
+            gameOver = true;
+        	return;
+    	}
+    }
+}
 
 //as of now, moves one enemy back and forth on a 3 unit long line
 void Game::moveEnemies(){
@@ -652,6 +684,13 @@ void Game::mainLoop() {
 	srand(time(NULL));
 
 	initscr();
+	start_color();
+	init_color(COLOR_BLACK, 0,0,0);
+	init_color(COLOR_YELLOW, 1000, 1000, 200);
+	init_color(COLOR_RED, 1000, 1000, 0);
+	init_color(COLOR_MAGENTA, 332, 210, 570);
+	init_color(COLOR_BLUE, 30, 570, 820);
+	init_color(COLOR_CYAN, 750, 750, 750);
 	clear();
 	refresh();
 
@@ -664,7 +703,10 @@ void Game::mainLoop() {
 		getmaxyx(stdscr, h, w);
 		int HUD_h = 1;
 		h = h - HUD_h;
-		levelWindow = newwin(h,w, HUD_h,0); 
+		levelWindow = newwin(h,w, HUD_h,0);
+		
+		init_pair(1, COLOR_WHITE, COLOR_BLACK);
+		wbkgd(levelWindow, COLOR_PAIR(1));
 		
 		createMap();
 

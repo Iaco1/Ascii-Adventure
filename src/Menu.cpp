@@ -18,7 +18,6 @@ WINDOW* Menu::printStartScreen(){
     WINDOW* belowTitle = newwin(3,30+2, h-4,w/2-16); // used to write the press space to play
     //wborder(belowTitle, '|','|','-','-','+','+','+','+');
     
-
     mvwprintw(title,1,1, "Basic 2D ASCII Platform");
     wrefresh(title);
     

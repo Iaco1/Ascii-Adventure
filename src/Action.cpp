@@ -9,7 +9,7 @@ Action::Action(){
 Action::Action(Animation animation, int x, int y, Initiator initiator, TileType ttAffected){
     this->animation = animation;
     
-    if(x>=0 && y>=0){
+    if(x>=-1 && y>=0){
         this->x = x;
         this->y = y;
     }else{
@@ -27,4 +27,12 @@ int Action::getY(){ return y; }
 Initiator Action::getInitiator(){ return initiator; }
 
 TileType Action::getTtAffected(){ return ttAffected; }
+
+void Action::setY(int y){
+    if(y>=0) this->y = y;
+}
+
+void Action::setTtAffected(TileType tt){
+    this->ttAffected = tt;
+}
 

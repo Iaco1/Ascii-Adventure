@@ -9,7 +9,8 @@ class Action{
     protected:
     Animation animation;
     int x, y; //affected position
-    Initiator initiator;
+    Initiator initiator; // USER || LOGIC
+    //Entity agent;
     TileType ttAffected; //amongst the (possibly) many tiletypes there could be in the same position
 
     public:
@@ -20,4 +21,6 @@ class Action{
     int getY();
     Initiator getInitiator();
     TileType getTtAffected();
+    void setY(int y);
+    void setTtAffected(TileType tt);
 };

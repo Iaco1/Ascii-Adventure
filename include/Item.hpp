@@ -4,12 +4,12 @@
 class Item : public Object{
     protected:
     int hp; //health points
-    int basicAttackDp; //Damage points
+    int dp; //Damage points
 
     public:
     Item();
-    Item(int x, int y, TileType tileType, int hp, int basicAttackDp);
+    Item(int x, int y, TileType tileType, int hp, int dp);
     int getHp();
     void setHp(int hp);
-    int getBasicAttackDp();
+    int getDp();
 };
