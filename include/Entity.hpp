@@ -1,15 +1,14 @@
 #pragma once
 #include "Action.hpp"
+#include "Item.hpp"
 
 enum class Direction{ LEFT, RIGHT};
 
 const int SIGNIFICANT_MOVES = 8;
 
-class Entity : public Object{
+class Entity : public Item{
     protected:
     Action actionLog[SIGNIFICANT_MOVES];
-    int hp; //health points
-    int basicAttackDp; //Damage points
     Direction direction; //where the "head" of the entity is pointing to, useful for attack purposes
     
     public:
@@ -22,8 +21,6 @@ class Entity : public Object{
     int countMoves(Animation animation);
     int countMoves(Animation animation, Initiator initiator);
     Action* getActionLog();
-    int getHp();
-    void setHp(int hp);
     Direction getDirection();
-    int getBasicAttackDp();
+    
 };

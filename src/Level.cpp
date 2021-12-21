@@ -19,9 +19,9 @@ Level::Level(int w, int h, int levelIndex) {
     //creates one 3-character long platform
     for (int i = 0; i < 6; i++) terrain.pushHead(new Node<Object>(Object(1 + i, h - 3, TileType::TERRAIN)));
 
-    bonuses.pushHead(new Node<Entity>(Entity(2, h-4, TileType::BONUS, 100, 0, Direction::LEFT)));
+    bonuses.pushHead(new Node<Item>(Item(2, h-4, TileType::BONUS, 100, 0)));
 
-    maluses.pushHead(new Node<Entity>(Entity(w/2, h-1, TileType::MALUS, 100, 100, Direction::RIGHT)));
+    maluses.pushHead(new Node<Item>(Item(w/2, h-1, TileType::MALUS, 100, 20)));
 
     //one enemy standing at the opposite side of the map with respect to the hero
     enemies.pushHead(new Node<Entity>(Entity(w - 1, h - 1, TileType::ENEMY, 100, 30, Direction::LEFT)));
@@ -30,8 +30,8 @@ Level::Level(int w, int h, int levelIndex) {
 }
 LinkedList <Object>* Level::getTerrain(){ return &terrain; }
 LinkedList <Entity>* Level::getEnemies(){ return &enemies; }
-LinkedList <Entity>* Level::getBonuses(){ return &bonuses; }
-LinkedList <Entity>* Level::getMaluses(){ return &maluses; }
+LinkedList <Item>* Level::getBonuses(){ return &bonuses; }
+LinkedList <Item>* Level::getMaluses(){ return &maluses; }
 LinkedList <Entity>* Level::getBullets(){ return &bullets; }
 
 int Level::countObjectsAt(int x, int y){
@@ -75,7 +75,7 @@ bool Level::checkOverlap(int x1, int y1, int x2, int y2, TileType tile /*= TileT
         }
     }
     if (tile == TileType::EMPTY || tile == TileType::BONUS) {
-        Node<Entity>* iter = bonuses.getHead();
+        Node<Item>* iter = bonuses.getHead();
         while (iter != NULL) {
             if (iter->data.getX() >= x1 && iter->data.getX() <= x2 && iter->data.getY() >= y1 && iter->data.getY() <= y2)
                 return true;
@@ -83,7 +83,7 @@ bool Level::checkOverlap(int x1, int y1, int x2, int y2, TileType tile /*= TileT
         }
     }
     if (tile == TileType::EMPTY || tile == TileType::MALUS) {
-        Node<Entity>* iter = maluses.getHead();
+        Node<Item>* iter = maluses.getHead();
         while (iter != NULL) {
             if (iter->data.getX() >= x1 && iter->data.getX() <= x2 && iter->data.getY() >= y1 && iter->data.getY() <= y2)
                 return true;

@@ -1,17 +1,12 @@
 #include "Entity.hpp"
 #include <cstdio>
 
-Entity::Entity() : Object(){}
-Entity::Entity(int x, int y, TileType tileType, int hp, int basicAttackDp, Direction direction) : Object(x,y,tileType){
+Entity::Entity() : Item(){}
+Entity::Entity(int x, int y, TileType tileType, int hp, int basicAttackDp, Direction direction) : Item(x,y,tileType, hp, basicAttackDp){
     //initialization for the actionLog with unsignificant Actions 
     for(int i=0; i<SIGNIFICANT_MOVES; i++){
         actionLog[i] = Action(Animation::STILL, 0,0, Initiator::LOGIC, TileType::EMPTY);
     }
-    if(hp>=0) this->hp = hp;
-    else this->hp = 100;
-    
-    if(basicAttackDp>0 || basicAttackDp==0) this->basicAttackDp = basicAttackDp;
-    else this->basicAttackDp = 0;
     
     this->direction = direction;
 }
@@ -80,14 +75,5 @@ Action* Entity::getActionLog(){
     return p;
 }
 
-int Entity::getHp(){ return hp; }
-
-void Entity::setHp(int hp){
-    this->hp = hp;
-    // if(hp == 0) call destructor 
-}
-
 Direction Entity::getDirection(){ return direction; }
-
-int Entity::getBasicAttackDp(){ return basicAttackDp; }
 

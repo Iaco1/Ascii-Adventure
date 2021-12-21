@@ -16,7 +16,6 @@ public:
     Game();
     void mainLoop();
     void createMap();
-    void updateMap();
     void draw(bool newLevel);
     void drawHero();
     void drawHUD(WINDOW* hud);
@@ -25,24 +24,43 @@ public:
     void drawDoors();
     template <class T>
     void drawLevelElements(LinkedList<T> list);
+
     LinkedList<Action> input();
     void logic(LinkedList<Action> proposedActions);
+
     Animation getCorrespondingAnimation(char userKey);
     Action getCorrespondingAction(Animation animation, Initiator initator, TileType ttAffected);
     Action getEngagedAction(Action proposedAction);
+    
     Action goLeftRight(Action proposedAction);
     Action jump(Action proposedAction);
     Action fall(Action proposedAction);
     Action shoot(Action proposedAction);
+    Action endOfFallingAction(Action proposedAction);
+    
     void moveBullets();
     void nextXyFor(int &x, int &y, Animation animation);
     int getCorrespondingDelay(Animation animation);
-    void mortician(TileType tt);
+    
+    //buries (deletes) the dead entities (currently Enemies, Bonuses, Maluses and the Hero if he happens to die)
+    //call using mortician(TileType::ENEMY)
+    template <class T>
+    void sweepItemsIn(LinkedList<T>* list){
+	    Node<T>* iter = list->getHead();
+	    while(iter!=NULL){
+    	    if(iter->data.getHp()<=0) list->popNode(iter);
+		    iter = iter->next;
+	    }
+    }
+    void mortician(TileType tt = TileType::ENEMY); 
+
     void fallingAttack(int x, int y);
     void completeJump(Animation &proposedAnimation, Initiator &proposedInitiator);
     void fallingMechanic(Animation &proposedAnimation, Initiator &proposedInitiator);
     void grabBonusAt(int x, int y);
-    Action endOfFallingAction(Action proposedAction);
+    
     void inflictMalusAt(int x, int y);
+
+    void moveEnemies();
     Menu getMenu();
 };

@@ -7,8 +7,8 @@ class Level{
     protected:
     LinkedList <Object> terrain;
     LinkedList <Entity> enemies;
-    LinkedList <Entity> bonuses;
-    LinkedList <Entity> maluses;
+    LinkedList <Item> bonuses;
+    LinkedList <Item> maluses;
     LinkedList <Entity> bullets;
     Object prevLevelDoor;
     Object nextLevelDoor;
@@ -20,8 +20,8 @@ class Level{
     Level(int w, int h, int levelIndex); //creates a level randomly
     LinkedList<Object>* getTerrain();
     LinkedList<Entity>* getEnemies();
-    LinkedList<Entity>* getBonuses();
-    LinkedList<Entity>* getMaluses();
+    LinkedList<Item>* getBonuses();
+    LinkedList<Item>* getMaluses();
     LinkedList<Entity>* getBullets();
     
     /*why this is here
