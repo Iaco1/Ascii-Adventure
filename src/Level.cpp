@@ -8,9 +8,9 @@ Level::Level(int w, int h, int levelIndex) {
     horBound = w;
     vertBound = h;
 
-    if(levelIndex > 0) prevLevelDoor = Object(0,h-1,TileType::DOOR);
+    if (levelIndex > 0) prevLevelDoor = Object(0, h - 1, TileType::DOOR);
     else prevLevelDoor = Object(); //this has TileType and thus should not be drawn
-    nextLevelDoor = Object(w,h-1,TileType::DOOR);
+    nextLevelDoor = Object(w, h - 1, TileType::DOOR);
 
     //floor generation
     for (int i = 0; i <= w; i++) terrain.pushHead(new Node<Object>(Object(i, h, TileType::TERRAIN)));
@@ -19,42 +19,42 @@ Level::Level(int w, int h, int levelIndex) {
     //creates one 3-character long platform
     for (int i = 0; i < 6; i++) terrain.pushHead(new Node<Object>(Object(1 + i, h - 3, TileType::TERRAIN)));
 
-    bonuses.pushHead(new Node<Entity>(Entity(2, h-4, TileType::BONUS, 100, 0, Direction::LEFT)));
+    bonuses.pushHead(new Node<Entity>(Entity(2, h - 4, TileType::BONUS, 100, 0, Direction::LEFT)));
 
-    maluses.pushHead(new Node<Entity>(Entity(w/2, h-1, TileType::MALUS, 100, 100, Direction::RIGHT)));
+    maluses.pushHead(new Node<Entity>(Entity(w / 2, h - 1, TileType::MALUS, 100, 100, Direction::RIGHT)));
 
     //one enemy standing at the opposite side of the map with respect to the hero
     enemies.pushHead(new Node<Entity>(Entity(w - 1, h - 1, TileType::ENEMY, 100, 30, Direction::LEFT)));
 
-    generatePlatforms(vertBound - 4, horBound / 2, 0, horBound-1, 1);
+    generatePlatforms(vertBound - 4, horBound / 2, 0, horBound - 1, 1);
 }
-LinkedList <Object>* Level::getTerrain(){ return &terrain; }
-LinkedList <Entity>* Level::getEnemies(){ return &enemies; }
-LinkedList <Entity>* Level::getBonuses(){ return &bonuses; }
-LinkedList <Entity>* Level::getMaluses(){ return &maluses; }
-LinkedList <Entity>* Level::getBullets(){ return &bullets; }
+LinkedList <Object>* Level::getTerrain() { return &terrain; }
+LinkedList <Entity>* Level::getEnemies() { return &enemies; }
+LinkedList <Entity>* Level::getBonuses() { return &bonuses; }
+LinkedList <Entity>* Level::getMaluses() { return &maluses; }
+LinkedList <Entity>* Level::getBullets() { return &bullets; }
 
-int Level::countObjectsAt(int x, int y){
-    return countObjectsAtIn(x,y, terrain)
-        +countObjectsAtIn(x,y, enemies)
-        +countObjectsAtIn(x,y, bonuses)
-        +countObjectsAtIn(x,y, maluses)
-        +countObjectsAtIn(x,y, bullets);
+int Level::countObjectsAt(int x, int y) {
+    return countObjectsAtIn(x, y, terrain)
+        + countObjectsAtIn(x, y, enemies)
+        + countObjectsAtIn(x, y, bonuses)
+        + countObjectsAtIn(x, y, maluses)
+        + countObjectsAtIn(x, y, bullets);
 }
 
-LinkedList<TileType> Level::getListOfTileTypesAt(int x, int y){
+LinkedList<TileType> Level::getListOfTileTypesAt(int x, int y) {
     LinkedList<TileType> list;
-    for(int i=0; i<countObjectsAtIn(x,y,terrain); i++) list.pushHead(new Node<TileType>(TileType::TERRAIN));
-    for(int i=0; i<countObjectsAtIn(x,y,enemies); i++) list.pushHead(new Node<TileType>(TileType::ENEMY));
-    for(int i=0; i<countObjectsAtIn(x,y,bonuses); i++) list.pushHead(new Node<TileType>(TileType::BONUS));
-    for(int i=0; i<countObjectsAtIn(x,y,maluses); i++) list.pushHead(new Node<TileType>(TileType::MALUS));
-    for(int i=0; i<countObjectsAtIn(x,y,bullets); i++) list.pushHead(new Node<TileType>(TileType::BULLET));
-    
+    for (int i = 0; i < countObjectsAtIn(x, y, terrain); i++) list.pushHead(new Node<TileType>(TileType::TERRAIN));
+    for (int i = 0; i < countObjectsAtIn(x, y, enemies); i++) list.pushHead(new Node<TileType>(TileType::ENEMY));
+    for (int i = 0; i < countObjectsAtIn(x, y, bonuses); i++) list.pushHead(new Node<TileType>(TileType::BONUS));
+    for (int i = 0; i < countObjectsAtIn(x, y, maluses); i++) list.pushHead(new Node<TileType>(TileType::MALUS));
+    for (int i = 0; i < countObjectsAtIn(x, y, bullets); i++) list.pushHead(new Node<TileType>(TileType::BULLET));
+
     return list;
 }
 
-Object Level::getPrevLevelDoor(){ return prevLevelDoor; }
-Object Level::getNextLevelDoor(){ return nextLevelDoor; }
+Object Level::getPrevLevelDoor() { return prevLevelDoor; }
+Object Level::getNextLevelDoor() { return nextLevelDoor; }
 
 bool Level::checkOverlap(int x1, int y1, int x2, int y2, TileType tile /*= TileType::EMPTY*/) {
     if (x1 < 0 || y1 < 0 || x2 > horBound || y2 > vertBound || x1 > x2 || y1 > y2) return true;
@@ -103,7 +103,7 @@ int Level::findClosestTerrain(int height, int xPosition, bool left) {
     int l = -1, r = horBound + 1;
     Node<Object>* iter = terrain.getHead();
     while (iter != NULL) {
-        if (iter->data.getY() >= height - 1 && iter->data.getY() <= height + 1) {
+        if (iter->data.getY() >= height - 2 && iter->data.getY() <= height + 2) {
             if (iter->data.getX() < xPosition && iter->data.getX() > l) l = iter->data.getX();
             if (iter->data.getX() > xPosition && iter->data.getX() < r) r = iter->data.getX();
         }
@@ -115,7 +115,7 @@ int Level::findClosestTerrain(int height, int xPosition, bool left) {
 
 void Level::generatePlatforms(int height, int averageXPosition, int leftBound, int rightBound, int currentIteration) {
     if (leftBound > rightBound || leftBound < 0 || rightBound > horBound || height < 0 || height > vertBound) return;
-    int platformLength = Misc::diceDistribution(2, min(20, rightBound - leftBound + 1), 5, round(2 + currentIteration / 3));
+    int platformLength = Misc::diceDistribution(2, min((horBound + 1) / 4, rightBound - leftBound + 1), 5, round(2 + currentIteration / 3));
     int minOffset = max(0, averageXPosition - leftBound - platformLength + 1);
     int maxOffset = min(averageXPosition - leftBound, rightBound - leftBound - platformLength + 1);
     int platformOffset = Misc::randInt(minOffset, maxOffset);
@@ -134,8 +134,8 @@ void Level::generatePlatforms(int height, int averageXPosition, int leftBound, i
         case 1:
             //new up-left platform
             if (Misc::randBool(generateChance)) {
-                int hDiff = Misc::randInt(2, 4);
-                if (!checkOverlap(xPos1 - 2, height - hDiff - 1, xPos1 + 2, height - hDiff + 1) && height - hDiff > 0) {
+                int hDiff = Misc::randInt(3, 4);
+                if (!checkOverlap(xPos1 - 2, height - hDiff - 2, xPos1 + 2, height - hDiff + 2) && height - hDiff >= 3) {
                     generatePlatforms(height - hDiff, xPos1, findClosestTerrain(height - hDiff, xPos1, true) + 2, min(findClosestTerrain(height - hDiff, xPos1, false) - 2, xPos2 - 1), currentIteration + 1);
                 }
             }
@@ -144,8 +144,8 @@ void Level::generatePlatforms(int height, int averageXPosition, int leftBound, i
         case 2:
             //new up-right platform
             if (Misc::randBool(generateChance)) {
-                int hDiff = Misc::randInt(2, 4);
-                if (!checkOverlap(xPos2 - 2, height - hDiff - 1, xPos2 + 2, height - hDiff + 1) && height - hDiff > 0) {
+                int hDiff = Misc::randInt(3, 4);
+                if (!checkOverlap(xPos2 - 2, height - hDiff - 2, xPos2 + 2, height - hDiff + 2) && height - hDiff >= 3) {
                     generatePlatforms(height - hDiff, xPos2, max(findClosestTerrain(height - hDiff, xPos2, true) + 2, xPos1 + 1), findClosestTerrain(height - hDiff, xPos2, false) - 2, currentIteration + 1);
                 }
             }
@@ -156,7 +156,7 @@ void Level::generatePlatforms(int height, int averageXPosition, int leftBound, i
             if (Misc::randBool(generateChance)) {
                 int hDiff = Misc::randInt(-1, 1);
                 int dist = Misc::randInt(2, 3);
-                if (!checkOverlap(xPos1 - dist - 4, height + hDiff - 1, xPos1 - dist, height + hDiff + 1) && height + hDiff > 0) {
+                if (!checkOverlap(xPos1 - dist - 4, height + hDiff - 2, xPos1 - dist, height + hDiff + 2) && height + hDiff >= 3) {
                     generatePlatforms(height + hDiff, xPos1 - dist, findClosestTerrain(height + hDiff, xPos1 - dist, true) + 2, xPos1 - dist, currentIteration + 1);
                 }
             }
@@ -167,7 +167,7 @@ void Level::generatePlatforms(int height, int averageXPosition, int leftBound, i
             if (Misc::randBool(generateChance)) {
                 int hDiff = Misc::randInt(-1, 1);
                 int dist = Misc::randInt(2, 3);
-                if (!checkOverlap(xPos2 + dist, height + hDiff - 1, xPos2 + dist + 4, height + hDiff + 1) && height + hDiff > 0) {
+                if (!checkOverlap(xPos2 + dist, height + hDiff - 2, xPos2 + dist + 4, height + hDiff + 2) && height + hDiff >= 3) {
                     generatePlatforms(height + hDiff, xPos2 + dist, xPos2 + dist, findClosestTerrain(height + hDiff, xPos2 + dist, false) - 2, currentIteration + 1);
                 }
             }
@@ -176,8 +176,8 @@ void Level::generatePlatforms(int height, int averageXPosition, int leftBound, i
         case 5:
             //new down-left platform
             if (Misc::randBool(generateChance)) {
-                int hDiff = Misc::randInt(2, 4);
-                if (!checkOverlap(xPos1 - 2, height + hDiff - 1, xPos1 + 2, height + hDiff + 1)) {
+                int hDiff = Misc::randInt(3, 4);
+                if (!checkOverlap(xPos1 - 2, height + hDiff - 2, xPos1 + 2, height + hDiff + 2)) {
                     generatePlatforms(height + hDiff, xPos1, findClosestTerrain(height + hDiff, xPos1, true) + 2, findClosestTerrain(height + hDiff, xPos1, false) - 2, currentIteration + 1);
                 }
             }
@@ -186,8 +186,8 @@ void Level::generatePlatforms(int height, int averageXPosition, int leftBound, i
         case 6:
             //new down-right platform
             if (Misc::randBool(generateChance)) {
-                int hDiff = Misc::randInt(2, 4);
-                if (!checkOverlap(xPos2 - 2, height + hDiff - 1, xPos2 + 2, height + hDiff + 1)) {
+                int hDiff = Misc::randInt(3, 4);
+                if (!checkOverlap(xPos2 - 2, height + hDiff - 2, xPos2 + 2, height + hDiff + 2)) {
                     generatePlatforms(height + hDiff, xPos2, findClosestTerrain(height + hDiff, xPos2, true) + 2, findClosestTerrain(height + hDiff, xPos2 + 2, false) - 2, currentIteration + 1);
                 }
             }
