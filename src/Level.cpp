@@ -41,7 +41,7 @@ int Level::countObjectsAt(int x, int y){
         +countObjectsAtIn(x,y, bullets)
         +countObjectsAtIn(x,y, xps)
         + (prevLevelDoor.getX() == x && prevLevelDoor.getY() == y)
-        + (nextLevelDoor.getX() == x && prevLevelDoor.getY() == y);
+        + (nextLevelDoor.getX() == x && nextLevelDoor.getY() == y);
 }
 
 LinkedList<TileType> Level::getListOfTileTypesAt(int x, int y) {

@@ -23,4 +23,5 @@ class Action{
     TileType getTtAffected();
     void setY(int y);
     void setTtAffected(TileType tt);
+    void setXY(int x, int y);
 };

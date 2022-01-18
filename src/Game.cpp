@@ -335,42 +335,41 @@ Action Game::getEngagedAction(Action proposedAction){
 
 //accepts or rejects left/right movement
 Action Game::goLeftRight(Action proposedAction){
-	int w = getmaxx(levelWindow);
+	int w = getmaxx(levelWindow), x = proposedAction.getX(), y = proposedAction.getY();
 	w--;
 	
 	//if hero will be in the map
-	if(proposedAction.getX() >= 0 && proposedAction.getX() <= w){
+	if(x >= 0 && x <= w){
 		switch(proposedAction.getTtAffected()){
 			case TileType::EMPTY:{
-				hero.setXY(proposedAction.getX(), proposedAction.getY());
+				hero.setXY(x,y);
 				return proposedAction;
 				break;
 			}
 
 			case TileType::BONUS:{
-				grabBonusAt(proposedAction.getX(), proposedAction.getY());
-				hero.setXY(proposedAction.getX(), proposedAction.getY());
-				return Action(proposedAction.getAnimation(), proposedAction.getX(), proposedAction.getY(), proposedAction.getInitiator(), TileType::BONUS);
+				grabBonusAt(x,y);
+				hero.setXY(x,y);
+				return proposedAction;
 				break;
 			}
 			
 			case TileType::MALUS:{
-				inflictMalusAt(proposedAction.getX(), proposedAction.getY());
-				hero.setXY(proposedAction.getX(), proposedAction.getY());
-				return Action(proposedAction.getAnimation(), proposedAction.getX(), proposedAction.getY(), proposedAction.getInitiator(), TileType::MALUS);
+				inflictMalusAt(x,y);
+				hero.setXY(x,y);
+				return proposedAction;
 				break;
 			}
 
 			case TileType::XP:{
-				gainXpAt(proposedAction.getX(), proposedAction.getY());
-				hero.setXY(proposedAction.getX(), proposedAction.getY());
-				proposedAction.setTtAffected(TileType::XP);
+				gainXpAt(x,y);
+				hero.setXY(x,y);
 				return proposedAction;
 				break;
 			}
 			case TileType::NL_DOOR:
 			case TileType::PL_DOOR:{
-				hero.setXY(proposedAction.getX(), proposedAction.getY());
+				hero.setXY(x,y);
 				return proposedAction;
 				break;
 			}
@@ -389,11 +388,11 @@ Action Game::goLeftRight(Action proposedAction){
 
 //accepts or rejects jumps
 Action Game::jump(Action proposedAction){
-	int h = getmaxy(levelWindow);
-	if(proposedAction.getY()>0 && proposedAction.getY() <= h){
-		if(map[currentLevel].countObjectsAt(proposedAction.getX(), proposedAction.getY()) == 0){
+	int h = getmaxy(levelWindow), y = proposedAction.getY(), x = proposedAction.getX();
+	if(y>0 && y <= h){
+		if(map[currentLevel].countObjectsAt(x, y) == 0){
 			if(hero.countMoves(Animation::JUMPING) < JUMP_HEIGHT && hero.countMoves(Animation::FALLING) == 0){
-				hero.setXY(proposedAction.getX(), proposedAction.getY());
+				hero.setXY(x, y);
 				return proposedAction;
 			}
 		}
@@ -403,75 +402,37 @@ Action Game::jump(Action proposedAction){
 
 //accepts or rejects falling
 Action Game::fall(Action proposedAction){
-	int h = getmaxy(levelWindow);
-	if(proposedAction.getY() >= 0 && proposedAction.getY() < h){
-		LinkedList<TileType> list = map[currentLevel].getListOfTileTypesAt(proposedAction.getX(), proposedAction.getY());
-		if(list.isEmpty()){ //equivalent of TileType::EMPTY
-			hero.setXY(proposedAction.getX(), proposedAction.getY());
-			return proposedAction;
-		}else{
-			for(int i=0; i<list.getSize(); i++){
-				switch(list[i]){
-					case TileType::EMPTY:
-					hero.setXY(proposedAction.getX(), proposedAction.getY());
-					return proposedAction;
-					break;
-
-					case TileType::ENEMY:{ //damages the enemy
-						Node<Entity>* enemy = map[currentLevel].getNodeAtIn(proposedAction.getX(), proposedAction.getY(), map[currentLevel].getEnemies());
-						enemy->data.setHp(enemy->data.getHp() - hero.getDp());
-						return Action(Animation::STILL, proposedAction.getX(), proposedAction.getY(), Initiator::LOGIC, TileType::ENEMY);
-						break;
-					}
-
-					case TileType::PL_DOOR:{
-						hero.setXY(proposedAction.getX(), proposedAction.getY());
-						proposedAction.setTtAffected(TileType::PL_DOOR);
-						return proposedAction;
-						break;
-					}
-					case TileType::NL_DOOR:{
-						hero.setXY(proposedAction.getX(), proposedAction.getY());
-						proposedAction.setTtAffected(TileType::NL_DOOR);
-						return proposedAction;
-						break;
-					}
-			
-					case TileType::TERRAIN:
-					case TileType::BONUS: //gets the bonus
-					case TileType::MALUS: //gets the malus	// prolly superflous				
-					case TileType::HERO: 
-					case TileType::SIZE: //ain't happening
-					default:
-					return Action(Animation::STILL, hero.getX(), hero.getY(), Initiator::LOGIC, TileType::HERO);
-					break;
-				}
-			}
-		}
-		
+	int h = getmaxy(levelWindow), y = proposedAction.getY(), x = proposedAction.getX();
+	LinkedList<TileType> list = map[currentLevel].getListOfTileTypesAt(x,y);
+	
+	if(y >= 0 && y < h && list.isEmpty()){
+		hero.setXY(x,y);
+		return proposedAction;
+	}else {
+		return Action(Animation::STILL, hero.getX(), hero.getY(), Initiator::LOGIC, TileType::HERO);
 	}
-	return Action(Animation::STILL, hero.getX(), hero.getY(), Initiator::LOGIC, TileType::HERO);
 }
 
 //accept or rejects shooting
 Action Game::shoot(Action proposedAction){
+	int x = proposedAction.getX(), y = proposedAction.getY();
 	if (hero.getWeapon()->getMagazineAmmo() > 0){
-		if(proposedAction.getX() >= 0 && proposedAction.getX() <= getmaxx(levelWindow)){
+		if(x >= 0 && x <= getmaxx(levelWindow)){
 			switch (proposedAction.getTtAffected()){
 				case TileType::XP:
 				case TileType::MALUS:
 				case TileType::BULLET:
 				case TileType::BONUS:
-				case TileType::EMPTY:
-				map[currentLevel].getBullets()->pushHead(new Node<Entity>(Entity(proposedAction.getX(), proposedAction.getY(), TileType::BULLET, 0, hero.getWeapon()->getDp(), hero.getDirection())));
-				hero.getWeapon()->setMagazineAmmo(hero.getWeapon()->getMagazineAmmo() - 1);
-				return proposedAction;
-				break;
-
+				case TileType::EMPTY:{
+					map[currentLevel].getBullets()->pushHead(new Node<Entity>(Entity(x,y, TileType::BULLET, 0, hero.getWeapon()->getDp(), hero.getDirection())));
+					hero.getWeapon()->setMagazineAmmo(hero.getWeapon()->getMagazineAmmo() - 1);
+					return proposedAction;
+					break;
+				}
 				case TileType::ENEMY:{
 					//hurt the enemy
 					hero.getWeapon()->setMagazineAmmo(hero.getWeapon()->getMagazineAmmo()-1);
-					Node<Entity>* enemy = map[currentLevel].getNodeAtIn(proposedAction.getX(), proposedAction.getY(), map[currentLevel].getEnemies());
+					Node<Entity>* enemy = map[currentLevel].getNodeAtIn(x,y, map[currentLevel].getEnemies());
 					enemy->data.setHp(enemy->data.getHp()-hero.getWeapon()->getDp());
 					return proposedAction;
 					break;
@@ -616,40 +577,48 @@ int Game::getCorrespondingDelay(Animation animation){
 //i.e. what do you do when the block underneat you is ...?
 Action Game::endOfFallingAction(Action proposedAction){
 	//be mindful that this will be called when the Hero is still and has something beneath him
-	LinkedList<TileType> list = map[currentLevel].getListOfTileTypesAt(proposedAction.getX(), proposedAction.getY()+1);
+	int x = proposedAction.getX(), y = proposedAction.getY();
+	LinkedList<TileType> list = map[currentLevel].getListOfTileTypesAt(x,y+1);
+
 	if(list.isEmpty()){
 		return proposedAction;
 	}else{
 		switch(list.getHead()->data){
 			case TileType::ENEMY:{
 				//hurt the enemy when falling over him
-				fallingAttack(proposedAction.getX(), proposedAction.getY()+1);
-				return Action(proposedAction.getAnimation(), proposedAction.getX(), proposedAction.getY(), proposedAction.getInitiator(), TileType::ENEMY);
+				fallingAttack(x,y+1);
+				proposedAction.setTtAffected(list.getHead()->data);
+				proposedAction.setXY(x,y+1);
+				return proposedAction;
 				break;
 			}
 			case TileType::BONUS:{
 				//grab the bonus when falling over it
-				grabBonusAt(proposedAction.getX(), proposedAction.getY()+1);
-				return Action(proposedAction.getAnimation(), proposedAction.getX(), proposedAction.getY()+1, proposedAction.getInitiator(), TileType::BONUS);
+				grabBonusAt(x,y+1);
+				proposedAction.setXY(x,y+1);
+				proposedAction.setTtAffected(list.getHead()->data);
+				return proposedAction;
 				break;
 			}
 			case TileType::MALUS:{
 				//inflict pain when falling over a malus
-				inflictMalusAt(proposedAction.getX(), proposedAction.getY()+1);
-				return Action(proposedAction.getAnimation(), proposedAction.getX(), proposedAction.getY()+1, proposedAction.getInitiator(), TileType::MALUS);
+				inflictMalusAt(x,y+1);
+				proposedAction.setXY(x,y+1);
+				proposedAction.setTtAffected(list.getHead()->data);
+				return proposedAction;
 				break;
 			}
 			case TileType::XP:{
 				gainXpAt(proposedAction.getX(), proposedAction.getY()+1);
-				proposedAction.setTtAffected(TileType::XP);
-				proposedAction.setY(proposedAction.getY()+1);
+				proposedAction.setXY(x,y+1);
+				proposedAction.setTtAffected(list.getHead()->data);
 				return proposedAction;
 				break;
 			}
 			case TileType::NL_DOOR:
 			case TileType::PL_DOOR:{
+				proposedAction.setXY(x,y+1);
 				proposedAction.setTtAffected(list.getHead()->data);
-				proposedAction.setY(proposedAction.getY()+1);
 				return proposedAction;
 			}
 			default:{

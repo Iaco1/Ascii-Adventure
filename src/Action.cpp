@@ -36,3 +36,7 @@ void Action::setTtAffected(TileType tt){
     this->ttAffected = tt;
 }
 
+void Action::setXY(int x, int y){
+    this->x = x;
+    this->y = y;
+}
