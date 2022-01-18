@@ -8,9 +8,9 @@ Level::Level(int w, int h, int levelIndex) {
     horBound = w;
     vertBound = h;
 
+    //previous level door placement
     if (levelIndex > 0) prevLevelDoor = Object(1, h - 1, TileType::PL_DOOR);
     else prevLevelDoor = Object(); //this has TileType and thus should not be drawn
-    nextLevelDoor = Object(w, h - 1, TileType::NL_DOOR);
 
     //floor generation
     for (int i = 0; i <= w; i++) terrain.pushHead(new Node<Object>(Object(i, h, TileType::TERRAIN)));
@@ -19,50 +19,54 @@ Level::Level(int w, int h, int levelIndex) {
     //creates one 3-character long platform
     for (int i = 0; i < 6; i++) terrain.pushHead(new Node<Object>(Object(1 + i, h - 3, TileType::TERRAIN)));
 
-    bonuses.pushHead(new Node<Bonus>(Bonus(2, h-4, TileType::BONUS, 100, 0, BonusType::HP, 1)));
-    maluses.pushHead(new Node<Malus>(Malus(w/2, h-1, TileType::MALUS, 100, 20, MalusType::THORN, 1)));
+    bonuses.pushHead(new Node<Bonus>(Bonus(2, h - 4, TileType::BONUS, 100, 0, BonusType::HP, 1)));
+    maluses.pushHead(new Node<Malus>(Malus(w / 2, h - 1, TileType::MALUS, 100, 20, MalusType::THORN, 1)));
     enemies.pushHead(new Node<Entity>(Entity(w - 1, h - 1, TileType::ENEMY, 100, 30, Direction::LEFT)));
-    xps.pushHead(new Node<Object>(Object(5, h-4, TileType::XP)));
+    xps.pushHead(new Node<Object>(Object(5, h - 4, TileType::XP)));
 
     generatePlatforms(vertBound - 4, horBound / 2, 0, horBound - 1, 1);
-}
-LinkedList <Object>* Level::getTerrain(){ return &terrain; }
-LinkedList <Entity>* Level::getEnemies(){ return &enemies; }
-LinkedList <Bonus>* Level::getBonuses(){ return &bonuses; }
-LinkedList <Malus>* Level::getMaluses(){ return &maluses; }
-LinkedList <Entity>* Level::getBullets(){ return &bullets; }
-LinkedList <Object>* Level::getXps(){ return &xps; }
 
-int Level::countObjectsAt(int x, int y){
-    return countObjectsAtIn(x,y, terrain)
-        +countObjectsAtIn(x,y, enemies)
-        +countObjectsAtIn(x,y, bonuses)
-        +countObjectsAtIn(x,y, maluses)
-        +countObjectsAtIn(x,y, bullets)
-        +countObjectsAtIn(x,y, xps)
+    //next level door placement
+    generateNLDoor();
+}
+
+LinkedList <Object>* Level::getTerrain() { return &terrain; }
+LinkedList <Entity>* Level::getEnemies() { return &enemies; }
+LinkedList <Bonus>* Level::getBonuses() { return &bonuses; }
+LinkedList <Malus>* Level::getMaluses() { return &maluses; }
+LinkedList <Entity>* Level::getBullets() { return &bullets; }
+LinkedList <Object>* Level::getXps() { return &xps; }
+
+int Level::countObjectsAt(int x, int y) {
+    return countObjectsAtIn(x, y, terrain)
+        + countObjectsAtIn(x, y, enemies)
+        + countObjectsAtIn(x, y, bonuses)
+        + countObjectsAtIn(x, y, maluses)
+        + countObjectsAtIn(x, y, bullets)
+        + countObjectsAtIn(x, y, xps)
         + (prevLevelDoor.getX() == x && prevLevelDoor.getY() == y)
         + (nextLevelDoor.getX() == x && nextLevelDoor.getY() == y);
 }
 
 LinkedList<TileType> Level::getListOfTileTypesAt(int x, int y) {
     LinkedList<TileType> list;
-    for(int i=0; i<countObjectsAtIn(x,y,terrain); i++) list.pushHead(new Node<TileType>(TileType::TERRAIN));
-    for(int i=0; i<countObjectsAtIn(x,y,enemies); i++) list.pushHead(new Node<TileType>(TileType::ENEMY));
-    for(int i=0; i<countObjectsAtIn(x,y,bonuses); i++) list.pushHead(new Node<TileType>(TileType::BONUS));
-    for(int i=0; i<countObjectsAtIn(x,y,maluses); i++) list.pushHead(new Node<TileType>(TileType::MALUS));
-    for(int i=0; i<countObjectsAtIn(x,y,bullets); i++) list.pushHead(new Node<TileType>(TileType::BULLET));
-    for(int i=0; i<countObjectsAtIn(x,y,xps); i++) list.pushHead(new Node<TileType>(TileType::XP));
+    for (int i = 0; i < countObjectsAtIn(x, y, terrain); i++) list.pushHead(new Node<TileType>(TileType::TERRAIN));
+    for (int i = 0; i < countObjectsAtIn(x, y, enemies); i++) list.pushHead(new Node<TileType>(TileType::ENEMY));
+    for (int i = 0; i < countObjectsAtIn(x, y, bonuses); i++) list.pushHead(new Node<TileType>(TileType::BONUS));
+    for (int i = 0; i < countObjectsAtIn(x, y, maluses); i++) list.pushHead(new Node<TileType>(TileType::MALUS));
+    for (int i = 0; i < countObjectsAtIn(x, y, bullets); i++) list.pushHead(new Node<TileType>(TileType::BULLET));
+    for (int i = 0; i < countObjectsAtIn(x, y, xps); i++) list.pushHead(new Node<TileType>(TileType::XP));
 
-    if(prevLevelDoor.getX() == x && prevLevelDoor.getY() == y) list.pushHead(new Node<TileType>(TileType::PL_DOOR));
-    if(nextLevelDoor.getX() == x && nextLevelDoor.getY() == y) list.pushHead(new Node<TileType>(TileType::NL_DOOR));
-    
+    if (prevLevelDoor.getX() == x && prevLevelDoor.getY() == y) list.pushHead(new Node<TileType>(TileType::PL_DOOR));
+    if (nextLevelDoor.getX() == x && nextLevelDoor.getY() == y) list.pushHead(new Node<TileType>(TileType::NL_DOOR));
+
     return list;
 }
 
 Object Level::getPrevLevelDoor() { return prevLevelDoor; }
 Object Level::getNextLevelDoor() { return nextLevelDoor; }
-int Level::getHorBound(){ return horBound; }
-int Level::getVertBound(){ return vertBound; }
+int Level::getHorBound() { return horBound; }
+int Level::getVertBound() { return vertBound; }
 
 bool Level::checkOverlap(int x1, int y1, int x2, int y2, TileType tile /*= TileType::EMPTY*/) {
     if (x1 < 0 || y1 < 0 || x2 > horBound || y2 > vertBound || x1 > x2 || y1 > y2) return true;
@@ -73,6 +77,10 @@ bool Level::checkOverlap(int x1, int y1, int x2, int y2, TileType tile /*= TileT
                 return true;
             iter = iter->next;
         }
+    }
+    if (tile == TileType::EMPTY || tile == TileType::HERO) {
+        if (x1 <= 2 && x2 >= 2 && y1 <= vertBound - 1 && y2 >= vertBound - 1)   //checks for overlap in the empty spot where
+            return true;                                                        //the hero is supposed to spawn (i.e. 2,h-1)
     }
     if (tile == TileType::EMPTY || tile == TileType::ENEMY) {
         Node<Entity>* iter = enemies.getHead();
@@ -92,6 +100,30 @@ bool Level::checkOverlap(int x1, int y1, int x2, int y2, TileType tile /*= TileT
     }
     if (tile == TileType::EMPTY || tile == TileType::MALUS) {
         Node<Malus>* iter = maluses.getHead();
+        while (iter != NULL) {
+            if (iter->data.getX() >= x1 && iter->data.getX() <= x2 && iter->data.getY() >= y1 && iter->data.getY() <= y2)
+                return true;
+            iter = iter->next;
+        }
+    }
+    if (tile == TileType::EMPTY || tile == TileType::BULLET) {
+        Node<Entity>* iter = bullets.getHead();
+        while (iter != NULL) {
+            if (iter->data.getX() >= x1 && iter->data.getX() <= x2 && iter->data.getY() >= y1 && iter->data.getY() <= y2)
+                return true;
+            iter = iter->next;
+        }
+    }
+    if (tile == TileType::EMPTY || tile == TileType::PL_DOOR) {
+        if (prevLevelDoor.getX() >= x1 && prevLevelDoor.getX() <= x2 && prevLevelDoor.getY() >= y1 && prevLevelDoor.getY() <= y2)
+            return true;
+    }
+    if (tile == TileType::EMPTY || tile == TileType::NL_DOOR) {
+        if (nextLevelDoor.getX() >= x1 && nextLevelDoor.getX() <= x2 && nextLevelDoor.getY() >= y1 && nextLevelDoor.getY() <= y2)
+            return true;
+    }
+    if (tile == TileType::EMPTY || tile == TileType::XP) {
+        Node<Object>* iter = xps.getHead();
         while (iter != NULL) {
             if (iter->data.getX() >= x1 && iter->data.getX() <= x2 && iter->data.getY() >= y1 && iter->data.getY() <= y2)
                 return true;
@@ -203,6 +235,18 @@ void Level::generatePlatforms(int height, int averageXPosition, int leftBound, i
         }
 
     }
+}
+
+void Level::generateNLDoor() {
+    int destX = horBound, destY = vertBound + 1;
+    for (int i = 1; i <= vertBound; i++) {
+        if (checkOverlap(horBound / 2 + 1, i, horBound, i, TileType::TERRAIN)) {
+            destY = i - 1;
+            destX = findClosestTerrain(i - 2, horBound + 1, true);
+            break;
+        }
+    }
+    nextLevelDoor = Object(destX, destY, TileType::NL_DOOR);
 }
 
 /*
