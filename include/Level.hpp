@@ -69,6 +69,9 @@ class Level{
     Object getPrevLevelDoor();
     Object getNextLevelDoor();
 
+    int getHorBound();
+    int getVertBound();
+
 
     bool checkOverlap(int x1, int y1, int x2, int y2, TileType tile = TileType::EMPTY);
     void placePlatform(int height, int leftBound, int rightBound);

@@ -8,9 +8,9 @@ Level::Level(int w, int h, int levelIndex) {
     horBound = w;
     vertBound = h;
 
-    if (levelIndex > 0) prevLevelDoor = Object(0, h - 1, TileType::DOOR);
+    if (levelIndex > 0) prevLevelDoor = Object(1, h - 1, TileType::PL_DOOR);
     else prevLevelDoor = Object(); //this has TileType and thus should not be drawn
-    nextLevelDoor = Object(w, h - 1, TileType::DOOR);
+    nextLevelDoor = Object(w, h - 1, TileType::NL_DOOR);
 
     //floor generation
     for (int i = 0; i <= w; i++) terrain.pushHead(new Node<Object>(Object(i, h, TileType::TERRAIN)));
@@ -39,7 +39,9 @@ int Level::countObjectsAt(int x, int y){
         +countObjectsAtIn(x,y, bonuses)
         +countObjectsAtIn(x,y, maluses)
         +countObjectsAtIn(x,y, bullets)
-        +countObjectsAtIn(x,y, xps);
+        +countObjectsAtIn(x,y, xps)
+        + (prevLevelDoor.getX() == x && prevLevelDoor.getY() == y)
+        + (nextLevelDoor.getX() == x && prevLevelDoor.getY() == y);
 }
 
 LinkedList<TileType> Level::getListOfTileTypesAt(int x, int y) {
@@ -50,12 +52,17 @@ LinkedList<TileType> Level::getListOfTileTypesAt(int x, int y) {
     for(int i=0; i<countObjectsAtIn(x,y,maluses); i++) list.pushHead(new Node<TileType>(TileType::MALUS));
     for(int i=0; i<countObjectsAtIn(x,y,bullets); i++) list.pushHead(new Node<TileType>(TileType::BULLET));
     for(int i=0; i<countObjectsAtIn(x,y,xps); i++) list.pushHead(new Node<TileType>(TileType::XP));
+
+    if(prevLevelDoor.getX() == x && prevLevelDoor.getY() == y) list.pushHead(new Node<TileType>(TileType::PL_DOOR));
+    if(nextLevelDoor.getX() == x && nextLevelDoor.getY() == y) list.pushHead(new Node<TileType>(TileType::NL_DOOR));
     
     return list;
 }
 
 Object Level::getPrevLevelDoor() { return prevLevelDoor; }
 Object Level::getNextLevelDoor() { return nextLevelDoor; }
+int Level::getHorBound(){ return horBound; }
+int Level::getVertBound(){ return vertBound; }
 
 bool Level::checkOverlap(int x1, int y1, int x2, int y2, TileType tile /*= TileType::EMPTY*/) {
     if (x1 < 0 || y1 < 0 || x2 > horBound || y2 > vertBound || x1 > x2 || y1 > y2) return true;

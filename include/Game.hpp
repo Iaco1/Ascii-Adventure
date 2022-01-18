@@ -16,7 +16,8 @@ public:
     Game();
     void mainLoop();
     void createMap();
-    void draw(bool newLevel);
+    void addLevel();
+    void draw(bool changeLevel);
     void drawHero();
     void drawHUD(WINDOW* hud);
     void drawBullets();
@@ -63,4 +64,6 @@ public:
 
     void moveEnemies();
     Menu getMenu();
+    void saveMapToFile();
+    char getTTchar(TileType tt);
 };

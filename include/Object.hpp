@@ -1,6 +1,6 @@
 #pragma once
 
-enum class TileType{ EMPTY, TERRAIN, HERO, ENEMY, BONUS, MALUS, BULLET, DOOR, XP, SIZE};
+enum class TileType{ EMPTY, TERRAIN, HERO, ENEMY, BONUS, MALUS, BULLET, PL_DOOR, NL_DOOR, XP, SIZE};
 
 class Object{
     protected:

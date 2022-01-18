@@ -2,6 +2,7 @@
 #include <iostream>
 #include <chrono>
 #include <thread>
+#include <fstream>
 
 using namespace std;
 
@@ -22,15 +23,24 @@ void Game::createMap(){
 	h--;w--;
 
     map.pushHead(new Node<Level>(Level(w,h, 0)));
-	hero = Hero(1,h-1,100,50, Weapon(50, 20, 20, WeaponType::HANDGUN));
+	hero = Hero(2,h-1,100,50, Weapon(50, 20, 20, WeaponType::HANDGUN));
     currentLevel = 0;
 }
 
+void Game::addLevel(){
+	currentLevel++;
+	int h, w;
+	getmaxyx(levelWindow, h, w);
+	h--;w--;
+	map.pushTail(new Node<Level>(Level(w,h,currentLevel)));
+	hero.setXY(2,h-1);
+}
+
 //handles the display of all of the level's elements and of the HUD
-void Game::draw(bool newLevel){
-	if(newLevel) {
-		clear();
-		refresh();
+void Game::draw(bool changeLevel){
+	if(changeLevel) {
+		wclear(levelWindow);
+		wrefresh(levelWindow);
 		drawLevelElements(*map[currentLevel].getTerrain());
 		drawDoors();
 	}
@@ -62,7 +72,9 @@ void Game::drawHero(){
 	hero.getXY(x,y);
 
 	//this hides the previous' hero's position with a ' ' char
-	if(hero.getActionLog()[0].getAnimation() != Animation::STILL){
+	if(hero.getActionLog()[0].getAnimation() != Animation::STILL 
+	&& hero.getActionLog()[0].getTtAffected() != TileType::PL_DOOR
+	&& hero.getActionLog()[0].getTtAffected() != TileType::NL_DOOR){
 		switch(hero.getActionLog()[0].getAnimation()){
 			case Animation::LEFT:
 			mvwaddch(levelWindow, y, x+1, ' ');
@@ -155,6 +167,7 @@ void Game::drawDoors(){
 	mvwaddch(levelWindow,y,x, prevDoor.getTileChar());
 	nextDoor.getXY(x,y);
 	mvwaddch(levelWindow,y,x,nextDoor.getTileChar());
+	wrefresh(levelWindow);
 }
 
 void Game::completeJump(Animation &proposedAnimation, Initiator &proposedInitiator){
@@ -250,10 +263,13 @@ Animation Game::getCorrespondingAnimation(char userKey){
 			return Animation::JUMPING;
 			break;
 
-			case '0':
-			gameOver = true;
-			return Animation::STILL;
-			break;
+			case '0':{
+				gameOver = true;
+				//saveMapToFile();
+				return Animation::STILL;
+				break;
+			}
+			
 
 			case 'p':
 			//here code to stop all moving entities 
@@ -351,6 +367,19 @@ Action Game::goLeftRight(Action proposedAction){
 				return proposedAction;
 				break;
 			}
+
+			case TileType::PL_DOOR:{
+				hero.setXY(proposedAction.getX(), proposedAction.getY());
+				proposedAction.setTtAffected(TileType::PL_DOOR);
+				return proposedAction;
+				break;
+			}
+			case TileType::NL_DOOR:{
+				hero.setXY(proposedAction.getX(), proposedAction.getY());
+				proposedAction.setTtAffected(TileType::NL_DOOR);
+				return proposedAction;
+				break;
+			}
 			
 			case TileType::ENEMY:
 			case TileType::BULLET:
@@ -398,6 +427,19 @@ Action Game::fall(Action proposedAction){
 						Node<Entity>* enemy = map[currentLevel].getNodeAtIn(proposedAction.getX(), proposedAction.getY(), map[currentLevel].getEnemies());
 						enemy->data.setHp(enemy->data.getHp() - hero.getDp());
 						return Action(Animation::STILL, proposedAction.getX(), proposedAction.getY(), Initiator::LOGIC, TileType::ENEMY);
+						break;
+					}
+
+					case TileType::PL_DOOR:{
+						hero.setXY(proposedAction.getX(), proposedAction.getY());
+						proposedAction.setTtAffected(TileType::PL_DOOR);
+						return proposedAction;
+						break;
+					}
+					case TileType::NL_DOOR:{
+						hero.setXY(proposedAction.getX(), proposedAction.getY());
+						proposedAction.setTtAffected(TileType::NL_DOOR);
+						return proposedAction;
 						break;
 					}
 			
@@ -650,14 +692,19 @@ void Game::mortician(TileType tt /*= TileType::ENEMY*/){
 
 		case TileType::MALUS:{
 		    sweepItemsIn(map[currentLevel].getMaluses());
+			mortician(TileType::HERO);
 	    	break;
 	    }
 
+		case TileType::HERO:{
+			if(hero.getHp()<=0) {
+            	gameOver = true;
+        		return;
+    		}
+		}
 		default:
-		if(hero.getHp()<=0) {
-            gameOver = true;
-        	return;
-    	}
+		break;
+		
     }
 }
 
@@ -675,10 +722,8 @@ void Game::logic(LinkedList<Action> proposedActions){
 		hero.registerMove(getEngagedAction(proposedActions.getHead()->data));
 		proposedActions.popHead();
 	}
-	mortician();
+	mortician(TileType::ENEMY);
 }
-
-
 
 void Game::mainLoop() {
 	srand(time(NULL));
@@ -710,7 +755,7 @@ void Game::mainLoop() {
 		
 		createMap();
 
-		bool newLevel = true;
+		bool changeLevel = true;
 		while(!gameOver){
 			/*
 			using namespace std::chrono;
@@ -720,10 +765,21 @@ void Game::mainLoop() {
 			frameStart = system_clock::now();
 			*/
 			
-			//if(levelChanged) newLevel = true;
-			draw(newLevel);
+			
+			draw(changeLevel);
 			logic(input());
-			newLevel = false;
+			
+			if(hero.getActionLog()[0].getTtAffected() == TileType::PL_DOOR ) {
+				changeLevel = true;
+				currentLevel--;
+				int x,y;
+				map[currentLevel].getNextLevelDoor().getXY(x,y);
+				hero.setXY(x-1,y);
+			}else if(hero.getActionLog()[0].getTtAffected() == TileType::NL_DOOR){
+				changeLevel = true;
+				addLevel();
+			}
+			else changeLevel = false;
 
 			/*
 			frameTime = system_clock::now() - frameStart;
@@ -744,3 +800,28 @@ void Game::mainLoop() {
 }
 
 Menu Game::getMenu(){ return menu; }
+
+void Game::saveMapToFile(){
+	
+	
+	ofstream file;
+	file.open("/home/user/projects/project-X-githubClone/projectX/output/map.txt",  ofstream::out);
+
+	for(int i=0; i<map.getSize(); i++){
+		for(int y=0; y<=map[i].getVertBound(); y++){
+			for(int x=0; x<=map[i].getHorBound(); x++){
+				LinkedList<TileType> list = map[i].getListOfTileTypesAt(x,y);
+				if(list.isEmpty()) file.put(' ');
+				else file.put(getTTchar(list.getHead()->data));
+			}
+			file.put('\n');
+		}
+		file.put('\n');file.put('!');file.put('\n');
+	}
+	file.close();
+}
+
+char Game::getTTchar(TileType tt){
+	char tileChar[]{ ' ', '#', 'H', 'E', 'B', 'M', 'o', '&', '&','$'};
+    return tileChar[(int)tt];
+}
