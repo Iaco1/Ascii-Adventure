@@ -1,5 +1,6 @@
 #pragma once
 #include <iostream>
+#include <cstdarg>
 using namespace std;
 
 template <class T>
@@ -158,11 +159,19 @@ class LinkedList{
 		}
 		return false;
 	}
-	bool containsData(T data){
-		Node<T> *iter = head;
-		while(iter!=NULL){
-			if(iter->data == data) return true;
-			else iter = iter->next;
+	bool containsData(int argn, ...){
+		va_list list;
+  		va_start(list, argn);
+		
+		for(int i=0; i<argn; i++){
+			Node<T> *iter = head;
+			while(iter!=NULL){
+				if(iter->data == va_arg(list, T)) {
+					va_end(list);
+					return true;
+				}
+				else iter = iter->next;
+			}
 		}
 		return false;
 	}

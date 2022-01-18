@@ -42,8 +42,9 @@ void Game::draw(bool changeLevel){
 		wclear(levelWindow);
 		wrefresh(levelWindow);
 		drawLevelElements(*map[currentLevel].getTerrain());
-		drawDoors();
+		
 	}
+	drawDoors();
 	int HUD_h = 1;
 	WINDOW* hud = newwin(HUD_h, getmaxx(levelWindow), 0, 0);
 	drawHUD(hud);
@@ -146,7 +147,7 @@ void Game::drawBullets(){
 
 		//popping animation for the bullet hitting something
 		LinkedList<TileType> list = map[currentLevel].getListOfTileTypesAt(nextX, y);
-		if(list.containsData(TileType::ENEMY) || list.containsData(TileType::TERRAIN)) {
+		if(list.containsData(4, TileType::ENEMY, TileType::TERRAIN, TileType::NL_DOOR, TileType::PL_DOOR)) {
 			mvwaddch(levelWindow, y, x, '*');
 			wrefresh(levelWindow);
 			std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -367,16 +368,9 @@ Action Game::goLeftRight(Action proposedAction){
 				return proposedAction;
 				break;
 			}
-
+			case TileType::NL_DOOR:
 			case TileType::PL_DOOR:{
 				hero.setXY(proposedAction.getX(), proposedAction.getY());
-				proposedAction.setTtAffected(TileType::PL_DOOR);
-				return proposedAction;
-				break;
-			}
-			case TileType::NL_DOOR:{
-				hero.setXY(proposedAction.getX(), proposedAction.getY());
-				proposedAction.setTtAffected(TileType::NL_DOOR);
 				return proposedAction;
 				break;
 			}
@@ -513,6 +507,9 @@ void Game::moveBullets(){
 					//this will cause the node to be popped in the following if-else
 					case TileType::ENEMY:
 					case TileType::TERRAIN:
+					case TileType::HERO:
+					case TileType::NL_DOOR:
+					case TileType::PL_DOOR:
 					nextX = -2; 
 					break;
 
@@ -541,6 +538,8 @@ void Game::moveBullets(){
 							break;
 
 							//they intersect for a second but then are deleted by the above while(!listAtCurrentXY.isEmpty())
+							case TileType::NL_DOOR:
+							case TileType::PL_DOOR:
 							case TileType::TERRAIN:
 							iter->data.setXY(nextX, y);
 							break;
@@ -617,30 +616,48 @@ int Game::getCorrespondingDelay(Animation animation){
 //i.e. what do you do when the block underneat you is ...?
 Action Game::endOfFallingAction(Action proposedAction){
 	//be mindful that this will be called when the Hero is still and has something beneath him
-	Node<Entity>* entity = map[currentLevel].getNodeAtIn(proposedAction.getX(), proposedAction.getY()+1, map[currentLevel].getEnemies());
-
-	if(entity!=NULL)
-	{
-		//hurt the enemy when falling over him
-		fallingAttack(proposedAction.getX(), proposedAction.getY()+1);
-		return Action(proposedAction.getAnimation(), proposedAction.getX(), proposedAction.getY(), proposedAction.getInitiator(), TileType::ENEMY);
-	}else if(map[currentLevel].getNodeAtIn(proposedAction.getX(), proposedAction.getY()+1, map[currentLevel].getBonuses()) != NULL)
-	{
-		//grab the bonus when falling over it
-		grabBonusAt(proposedAction.getX(), proposedAction.getY()+1);
-		return Action(proposedAction.getAnimation(), proposedAction.getX(), proposedAction.getY()+1, proposedAction.getInitiator(), TileType::BONUS);
-	}else if(map[currentLevel].getNodeAtIn(proposedAction.getX(), proposedAction.getY()+1, map[currentLevel].getMaluses()) != NULL)
-	{
-		//inflict pain when falling over a malus
-		inflictMalusAt(proposedAction.getX(), proposedAction.getY()+1);
-		return Action(proposedAction.getAnimation(), proposedAction.getX(), proposedAction.getY()+1, proposedAction.getInitiator(), TileType::MALUS);
-	}else if(map[currentLevel].getNodeAtIn(proposedAction.getX(), proposedAction.getY()+1, map[currentLevel].getXps()) != NULL){
-		gainXpAt(proposedAction.getX(), proposedAction.getY()+1);
-		proposedAction.setTtAffected(TileType::XP);
-		proposedAction.setY(proposedAction.getY()+1);
+	LinkedList<TileType> list = map[currentLevel].getListOfTileTypesAt(proposedAction.getX(), proposedAction.getY()+1);
+	if(list.isEmpty()){
 		return proposedAction;
-	}else return proposedAction; 
-
+	}else{
+		switch(list.getHead()->data){
+			case TileType::ENEMY:{
+				//hurt the enemy when falling over him
+				fallingAttack(proposedAction.getX(), proposedAction.getY()+1);
+				return Action(proposedAction.getAnimation(), proposedAction.getX(), proposedAction.getY(), proposedAction.getInitiator(), TileType::ENEMY);
+				break;
+			}
+			case TileType::BONUS:{
+				//grab the bonus when falling over it
+				grabBonusAt(proposedAction.getX(), proposedAction.getY()+1);
+				return Action(proposedAction.getAnimation(), proposedAction.getX(), proposedAction.getY()+1, proposedAction.getInitiator(), TileType::BONUS);
+				break;
+			}
+			case TileType::MALUS:{
+				//inflict pain when falling over a malus
+				inflictMalusAt(proposedAction.getX(), proposedAction.getY()+1);
+				return Action(proposedAction.getAnimation(), proposedAction.getX(), proposedAction.getY()+1, proposedAction.getInitiator(), TileType::MALUS);
+				break;
+			}
+			case TileType::XP:{
+				gainXpAt(proposedAction.getX(), proposedAction.getY()+1);
+				proposedAction.setTtAffected(TileType::XP);
+				proposedAction.setY(proposedAction.getY()+1);
+				return proposedAction;
+				break;
+			}
+			case TileType::NL_DOOR:
+			case TileType::PL_DOOR:{
+				proposedAction.setTtAffected(list.getHead()->data);
+				proposedAction.setY(proposedAction.getY()+1);
+				return proposedAction;
+			}
+			default:{
+				return proposedAction;
+				break;
+			}
+		}
+	}	
 }
 
 //decides whether to damage an enemy sitting below the attacker or not
