@@ -8,9 +8,9 @@ Level::Level(int w, int h, int levelIndex) {
     horBound = w;
     vertBound = h;
 
+    //previous level door placement
     if (levelIndex > 0) prevLevelDoor = Object(1, h - 1, TileType::PL_DOOR);
     else prevLevelDoor = Object(); //this has TileType and thus should not be drawn
-    nextLevelDoor = Object(w, h - 1, TileType::NL_DOOR);
 
     //floor generation
     for (int i = 0; i <= w; i++) terrain.pushHead(new Node<Object>(Object(i, h, TileType::TERRAIN)));
@@ -25,7 +25,11 @@ Level::Level(int w, int h, int levelIndex) {
     xps.pushHead(new Node<Object>(Object(5, h - 4, TileType::XP)));
 
     generatePlatforms(vertBound - 4, horBound / 2, 0, horBound - 1, 1);
+
+    //next level door placement
+    generateNLDoor();
 }
+
 LinkedList <Object>* Level::getTerrain() { return &terrain; }
 LinkedList <Entity>* Level::getEnemies() { return &enemies; }
 LinkedList <Bonus>* Level::getBonuses() { return &bonuses; }
@@ -231,6 +235,18 @@ void Level::generatePlatforms(int height, int averageXPosition, int leftBound, i
         }
 
     }
+}
+
+void Level::generateNLDoor() {
+    int destX = horBound, destY = vertBound + 1;
+    for (int i = 1; i <= vertBound; i++) {
+        if (checkOverlap(horBound / 2 + 1, i, horBound, i, TileType::TERRAIN)) {
+            destY = i - 1;
+            destX = findClosestTerrain(i - 2, horBound + 1, true);
+            break;
+        }
+    }
+    nextLevelDoor = Object(destX, destY, TileType::NL_DOOR);
 }
 
 /*
