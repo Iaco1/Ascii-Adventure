@@ -31,13 +31,13 @@ public:
 
     Animation getCorrespondingAnimation(char userKey);
     Action getCorrespondingAction(Animation animation, Initiator initator, TileType ttAffected);
-    Action getEngagedAction(Action proposedAction);
+    LinkedList<Action> getEngagedAction(Action proposedAction);
     
     Action goLeftRight(Action proposedAction);
     Action jump(Action proposedAction);
     Action fall(Action proposedAction);
     Action shoot(Action proposedAction);
-    Action endOfFallingAction(Action proposedAction);
+    LinkedList<Action> endOfFallingAction(Action proposedAction);
     
     void moveBullets();
     void nextXyFor(int &x, int &y, Animation animation);

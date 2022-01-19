@@ -10,7 +10,7 @@ Level::Level(int w, int h, int levelIndex) {
 
     //previous level door placement
     if (levelIndex > 0) prevLevelDoor = Object(1, h - 1, TileType::PL_DOOR);
-    else prevLevelDoor = Object(); //this has TileType and thus should not be drawn
+    else prevLevelDoor = Object(); //this has TileType::EMPTY and thus should not be drawn
 
     //floor generation
     for (int i = 0; i <= w; i++) terrain.pushHead(new Node<Object>(Object(i, h, TileType::TERRAIN)));

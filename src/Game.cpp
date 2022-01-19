@@ -288,7 +288,7 @@ Animation Game::getCorrespondingAnimation(char userKey){
 		}
 }
 
-//returns an action to propose to Game::Logic()
+//returns an action to propose to Game::Logic() with the correct affected x,y
 Action Game::getCorrespondingAction(Animation animation, Initiator initiator, TileType ttAffected){
 	int x = hero.getX(), y = hero.getY();
 	nextXyFor(x,y,animation);
@@ -296,41 +296,42 @@ Action Game::getCorrespondingAction(Animation animation, Initiator initiator, Ti
 }
 
 //either accepts the action proposed by the user or forces an action by logic  
-Action Game::getEngagedAction(Action proposedAction){
-	/*int h, w;
-	getmaxyx(levelWindow, h, w);*/
+LinkedList<Action> Game::getEngagedAction(Action proposedAction){	
+	LinkedList<Action> ea;
 	
 	//establishes the legality of the action
 	switch(proposedAction.getAnimation()){
-
 		case Animation::JUMPING:
-		return jump(proposedAction);
+		ea.pushHead(new Node<Action>(jump(proposedAction)));
 		break;
 
 		case Animation::LEFT:
 		case Animation::RIGHT:
-		return goLeftRight(proposedAction);
+		ea.pushHead(new Node<Action>(goLeftRight(proposedAction)));
 		break;
 
 		case Animation::FALLING:
-		return fall(proposedAction);
+		ea.pushHead(new Node<Action>(fall(proposedAction)));
 		break;
 		
 		case Animation::SHOOTING:
-		return shoot(proposedAction);
+		ea.pushHead(new Node<Action>(shoot(proposedAction)));
 		break;
 
-		case Animation::STILL:{//cause actually hero is STILL and has an ENEMY below him when he's done with his jump
-			return endOfFallingAction(proposedAction);
-		}
+		case Animation::STILL://cause actually hero is STILL and has an ENEMY below him when he's done with his jump
+		return endOfFallingAction(proposedAction);
+		break;
 
 		case Animation::CLIMB_UP:
 		case Animation::CLIMB_DOWN:
 		case Animation::PAUSE:
 		case Animation::QUIT:
-		default: // this if may be useless
-		return proposedAction;
+		default:
+			ea.pushHead(new Node<Action>(proposedAction));
+			break;
 	}
+	
+	return ea;
 }
 
 //accepts or rejects left/right movement
@@ -570,62 +571,76 @@ void Game::nextXyFor(int &x, int &y, Animation animation){
 
 int Game::getCorrespondingDelay(Animation animation){
 	//enum class Animation{CLIMB_UP, CLIMB_DOWN, LEFT, RIGHT, STILL, JUMPING, FALLING, QUIT, PAUSE, SHOOTING};
-	int animationDelay[] = {0, 0, 12, 12, 0, 112, 112, 0, 0, 10};
+	int animationDelay[] = {0, 0, 12, 12, 0, 168, 112, 0, 0, 10};
 	return animationDelay[(int)animation];
 }
 
 //i.e. what do you do when the block underneat you is ...?
-Action Game::endOfFallingAction(Action proposedAction){
+LinkedList<Action> Game::endOfFallingAction(Action proposedAction){
 	//be mindful that this will be called when the Hero is still and has something beneath him
 	int x = proposedAction.getX(), y = proposedAction.getY();
-	LinkedList<TileType> list = map[currentLevel].getListOfTileTypesAt(x,y+1);
+	LinkedList<TileType> ltta = map[currentLevel].getListOfTileTypesAt(x,y+1);
 
-	if(list.isEmpty()){
-		return proposedAction;
+	if(ltta.isEmpty()){
+		LinkedList<Action> l;
+		l.pushHead(new Node<Action>(proposedAction));
+		return l;
 	}else{
-		switch(list.getHead()->data){
-			case TileType::ENEMY:{
-				//hurt the enemy when falling over him
-				fallingAttack(x,y+1);
-				proposedAction.setTtAffected(list.getHead()->data);
-				proposedAction.setXY(x,y+1);
-				return proposedAction;
-				break;
+		LinkedList<Action> ea;
+
+		while(!ltta.isEmpty()){
+			switch(ltta.getHead()->data){
+				case TileType::ENEMY:{
+					//hurt the enemy when falling over him
+					fallingAttack(x,y+1);
+					proposedAction.setTtAffected(ltta.getHead()->data);
+					proposedAction.setXY(x,y+1);
+					ea.pushHead(new Node<Action>(proposedAction));
+					proposedAction.setXY(x,y);
+					break;
+				}
+				case TileType::BONUS:{
+					//grab the bonus when falling over it
+					grabBonusAt(x,y+1);
+					proposedAction.setXY(x,y+1);
+					proposedAction.setTtAffected(ltta.getHead()->data);
+					ea.pushHead(new Node<Action>(proposedAction));
+					proposedAction.setXY(x,y);
+					break;
+				}
+				case TileType::MALUS:{
+					//inflict pain when falling over a malus
+					inflictMalusAt(x,y+1);
+					proposedAction.setXY(x,y+1);
+					proposedAction.setTtAffected(ltta.getHead()->data);
+					ea.pushHead(new Node<Action>(proposedAction));
+					proposedAction.setXY(x,y);
+					break;
+				}
+				case TileType::XP:{
+					gainXpAt(proposedAction.getX(), proposedAction.getY()+1);
+					proposedAction.setXY(x,y+1);
+					proposedAction.setTtAffected(ltta.getHead()->data);
+					ea.pushHead(new Node<Action>(proposedAction));
+					proposedAction.setXY(x,y);
+					break;
+				}
+				case TileType::NL_DOOR:
+				case TileType::PL_DOOR:{
+					proposedAction.setXY(x,y+1);
+					proposedAction.setTtAffected(ltta.getHead()->data);
+					ea.pushHead(new Node<Action>(proposedAction));
+					proposedAction.setXY(x,y);
+					break;
+				}
+				default:{
+					ea.pushHead(new Node<Action>(proposedAction));
+					break;
+				}
 			}
-			case TileType::BONUS:{
-				//grab the bonus when falling over it
-				grabBonusAt(x,y+1);
-				proposedAction.setXY(x,y+1);
-				proposedAction.setTtAffected(list.getHead()->data);
-				return proposedAction;
-				break;
-			}
-			case TileType::MALUS:{
-				//inflict pain when falling over a malus
-				inflictMalusAt(x,y+1);
-				proposedAction.setXY(x,y+1);
-				proposedAction.setTtAffected(list.getHead()->data);
-				return proposedAction;
-				break;
-			}
-			case TileType::XP:{
-				gainXpAt(proposedAction.getX(), proposedAction.getY()+1);
-				proposedAction.setXY(x,y+1);
-				proposedAction.setTtAffected(list.getHead()->data);
-				return proposedAction;
-				break;
-			}
-			case TileType::NL_DOOR:
-			case TileType::PL_DOOR:{
-				proposedAction.setXY(x,y+1);
-				proposedAction.setTtAffected(list.getHead()->data);
-				return proposedAction;
-			}
-			default:{
-				return proposedAction;
-				break;
-			}
+			ltta.popHead();
 		}
+		return ea;
 	}	
 }
 
@@ -705,7 +720,11 @@ void Game::logic(LinkedList<Action> proposedActions){
 	moveBullets();
 	moveEnemies();
 	while(!proposedActions.isEmpty()){
-		hero.registerMove(getEngagedAction(proposedActions.getHead()->data));
+		LinkedList<Action> ea = getEngagedAction(proposedActions.getHead()->data);
+		while(!ea.isEmpty()){
+			hero.registerMove(ea.getHead()->data);
+			ea.popHead();
+		}
 		proposedActions.popHead();
 	}
 	mortician(TileType::ENEMY);
