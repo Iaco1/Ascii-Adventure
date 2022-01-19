@@ -1,7 +1,7 @@
 #pragma once
 #include "Item.hpp"
 
-enum class BonusType{ HP, AMMO};
+enum class BonusType{ HP, AMMO, SIZE };
 
 class Bonus : public Item{
     protected:
