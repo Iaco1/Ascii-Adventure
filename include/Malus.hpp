@@ -10,7 +10,7 @@ class Malus : public Item{
 
     public:
     Malus();
-    Malus(int x, int y, TileType tileType, int hp, int dp, MalusType bt, int quantity);
+    Malus(int x, int y, int hp, int dp, MalusType mt, int quantity);
     char getTileChar();
 
 };

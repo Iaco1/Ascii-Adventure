@@ -55,7 +55,7 @@ void Game::draw(bool changeLevel){
 	wrefresh(levelWindow);
 	//terrain, enemies, bonuses and maluses' drawing
 	
-	drawLevelElements(*map[currentLevel].getEnemies());//drawEnemies();
+	drawLevelElements(*map[currentLevel].getEnemies());
 	drawLevelElements(*map[currentLevel].getBonuses());
 	drawLevelElements(*map[currentLevel].getMaluses());
 	drawLevelElements(*map[currentLevel].getXps());
@@ -147,7 +147,7 @@ void Game::drawBullets(){
 
 		//popping animation for the bullet hitting something
 		LinkedList<TileType> list = map[currentLevel].getListOfTileTypesAt(nextX, y);
-		if(list.containsData(4, TileType::ENEMY, TileType::TERRAIN, TileType::NL_DOOR, TileType::PL_DOOR)) {
+		if(list.containsAnyData(4, TileType::ENEMY, TileType::TERRAIN, TileType::NL_DOOR, TileType::PL_DOOR)) {
 			mvwaddch(levelWindow, y, x, '*');
 			wrefresh(levelWindow);
 			std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -433,7 +433,7 @@ Action Game::shoot(Action proposedAction){
 				case TileType::ENEMY:{
 					//hurt the enemy
 					hero.getWeapon()->setMagazineAmmo(hero.getWeapon()->getMagazineAmmo()-1);
-					Node<Entity>* enemy = map[currentLevel].getNodeAtIn(x,y, map[currentLevel].getEnemies());
+					Node<Enemy>* enemy = map[currentLevel].getNodeAtIn(x,y, map[currentLevel].getEnemies());
 					enemy->data.setHp(enemy->data.getHp()-hero.getWeapon()->getDp());
 					return proposedAction;
 					break;
@@ -508,7 +508,7 @@ void Game::moveBullets(){
 
 							//harm the enemy and intersect for a moment (will be later deleted)
 							case TileType::ENEMY:{
-								Node<Entity>* enemy = map[currentLevel].getNodeAtIn(nextX, y, map[currentLevel].getEnemies());
+								Node<Enemy>* enemy = map[currentLevel].getNodeAtIn(nextX, y, map[currentLevel].getEnemies());
 								enemy->data.setHp(enemy->data.getHp()-hero.getWeapon()->getDp());
 								iter->data.setXY(nextX, y);
 								//hurt the enemy
@@ -646,7 +646,7 @@ LinkedList<Action> Game::endOfFallingAction(Action proposedAction){
 
 //decides whether to damage an enemy sitting below the attacker or not
 void Game::fallingAttack(int x, int y){
-	Node<Entity>* enemy = map[currentLevel].getNodeAtIn(x,y, map[currentLevel].getEnemies());
+	Node<Enemy>* enemy = map[currentLevel].getNodeAtIn(x,y, map[currentLevel].getEnemies());
 	enemy->data.setHp(enemy->data.getHp()-hero.getDp());
 }
 
@@ -711,7 +711,7 @@ void Game::mortician(TileType tt /*= TileType::ENEMY*/){
 
 //as of now, moves one enemy back and forth on a 3 unit long line
 void Game::moveEnemies(){
-	//move
+	
 }
 
 //poses constraints on what the user can do, mainly chosen from our own world
@@ -807,8 +807,6 @@ void Game::mainLoop() {
 Menu Game::getMenu(){ return menu; }
 
 void Game::saveMapToFile(){
-	
-	
 	ofstream file;
 	file.open("/home/user/projects/project-X-githubClone/projectX/output/map.txt",  ofstream::out);
 

@@ -19,9 +19,9 @@ Level::Level(int w, int h, int levelIndex) {
     //creates one 3-character long platform
     for (int i = 0; i < 6; i++) terrain.pushHead(new Node<Object>(Object(1 + i, h - 3, TileType::TERRAIN)));
 
-    bonuses.pushHead(new Node<Bonus>(Bonus(2, h - 4, TileType::BONUS, 100, 0, BonusType::HP, 1)));
-    maluses.pushHead(new Node<Malus>(Malus(w / 2, h - 1, TileType::MALUS, 100, 20, MalusType::THORN, 1)));
-    enemies.pushHead(new Node<Entity>(Entity(w - 1, h - 1, TileType::ENEMY, 100, 30, Direction::LEFT)));
+    bonuses.pushHead(new Node<Bonus>(Bonus(2, h - 4, 100, BonusType::HP, 1)));
+    maluses.pushHead(new Node<Malus>(Malus(w / 2, h - 1, 100, 20, MalusType::THORN, 1)));
+    enemies.pushHead(new Node<Enemy>(Enemy(w - 1, h - 1, 100, 30, EnemyType::SENTRY)));
     xps.pushHead(new Node<Object>(Object(5, h - 4, TileType::XP)));
 
     generatePlatforms(vertBound - 4, horBound / 2, 0, horBound - 1, 1);
@@ -31,7 +31,7 @@ Level::Level(int w, int h, int levelIndex) {
 }
 
 LinkedList <Object>* Level::getTerrain() { return &terrain; }
-LinkedList <Entity>* Level::getEnemies() { return &enemies; }
+LinkedList <Enemy>* Level::getEnemies() { return &enemies; }
 LinkedList <Bonus>* Level::getBonuses() { return &bonuses; }
 LinkedList <Malus>* Level::getMaluses() { return &maluses; }
 LinkedList <Entity>* Level::getBullets() { return &bullets; }
@@ -83,7 +83,7 @@ bool Level::checkOverlap(int x1, int y1, int x2, int y2, TileType tile /*= TileT
             return true;                                                        //the hero is supposed to spawn (i.e. 2,h-1)
     }
     if (tile == TileType::EMPTY || tile == TileType::ENEMY) {
-        Node<Entity>* iter = enemies.getHead();
+        Node<Enemy>* iter = enemies.getHead();
         while (iter != NULL) {
             if (iter->data.getX() >= x1 && iter->data.getX() <= x2 && iter->data.getY() >= y1 && iter->data.getY() <= y2)
                 return true;

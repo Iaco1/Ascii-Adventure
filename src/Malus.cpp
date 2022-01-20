@@ -2,8 +2,7 @@
 
 Malus::Malus(){}
 
-Malus::Malus(int x, int y, TileType tileType, int hp, int dp, MalusType mt, int quantity) : Item(x,y,tileType, hp, dp){
-    if(dp>0) dp = 0;
+Malus::Malus(int x, int y, int hp, int dp, MalusType mt, int quantity) : Item(x,y, TileType::MALUS, hp, dp){
     this->mt = mt;
     this->quantity = quantity;
 }

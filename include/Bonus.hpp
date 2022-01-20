@@ -10,6 +10,6 @@ class Bonus : public Item{
     
     public:
     Bonus();
-    Bonus(int x, int y, TileType tileType, int hp, int dp, BonusType bt, int quantity);
+    Bonus(int x, int y, int hp, BonusType bt, int quantity);
     char getTileChar();
 };

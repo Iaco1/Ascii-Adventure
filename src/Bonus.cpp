@@ -2,8 +2,7 @@
 
 Bonus::Bonus(){}
 
-Bonus::Bonus(int x, int y, TileType tileType, int hp, int dp, BonusType bt, int quantity) : Item(x,y,tileType, hp, dp){
-    if(dp>0) dp = 0;
+Bonus::Bonus(int x, int y, int hp, BonusType bt, int quantity) : Item(x,y,TileType::BONUS, hp, 0){
     this->bt = bt;
     this->quantity = quantity;
 }

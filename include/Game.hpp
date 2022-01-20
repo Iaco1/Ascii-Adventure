@@ -21,7 +21,6 @@ public:
     void drawHero();
     void drawHUD(WINDOW* hud);
     void drawBullets();
-    void drawEnemies();
     void drawDoors();
     template <class T>
     void drawLevelElements(LinkedList<T> list);
@@ -34,6 +33,7 @@ public:
     LinkedList<Action> getEngagedAction(Action proposedAction);
     
     Action goLeftRight(Action proposedAction);
+    //Action goLeftRight(Action proposedAction, Enemy enemy);
     Action jump(Action proposedAction);
     Action fall(Action proposedAction);
     Action shoot(Action proposedAction);

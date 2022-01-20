@@ -159,7 +159,7 @@ class LinkedList{
 		}
 		return false;
 	}
-	bool containsData(int argn, ...){
+	bool containsAnyData(int argn, ...){
 		va_list list;
   		va_start(list, argn);
 		
