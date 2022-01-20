@@ -1,7 +1,7 @@
 #pragma once
 #include "Item.hpp"
 
-enum class MalusType{ THORN };
+enum class MalusType{ THORN, SIZE };
 
 class Malus : public Item{
     protected:
