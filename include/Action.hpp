@@ -3,7 +3,7 @@
 #include "Object.hpp" //or could include a file contaning the enum class TileType
 
 enum class Animation{CLIMB_UP, CLIMB_DOWN, LEFT, RIGHT, STILL, JUMPING, FALLING, QUIT, PAUSE, SHOOTING};
-enum class Initiator{ USER, LOGIC};
+enum class Initiator{ USER, LOGIC, ENEMY_PATTERN};
 
 class Action{
     protected:

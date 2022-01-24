@@ -24,6 +24,8 @@ public:
     void drawDoors();
     template <class T>
     void drawLevelElements(LinkedList<T> list);
+    void drawEnemies();
+    void delay();
 
     LinkedList<Action> input();
     void logic(LinkedList<Action> proposedActions);
@@ -31,9 +33,10 @@ public:
     Animation getCorrespondingAnimation(char userKey);
     Action getCorrespondingAction(Animation animation, Initiator initator, TileType ttAffected);
     LinkedList<Action> getEngagedAction(Action proposedAction);
+    LinkedList<Action> getEngagedAction(Action proposedAction, Enemy *enemy);
     
     Action goLeftRight(Action proposedAction);
-    //Action goLeftRight(Action proposedAction, Enemy enemy);
+    Action goLeftRight(Action proposedAction, Enemy *enemy);
     Action jump(Action proposedAction);
     Action fall(Action proposedAction);
     Action shoot(Action proposedAction);
@@ -63,6 +66,7 @@ public:
     void gainXpAt(int x, int y);
 
     void moveEnemies();
+    LinkedList<Action> horizontalPattern(Enemy *enemy);
     Menu getMenu();
     void saveMapToFile();
     char getTTchar(TileType tt);

@@ -232,6 +232,13 @@ class LinkedList{
 			}
 		}
 	}	
+	void appendList(LinkedList<T> ll){
+		Node<T> *n = ll.getHead();
+		while(n!=NULL){
+			pushTail(n);
+			n = n->next;
+		}
+	}
 	~LinkedList(){
 		head = NULL;
 		tail = NULL;
