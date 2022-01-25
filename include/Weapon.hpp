@@ -17,5 +17,7 @@ class Weapon{
     int getMagazineAmmo();
     int getDp();
     void setMagazineAmmo(int magazineAmmo);
+    void setMaxAmmo(int maxAmmo);
+    void setDp(int dp);
 
 };
