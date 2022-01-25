@@ -5,7 +5,7 @@ Entity::Entity() : Item(){}
 Entity::Entity(int x, int y, TileType tileType, int hp, int dp, Direction direction) : Item(x,y,tileType, hp, dp){
     //initialization for the actionLog with unsignificant Actions 
     for(int i=0; i<SIGNIFICANT_MOVES; i++){
-        actionLog[i] = Action(Animation::STILL, 0,0, Initiator::LOGIC, TileType::EMPTY);
+        actionLog[i] = Action(Animation::STILL, 0,0, Initiator::LOGIC, TileType::EMPTY, 0);
     }
     
     this->direction = direction;
@@ -53,18 +53,22 @@ int Entity::countMoves(Action action){
 }
 
 //counts the no. of nodes that have matching data (animation)
-int Entity::countMoves(Animation animation){
+int Entity::countMoves(Animation animation, int n){
 	int count = 0;
-	for(int i=0; i<SIGNIFICANT_MOVES-1; i++){
+    if(n>SIGNIFICANT_MOVES || n<=0) n = SIGNIFICANT_MOVES;
+
+	for(int i=0; i < n-1; i++){
         if(actionLog[i].getAnimation() == animation) count++;
     }
 	return count;
 }
 
 //counts the no. of nodes that have matching data (animation and initiator)
-int Entity::countMoves(Animation animation, Initiator initiator){
+int Entity::countMoves(Animation animation, Initiator initiator, int n){
 	int count = 0;
-	for(int i=0; i<SIGNIFICANT_MOVES-1; i++){
+    if(n>SIGNIFICANT_MOVES || n<=0) n = SIGNIFICANT_MOVES;
+    
+	for(int i=0; i < n-1; i++){
         if(actionLog[i].getAnimation() == animation && actionLog[i].getInitiator() == initiator) count++;
     }
 	return count;

@@ -25,8 +25,7 @@ public:
     template <class T>
     void drawLevelElements(LinkedList<T> list);
     void drawEnemies();
-    void delay();
-
+    
     LinkedList<Action> input();
     void logic(LinkedList<Action> proposedActions);
 

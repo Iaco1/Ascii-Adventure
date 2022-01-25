@@ -7,7 +7,7 @@
 using namespace std;
 
 const int JUMP_HEIGHT = 4;
-const int targetFrameRate = 60;
+const int targetFrameRate = 120;
 auto frameDelay =  std::chrono::milliseconds(1000/targetFrameRate); //max duration for a frame
 
 
@@ -169,24 +169,6 @@ void Game::drawDoors(){
 	wrefresh(levelWindow);
 }
 
-//this slows down the refresh rate in order for the user to see certain animations
-void Game::delay(){
-	/*
-	Animation herosAnimation = hero.getActionLog()[0].getAnimation();
-	Animation enemysAnimation = Animation::STILL; //has the zero delay thus it won't affect the following if when there are no more enemies left 
-	if(!map[currentLevel].getEnemies()->isEmpty()) enemysAnimation = map[currentLevel].getEnemies()->getHead()->data.getActionLog()[0].getAnimation();
-	
-	if(getCorrespondingDelay(herosAnimation) > 0) std::this_thread::sleep_for(std::chrono::milliseconds(getCorrespondingDelay(hero.getActionLog()[0].getAnimation())));
-	else if(!map[currentLevel].getBullets()->isEmpty()) std::this_thread::sleep_for(std::chrono::milliseconds(getCorrespondingDelay(Animation::SHOOTING)));
-	else if(getCorrespondingDelay(enemysAnimation)>0)std::this_thread::sleep_for(std::chrono::milliseconds(500));
-	*/
-	if(hero.getActionLog()[0].getAnimation() == Animation::JUMPING) {
-		Action lastMove = hero.getActionLog()[0];
-		Action still = Action(Animation::STILL, lastMove.getX(), lastMove.getY(), Initiator::LOGIC, TileType::HERO);
-		for(int i=0; i<50; i++) hero.registerMove(still);
-	}
-}
-
 void Game::drawEnemies(){
 	LinkedList<Enemy> enemies = *map[currentLevel].getEnemies();
 	while(!enemies.isEmpty()){
@@ -266,6 +248,32 @@ LinkedList<Action> Game::input(){
 	LinkedList<TileType> listOfTileTypesAt; //this tells us all of the objects that are placed at x,y
 	LinkedList<Action> proposedActions;		//this tells us everything that should happen given the userLog[] and the user-initiated actions
 	
+	{
+		//delay setting mechanism
+		if(hero.getActionLog()[0].getDelay()>0) {
+			Action lastAction = hero.getActionLog()[0];
+			lastAction.setAnimation(Animation::STILL);
+			lastAction.setInitiator(Initiator::LOGIC);
+			lastAction.setTtAffected(TileType::HERO);
+
+			if(hero.countMoves(Animation::JUMPING) == 4 
+			&& hero.getActionLog()[0].getAnimation() == Animation::JUMPING){
+				//slowing down at the top to give the player time to move left or right
+				lastAction.setDelay(getCorrespondingDelay(Animation::JUMPING)*2);
+			}
+			else if(hero.countMoves(Animation::FALLING) == 4
+			&& hero.getActionLog()[0].getAnimation() == Animation::FALLING){
+				//speeding up at the bottom to give player the possibility of jumping again faster
+				lastAction.setDelay(0);
+			}
+			else lastAction.setDelay(lastAction.getDelay()-1);
+
+			proposedActions.pushHead(new Node<Action>(lastAction));
+			return proposedActions;
+		}
+	}
+	
+
 	//keeps the hero jumping till he moved JUMP_HEIGHT positions up in the Y-axis
 	completeJump(proposedAnimation ,proposedInitiator);
 	//has the hero fall each time a TileType::EMPTY is beneath him
@@ -358,7 +366,7 @@ Animation Game::getCorrespondingAnimation(char userKey){
 Action Game::getCorrespondingAction(Animation animation, Initiator initiator, TileType ttAffected){
 	int x = hero.getX(), y = hero.getY();
 	nextXyFor(x,y,animation);
-	return Action(animation, x, y, initiator, ttAffected);
+	return Action(animation, x, y, initiator, ttAffected, 0);
 }
 
 //either accepts the action proposed by the user or forces an action by logic  
@@ -487,9 +495,9 @@ Action Game::goLeftRight(Action proposedAction){
 			case TileType::HERO:
 			case TileType::TERRAIN:
 			default:
-			return Action(Animation::STILL, hero.getX(), hero.getY(), Initiator::LOGIC, TileType::HERO); 
+			return Action(Animation::STILL, hero.getX(), hero.getY(), Initiator::LOGIC, TileType::HERO, 0); 
 		}
-	}else return Action(Animation::STILL, hero.getX(), hero.getY(), Initiator::LOGIC, TileType::HERO);
+	}else return Action(Animation::STILL, hero.getX(), hero.getY(), Initiator::LOGIC, TileType::HERO, 0);
 	
 	//probably need to generalize these functions to take the acting entity as a parameter
 }
@@ -512,26 +520,26 @@ Action Game::goLeftRight(Action proposedAction, Enemy *enemy){
 			}
 			case TileType::HERO:
 			//harm hero;
-			return Action(Animation::STILL, enemy->getX(), enemy->getY(), Initiator::LOGIC, TileType::ENEMY); 
+			return Action(Animation::STILL, enemy->getX(), enemy->getY(), Initiator::LOGIC, TileType::ENEMY, 0); 
 			break;
 
 			case TileType::ENEMY:
 			//move in the opposite direction
-			return Action(Animation::STILL, enemy->getX(), enemy->getY(), Initiator::LOGIC, TileType::ENEMY); 
+			return Action(Animation::STILL, enemy->getX(), enemy->getY(), Initiator::LOGIC, TileType::ENEMY, 0); 
 			break;
 			
 			case TileType::BULLET:
 			//harm this enemy
-			return Action(Animation::STILL, enemy->getX(), enemy->getY(), Initiator::LOGIC, TileType::ENEMY); 
+			return Action(Animation::STILL, enemy->getX(), enemy->getY(), Initiator::LOGIC, TileType::ENEMY, 0); 
 			break;
 
 			case TileType::TERRAIN:
 			case TileType::NL_DOOR:
 			case TileType::PL_DOOR:
 			default:
-			return Action(Animation::STILL, enemy->getX(), enemy->getY(), Initiator::LOGIC, TileType::ENEMY); 
+			return Action(Animation::STILL, enemy->getX(), enemy->getY(), Initiator::LOGIC, TileType::ENEMY, 0); 
 		}
-	}else return Action(Animation::STILL, enemy->getX(), enemy->getY(), Initiator::LOGIC, TileType::ENEMY);
+	}else return Action(Animation::STILL, enemy->getX(), enemy->getY(), Initiator::LOGIC, TileType::ENEMY, 0);
 }
 
 
@@ -546,7 +554,7 @@ Action Game::jump(Action proposedAction){
 			}
 		}
 	}
-	return Action(Animation::STILL, hero.getX(), hero.getY(), Initiator::LOGIC, TileType::HERO);
+	return Action(Animation::STILL, hero.getX(), hero.getY(), Initiator::LOGIC, TileType::HERO, 0);
 }
 
 //accepts or rejects falling
@@ -558,7 +566,7 @@ Action Game::fall(Action proposedAction){
 		hero.setXY(x,y);
 		return proposedAction;
 	}else {
-		return Action(Animation::STILL, hero.getX(), hero.getY(), Initiator::LOGIC, TileType::HERO);
+		return Action(Animation::STILL, hero.getX(), hero.getY(), Initiator::LOGIC, TileType::HERO, 0);
 	}
 }
 
@@ -593,7 +601,7 @@ Action Game::shoot(Action proposedAction){
 			}
 		}
 	}
-	return Action(Animation::STILL, hero.getX(), hero.getY(), Initiator::LOGIC, TileType::HERO);
+	return Action(Animation::STILL, hero.getX(), hero.getY(), Initiator::LOGIC, TileType::HERO, 0);
 }
 
 void Game::moveBullets(){
@@ -719,7 +727,9 @@ void Game::nextXyFor(int &x, int &y, Animation animation){
 
 int Game::getCorrespondingDelay(Animation animation){
 	//enum class Animation{CLIMB_UP, CLIMB_DOWN, LEFT, RIGHT, STILL, JUMPING, FALLING, QUIT, PAUSE, SHOOTING};
-	int animationDelay[] = {0, 0, 12, 12, 0, 168, 112, 0, 0, 10};
+	//int animationDelay[] = {0, 0, 12, 12, 0, 168, 112, 0, 0, 10}; //milliseconds unit
+	// SIGNIFICANT_MOVES/7
+	int animationDelay[] = {0, 0, 0, 0, 0, 8, 5, 0, 0, SIGNIFICANT_MOVES/getmaxx(levelWindow)};	//no. actions unit
 	return animationDelay[(int)animation];
 }
 
@@ -870,7 +880,7 @@ LinkedList<Action> Game::horizontalPattern(Enemy *enemy){
 
 	TileType propTt;
 	Action propAction;
-	Action(propAnimation, propX, propY, Initiator::ENEMY_PATTERN, TileType::EMPTY);
+	Action(propAnimation, propX, propY, Initiator::ENEMY_PATTERN, TileType::EMPTY, 0);
 
 	LinkedList<TileType> ltta = map[currentLevel].getListOfTileTypesAt(propX, propY);
 	LinkedList<Action> pa;
@@ -880,12 +890,12 @@ LinkedList<Action> Game::horizontalPattern(Enemy *enemy){
 		if(hero.getX() == propX && hero.getY() == propY) propTt = TileType::HERO;
 		else propTt = TileType::EMPTY;
 		
-		propAction = Action(propAnimation, propX, propY, Initiator::ENEMY_PATTERN, propTt);
+		propAction = Action(propAnimation, propX, propY, Initiator::ENEMY_PATTERN, propTt, 0);
 		pa.pushHead(new Node<Action>(goLeftRight(propAction, enemy)));
 	}else{
 		while(!ltta.isEmpty()){
 			propTt = ltta.getHead()->data;
-			propAction = Action(propAnimation, propX, propY, Initiator::ENEMY_PATTERN, propTt);
+			propAction = Action(propAnimation, propX, propY, Initiator::ENEMY_PATTERN, propTt, 0);
 			pa.pushHead(new Node<Action>(goLeftRight(propAction, enemy)));
 			
 			ltta.popHead();
@@ -923,6 +933,7 @@ void Game::logic(LinkedList<Action> proposedActions){
 	while(!proposedActions.isEmpty()){
 		LinkedList<Action> ea = getEngagedAction(proposedActions.getHead()->data);
 		while(!ea.isEmpty()){
+			if(ea.getHead()->data.getDelay() == 0) ea.getHead()->data.setDelay(getCorrespondingDelay(ea.getHead()->data.getAnimation()));
 			hero.registerMove(ea.getHead()->data);
 			ea.popHead();
 		}

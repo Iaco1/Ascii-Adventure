@@ -12,10 +12,11 @@ class Action{
     Initiator initiator; // USER || LOGIC
     //Entity agent;
     TileType ttAffected; //amongst the (possibly) many tiletypes there could be in the same position
+    int delay;  // the unit is no. of actions in the action log
 
     public:
     Action();
-    Action(Animation animation, int x, int y, Initiator initiator, TileType ttAffected);
+    Action(Animation animation, int x, int y, Initiator initiator, TileType ttAffected, int delay);
     Animation getAnimation();
     int getX();
     int getY();
@@ -24,4 +25,8 @@ class Action{
     void setY(int y);
     void setTtAffected(TileType tt);
     void setXY(int x, int y);
+    void setAnimation(Animation animation);
+    void setInitiator(Initiator initiator);
+    int getDelay();
+    void setDelay(int delay);
 };

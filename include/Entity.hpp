@@ -4,7 +4,7 @@
 
 enum class Direction{ LEFT, RIGHT};
 
-const int SIGNIFICANT_MOVES = 8;
+const int SIGNIFICANT_MOVES = 60;
 
 class Entity : public Item{
     protected:
@@ -18,8 +18,8 @@ class Entity : public Item{
 
     void registerMove(Action action);
     int countMoves(Action action);
-    int countMoves(Animation animation);
-    int countMoves(Animation animation, Initiator initiator);
+    int countMoves(Animation animation, int n = SIGNIFICANT_MOVES);
+    int countMoves(Animation animation, Initiator initiator, int n = SIGNIFICANT_MOVES);
     Action* getActionLog();
     Direction getDirection();
     
