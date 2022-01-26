@@ -6,8 +6,9 @@ Action::Action(){
     initiator = Initiator::LOGIC;
 }
 
-Action::Action(Animation animation, int x, int y, Initiator initiator, TileType ttAffected){
+Action::Action(Animation animation, int x, int y, Initiator initiator, TileType ttAffected, int delay){
     this->animation = animation;
+    if(delay>=0) this->delay = delay;
     
     if(x>=-1 && y>=0){
         this->x = x;
@@ -40,3 +41,18 @@ void Action::setXY(int x, int y){
     this->x = x;
     this->y = y;
 }
+
+void Action::setAnimation(Animation animation){
+    this->animation = animation;
+}
+
+void Action::setInitiator(Initiator initiator){
+    this->initiator = initiator;
+}
+
+int Action::getDelay(){ return delay; }
+
+void Action::setDelay(int delay){
+    if(delay>=0) this->delay = delay;
+}
+

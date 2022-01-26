@@ -1,7 +1,7 @@
 #pragma once
-#include "Item.hpp"
+#include "Hero.hpp"
 
-enum class MalusType{ THORN, SIZE };
+enum class MalusType{ THORN, LANDMINE, BARBED_WIRE, SIZE };
 
 class Malus : public Item{
     protected:
@@ -10,7 +10,7 @@ class Malus : public Item{
 
     public:
     Malus();
-    Malus(int x, int y, TileType tileType, int hp, int dp, MalusType bt, int quantity);
+    Malus(int x, int y, int hp, int dp, MalusType mt, int quantity);
     char getTileChar();
-
+    void inflictMalusTo(Hero *hero);
 };

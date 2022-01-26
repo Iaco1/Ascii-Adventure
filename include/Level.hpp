@@ -4,11 +4,12 @@
 #include "MiscFunctions.hpp"
 #include "Bonus.hpp"
 #include "Malus.hpp"
+#include "Enemy.hpp"
 
 class Level {
 protected:
     LinkedList <Object> terrain;
-    LinkedList <Entity> enemies;
+    LinkedList <Enemy> enemies;
     LinkedList <Bonus> bonuses;
     LinkedList <Malus> maluses;
     LinkedList <Entity> bullets;
@@ -22,7 +23,7 @@ public:
     Level();
     Level(int w, int h, int levelIndex); //creates a level randomly
     LinkedList<Object>* getTerrain();
-    LinkedList<Entity>* getEnemies();
+    LinkedList<Enemy>* getEnemies();
     LinkedList<Bonus>* getBonuses();
     LinkedList<Malus>* getMaluses();
     LinkedList<Entity>* getBullets();

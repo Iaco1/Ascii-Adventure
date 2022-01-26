@@ -1,7 +1,7 @@
 #pragma once
-#include "Item.hpp"
+#include "Hero.hpp"
 
-enum class BonusType{ HP, AMMO, SIZE };
+enum class BonusType{ HP, AMMO, MAXAMMO, INSTAKILL, SIZE };
 
 class Bonus : public Item{
     protected:
@@ -10,6 +10,7 @@ class Bonus : public Item{
     
     public:
     Bonus();
-    Bonus(int x, int y, TileType tileType, int hp, int dp, BonusType bt, int quantity);
+    Bonus(int x, int y, int hp, BonusType bt, int quantity);
+    void giveBonus(Hero *hero);
     char getTileChar();
 };

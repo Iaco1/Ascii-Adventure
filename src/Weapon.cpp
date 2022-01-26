@@ -28,3 +28,11 @@ int Weapon::getDp(){ return dp; }
 void Weapon::setMagazineAmmo(int magazineAmmo){
     if(magazineAmmo <= maxAmmo && magazineAmmo >= 0) this->magazineAmmo = magazineAmmo;
 }
+
+void Weapon::setMaxAmmo(int maxAmmo){
+    if(maxAmmo > 0 ) this->maxAmmo = maxAmmo;
+}
+
+void Weapon::setDp(int dp){
+    if(dp>0) this->dp = dp;
+}

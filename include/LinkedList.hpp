@@ -159,7 +159,7 @@ class LinkedList{
 		}
 		return false;
 	}
-	bool containsData(int argn, ...){
+	bool containsAnyData(int argn, ...){
 		va_list list;
   		va_start(list, argn);
 		
@@ -232,6 +232,13 @@ class LinkedList{
 			}
 		}
 	}	
+	void appendList(LinkedList<T> ll){
+		Node<T> *n = ll.getHead();
+		while(n!=NULL){
+			pushTail(n);
+			n = n->next;
+		}
+	}
 	~LinkedList(){
 		head = NULL;
 		tail = NULL;
