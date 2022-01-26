@@ -19,8 +19,18 @@ Level::Level(int w, int h, int levelIndex) {
     //creates one 3-character long platform
     for (int i = 0; i < 6; i++) terrain.pushHead(new Node<Object>(Object(1 + i, h - 3, TileType::TERRAIN)));
 
-    bonuses.pushHead(new Node<Bonus>(Bonus(2, h - 4, 100, BonusType::HP, 1)));
-    maluses.pushHead(new Node<Malus>(Malus(w / 2, h - 1, 100, 20, MalusType::THORN, 1)));
+    bonuses.pushHead(new Node<Bonus>(Bonus(3, h - 1, 100, BonusType::HP, 100)));
+    bonuses.pushHead(new Node<Bonus>(Bonus(5, h - 1, 100, BonusType::AMMO, 10)));
+    bonuses.pushHead(new Node<Bonus>(Bonus(7, h - 1, 100, BonusType::MAXAMMO, 100)));
+    bonuses.pushHead(new Node<Bonus>(Bonus(9, h - 1, 100, BonusType::INSTAKILL, 1)));
+
+    maluses.pushHead(new Node<Malus>(Malus(w / 2, h - 1, 100, 5, MalusType::THORN, 10)));
+    maluses.pushHead(new Node<Malus>(Malus(w / 2 + 2, h - 1, 100, 50, MalusType::LANDMINE, 1)));
+
+    maluses.pushHead(new Node<Malus>(Malus(w / 2 + 4, h - 1, 100, 1, MalusType::BARBED_WIRE, 20)));
+    maluses.pushHead(new Node<Malus>(Malus(w / 2 + 4, h - 2, 100, 1, MalusType::BARBED_WIRE, 20)));
+    maluses.pushHead(new Node<Malus>(Malus(w / 2 + 4, h - 3, 100, 1, MalusType::BARBED_WIRE, 20)));
+
     enemies.pushHead(new Node<Enemy>(Enemy(w - 1, h - 1, 100, 30, EnemyType::SENTRY)));
     xps.pushHead(new Node<Object>(Object(5, h - 4, TileType::XP)));
 

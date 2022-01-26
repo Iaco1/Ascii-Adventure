@@ -62,7 +62,6 @@ void Game::draw(bool changeLevel){
 	drawBullets();
 
 	wrefresh(levelWindow);
-	delay();
 }
 
 //draws the current hero position and hides the last one with a ' ' char
@@ -249,28 +248,8 @@ LinkedList<Action> Game::input(){
 	LinkedList<Action> proposedActions;		//this tells us everything that should happen given the userLog[] and the user-initiated actions
 	
 	{
-		//delay setting mechanism
-		if(hero.getActionLog()[0].getDelay()>0) {
-			Action lastAction = hero.getActionLog()[0];
-			lastAction.setAnimation(Animation::STILL);
-			lastAction.setInitiator(Initiator::LOGIC);
-			lastAction.setTtAffected(TileType::HERO);
-
-			if(hero.countMoves(Animation::JUMPING) == 4 
-			&& hero.getActionLog()[0].getAnimation() == Animation::JUMPING){
-				//slowing down at the top to give the player time to move left or right
-				lastAction.setDelay(getCorrespondingDelay(Animation::JUMPING)*2);
-			}
-			else if(hero.countMoves(Animation::FALLING) == 4
-			&& hero.getActionLog()[0].getAnimation() == Animation::FALLING){
-				//speeding up at the bottom to give player the possibility of jumping again faster
-				lastAction.setDelay(0);
-			}
-			else lastAction.setDelay(lastAction.getDelay()-1);
-
-			proposedActions.pushHead(new Node<Action>(lastAction));
-			return proposedActions;
-		}
+		delay(&proposedActions, hero.getActionLog(), TileType::HERO);
+		if(!proposedActions.isEmpty()) return proposedActions;
 	}
 	
 
@@ -301,9 +280,14 @@ LinkedList<Action> Game::input(){
 		nextXyFor(x,y, proposedAnimation);
 		listOfTileTypesAt = map[currentLevel].getListOfTileTypesAt(x,y);
 		
-		while(!listOfTileTypesAt.isEmpty()){
-			proposedActions.pushHead(new Node<Action>(getCorrespondingAction(proposedAnimation, proposedInitiator, listOfTileTypesAt.getHead()->data)));
-			listOfTileTypesAt.popHead();
+		if(!listOfTileTypesAt.isEmpty()){
+			while(!listOfTileTypesAt.isEmpty()){
+				proposedActions.pushHead(new Node<Action>(getCorrespondingAction(proposedAnimation, proposedInitiator, listOfTileTypesAt.getHead()->data)));
+				listOfTileTypesAt.popHead();
+			}
+		}
+		else if(listOfTileTypesAt.isEmpty()){
+			proposedActions.pushHead(new Node<Action>(getCorrespondingAction(proposedAnimation, proposedInitiator, TileType::EMPTY)));
 		}
 	}
 
@@ -472,8 +456,7 @@ Action Game::goLeftRight(Action proposedAction){
 			
 			case TileType::MALUS:{
 				inflictMalusAt(x,y);
-				hero.setXY(x,y);
-				return proposedAction;
+				return Action(Animation::STILL, hero.getX(), hero.getY(), Initiator::LOGIC, TileType::HERO, 0);
 				break;
 			}
 
@@ -725,12 +708,45 @@ void Game::nextXyFor(int &x, int &y, Animation animation){
 	}
 }
 
-int Game::getCorrespondingDelay(Animation animation){
+int Game::getCorrespondingDelay(Animation animation, TileType agent){
 	//enum class Animation{CLIMB_UP, CLIMB_DOWN, LEFT, RIGHT, STILL, JUMPING, FALLING, QUIT, PAUSE, SHOOTING};
 	//int animationDelay[] = {0, 0, 12, 12, 0, 168, 112, 0, 0, 10}; //milliseconds unit
 	// SIGNIFICANT_MOVES/7
-	int animationDelay[] = {0, 0, 0, 0, 0, 8, 5, 0, 0, SIGNIFICANT_MOVES/getmaxx(levelWindow)};	//no. actions unit
-	return animationDelay[(int)animation];
+
+	if(agent == TileType::HERO) {
+		int animationDelay[] = {0, 0, 0, 0, 0, 8, 5, 0, 0, SIGNIFICANT_MOVES/getmaxx(levelWindow)};	//no. actions unit
+		return animationDelay[(int)animation];
+	}else if(agent == TileType::ENEMY) {
+		int animationDelay[] = {0, 0, 10, 10, 0, 8, 5, 0, 0, SIGNIFICANT_MOVES/getmaxx(levelWindow)};
+		return animationDelay[(int)animation];
+	}
+}
+//delay setting mechanism, proposedActions and entity's ActionLog
+void Game::delay(LinkedList<Action> *pa, Action al[], TileType agent){
+	
+	if(al[0].getDelay()>0) {
+		Action lastAction = al[0];
+		lastAction.setAnimation(Animation::STILL);
+		lastAction.setInitiator(Initiator::LOGIC);
+		lastAction.setTtAffected(agent);
+		
+		if(agent == TileType::HERO){
+			if(hero.countMoves(Animation::JUMPING) == 4 
+			&& hero.getActionLog()[0].getAnimation() == Animation::JUMPING){
+				//slowing down at the top to give the player time to move left or right
+				lastAction.setDelay(getCorrespondingDelay(Animation::JUMPING, TileType::HERO)*2);
+			}
+			else if(hero.countMoves(Animation::FALLING) == 4
+			&& hero.getActionLog()[0].getAnimation() == Animation::FALLING){
+				//speeding up at the bottom to give player the possibility of jumping again faster
+				lastAction.setDelay(0);
+			}
+			else lastAction.setDelay(lastAction.getDelay()-1);
+		}
+		else lastAction.setDelay(lastAction.getDelay()-1);
+
+		pa->pushHead(new Node<Action>(lastAction));
+	}
 }
 
 //i.e. what do you do when the block underneat you is ...?
@@ -817,16 +833,14 @@ void Game::fallingMechanic(Animation &proposedAnimation, Initiator &proposedInit
 
 //gives the player the benefits of the bonus and deletes it
 void Game::grabBonusAt(int x, int y){
-	Node<Bonus>* bonus = map[currentLevel].getNodeAtIn(x,y, map[currentLevel].getBonuses());
-		hero.setHp(hero.getHp() + bonus->data.getHp());
-		bonus->data.setHp(0);
+	Bonus *bonus = &map[currentLevel].getNodeAtIn(x,y, map[currentLevel].getBonuses())->data;
+	bonus->giveBonus(&hero);
 }
 
 //inflicts the player the agony of the malus and deletes it
 void Game::inflictMalusAt(int x, int y){
-	Node<Malus>* malus = map[currentLevel].getNodeAtIn(x, y, map[currentLevel].getMaluses());
-	hero.setHp(hero.getHp() - malus->data.getDp());
-	malus->data.setHp(0);
+	Malus *malus = &map[currentLevel].getNodeAtIn(x, y, map[currentLevel].getMaluses())->data;
+	malus->inflictMalusTo(&hero);
 }
 
 void Game::gainXpAt(int x, int y){
@@ -910,13 +924,17 @@ void Game::moveEnemies(){
 		Node<Enemy> *enemy_iter = map[currentLevel].getEnemies()->getHead();
 
 		LinkedList<Action> pa;
-		pa.appendList(horizontalPattern(&enemy_iter->data));
+
+		delay(&pa, enemy_iter->data.getActionLog(), TileType::ENEMY);
+		
+		if(pa.isEmpty()) pa.appendList(horizontalPattern(&enemy_iter->data));
 		
 		
 		//moves' approval
 		while(!pa.isEmpty()){
 			LinkedList<Action> ea = getEngagedAction(pa.getHead()->data, &(enemy_iter->data));
 			while(!ea.isEmpty()){
+				if(ea.getHead()->data.getDelay() == 0) ea.getHead()->data.setDelay(getCorrespondingDelay(ea.getHead()->data.getAnimation(), TileType::ENEMY));
 				enemy_iter->data.registerMove(ea.getHead()->data);
 				ea.popHead();
 			}
@@ -933,7 +951,7 @@ void Game::logic(LinkedList<Action> proposedActions){
 	while(!proposedActions.isEmpty()){
 		LinkedList<Action> ea = getEngagedAction(proposedActions.getHead()->data);
 		while(!ea.isEmpty()){
-			if(ea.getHead()->data.getDelay() == 0) ea.getHead()->data.setDelay(getCorrespondingDelay(ea.getHead()->data.getAnimation()));
+			if(ea.getHead()->data.getDelay() == 0) ea.getHead()->data.setDelay(getCorrespondingDelay(ea.getHead()->data.getAnimation(), TileType::HERO));
 			hero.registerMove(ea.getHead()->data);
 			ea.popHead();
 		}
@@ -1003,7 +1021,7 @@ void Game::mainLoop() {
 				std::this_thread::sleep_for(frameDelay - frameDelta);
 			}
 
-
+		
 			
 		}
 	}
