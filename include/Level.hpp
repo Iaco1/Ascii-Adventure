@@ -79,6 +79,8 @@ public:
     int findClosestTerrain(int height, int xPosition, bool left);
     void generatePlatforms(int height, int averageXPosition, int leftBound, int rightBound, int currentIteration);
     void generateNLDoor();
-    void findFreeSpace(int& x, int& y);
+    void findFreeSpace(int& x, int& y, int offset = 0);
     void spawnEnemies(int currentLevel);
+    void spawnBonuses(int currentLevel);
+    void spawnMaluses(int currentLevel);
 };
