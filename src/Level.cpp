@@ -21,13 +21,15 @@ Level::Level(int w, int h, int levelIndex) {
 
     bonuses.pushHead(new Node<Bonus>(Bonus(2, h - 4, TileType::BONUS, 100, 0, BonusType::HP, 1)));
     maluses.pushHead(new Node<Malus>(Malus(w / 2, h - 1, TileType::MALUS, 100, 20, MalusType::THORN, 1)));
-    enemies.pushHead(new Node<Entity>(Entity(w - 1, h - 1, TileType::ENEMY, 100, 30, Direction::LEFT)));
+    //enemies.pushHead(new Node<Entity>(Entity(w - 1, h - 1, TileType::ENEMY, 100, 30, Direction::LEFT)));
     xps.pushHead(new Node<Object>(Object(5, h - 4, TileType::XP)));
 
     generatePlatforms(vertBound - 4, horBound / 2, 0, horBound - 1, 1);
 
     //next level door placement
-    generateNLDoor();
+    //generateNLDoor();
+    nextLevelDoor = Object(5, h - 1, TileType::NL_DOOR);
+    spawnEnemies(levelIndex);
 }
 
 LinkedList <Object>* Level::getTerrain() { return &terrain; }
@@ -115,11 +117,11 @@ bool Level::checkOverlap(int x1, int y1, int x2, int y2, TileType tile /*= TileT
         }
     }
     if (tile == TileType::EMPTY || tile == TileType::PL_DOOR) {
-        if (prevLevelDoor.getX() >= x1 && prevLevelDoor.getX() <= x2 && prevLevelDoor.getY() >= y1 && prevLevelDoor.getY() <= y2)
+        if (prevLevelDoor.getX() + 1 >= x1 && prevLevelDoor.getX() <= x2 && prevLevelDoor.getY() >= y1 && prevLevelDoor.getY() <= y2)
             return true;
     }
     if (tile == TileType::EMPTY || tile == TileType::NL_DOOR) {
-        if (nextLevelDoor.getX() >= x1 && nextLevelDoor.getX() <= x2 && nextLevelDoor.getY() >= y1 && nextLevelDoor.getY() <= y2)
+        if (nextLevelDoor.getX() >= x1 && nextLevelDoor.getX() - 1 <= x2 && nextLevelDoor.getY() >= y1 && nextLevelDoor.getY() <= y2)
             return true;
     }
     if (tile == TileType::EMPTY || tile == TileType::XP) {
@@ -249,8 +251,36 @@ void Level::generateNLDoor() {
     nextLevelDoor = Object(destX, destY, TileType::NL_DOOR);
 }
 
-/*
-void Level::spawnEnemies(int currentLevel) {
-
+void Level::findFreeSpace(int& x, int& y) {
+    x = -1;
+    y = -1;
+    int terrSize = terrain.getSize();
+    int index = Misc::randInt(0, terrSize - 1);
+    Node<Object>* iter = terrain.getHead();
+    for (int i = 0; i < index; i++) iter = iter->next;
+    for (int i = 0; i < terrSize; i++) {
+        int xIter = iter->data.getX(), yIter = iter->data.getY();
+        if (!checkOverlap(xIter - 1, yIter - 1, xIter + 1, yIter - 1)) {
+            x = xIter;
+            y = yIter - 1;
+            break;
+        }
+        if (iter->next == NULL) {
+            iter = terrain.getHead();
+        }
+        else {
+            iter = iter->next;
+        }
+    }
 }
-*/
+
+void Level::spawnEnemies(int currentLevel) {
+    int enemiesNum = Misc::diceDistribution(2, Misc::bound(currentLevel + 3, 4, 20), Misc::bound(currentLevel + 3, 4, 20) / 2, 3);
+    for (int i = 0; i < enemiesNum; i++) {
+        int x, y;
+        findFreeSpace(x, y);
+        if (x == -1 || y == -1) break;
+        enemies.pushHead(new Node<Entity>(Entity(x, y, TileType::ENEMY, 100, 30, Direction::LEFT)));
+        //tba: make enemies stronger
+    }
+}
