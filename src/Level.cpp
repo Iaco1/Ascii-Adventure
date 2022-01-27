@@ -17,22 +17,22 @@ Level::Level(int w, int h, int levelIndex) {
 
     //platform generation
     //creates one 3-character long platform
-    for (int i = 0; i < 6; i++) terrain.pushHead(new Node<Object>(Object(1 + i, h - 3, TileType::TERRAIN)));
+    //for (int i = 0; i < 6; i++) terrain.pushHead(new Node<Object>(Object(1 + i, h - 3, TileType::TERRAIN)));
 
     //bonuses.pushHead(new Node<Bonus>(Bonus(3, h - 1, 100, BonusType::HP, 100)));
     //bonuses.pushHead(new Node<Bonus>(Bonus(5, h - 1, 100, BonusType::AMMO, 10)));
     //bonuses.pushHead(new Node<Bonus>(Bonus(7, h - 1, 100, BonusType::MAXAMMO, 100)));
     //bonuses.pushHead(new Node<Bonus>(Bonus(9, h - 1, 100, BonusType::INSTAKILL, 1)));
 
-    maluses.pushHead(new Node<Malus>(Malus(w / 2, h - 1, 100, 5, MalusType::THORN, 10)));
-    maluses.pushHead(new Node<Malus>(Malus(w / 2 + 2, h - 1, 100, 50, MalusType::LANDMINE, 1)));
+    //maluses.pushHead(new Node<Malus>(Malus(w / 2, h - 1, 100, 5, MalusType::THORN, 10)));
+    //maluses.pushHead(new Node<Malus>(Malus(w / 2 + 2, h - 1, 100, 50, MalusType::LANDMINE, 1)));
 
-    maluses.pushHead(new Node<Malus>(Malus(w / 2 + 4, h - 1, 100, 1, MalusType::BARBED_WIRE, 20)));
-    maluses.pushHead(new Node<Malus>(Malus(w / 2 + 4, h - 2, 100, 1, MalusType::BARBED_WIRE, 20)));
-    maluses.pushHead(new Node<Malus>(Malus(w / 2 + 4, h - 3, 100, 1, MalusType::BARBED_WIRE, 20)));
+    //maluses.pushHead(new Node<Malus>(Malus(w / 2 + 4, h - 1, 100, 1, MalusType::BARBED_WIRE, 20)));
+    //maluses.pushHead(new Node<Malus>(Malus(w / 2 + 4, h - 2, 100, 1, MalusType::BARBED_WIRE, 20)));
+    //maluses.pushHead(new Node<Malus>(Malus(w / 2 + 4, h - 3, 100, 1, MalusType::BARBED_WIRE, 20)));
 
     //enemies.pushHead(new Node<Enemy>(Enemy(w - 1, h - 1, 100, 30, EnemyType::SENTRY)));
-    xps.pushHead(new Node<Object>(Object(5, h - 4, TileType::XP)));
+    //xps.pushHead(new Node<Object>(Object(5, h - 4, TileType::XP)));
 
     generatePlatforms(vertBound - 4, horBound / 2, 0, horBound - 1, 1);
 
@@ -41,6 +41,8 @@ Level::Level(int w, int h, int levelIndex) {
     //nextLevelDoor = Object(5, h - 1, TileType::NL_DOOR);
     spawnEnemies(levelIndex);
     spawnBonuses(levelIndex);
+    spawnMaluses(levelIndex);
+    spawnXp();
 }
 
 LinkedList <Object>* Level::getTerrain() { return &terrain; }
@@ -302,7 +304,7 @@ void Level::spawnBonuses(int currentLevel) {
         int x, y;
         findFreeSpace(x, y, Misc::randInt(0, 2));
         if (x == -1 || y == -1) break;
-        BonusType typeOfBonus = (BonusType)Misc::diceDistribution(0, 3, 0, 2);
+        BonusType typeOfBonus = (BonusType)Misc::bound(Misc::diceDistribution(0, 4, 0, 2), 0, 3);
         switch (typeOfBonus) {
         case BonusType::HP:
             bonuses.pushHead(new Node<Bonus>(Bonus(x, y, 100, BonusType::HP, 100)));
@@ -317,5 +319,41 @@ void Level::spawnBonuses(int currentLevel) {
             bonuses.pushHead(new Node<Bonus>(Bonus(x, y, 100, BonusType::INSTAKILL, 1)));
             break;
         }
+    }
+}
+
+void Level::spawnMaluses(int currentLevel) {
+    int malusNum = Misc::diceDistribution(2, Misc::bound(currentLevel + 3, 3, 7), Misc::bound(currentLevel + 3, 3, 7) / 2, 3);
+    for (int i = 0; i < malusNum; i++) {
+        int x, y;
+        findFreeSpace(x, y);
+        if (x == -1 || y == -1) break;
+        MalusType typeOfMalus = (MalusType)Misc::randInt(0, 2);
+        switch (typeOfMalus) {
+        case MalusType::THORN:
+            maluses.pushHead(new Node<Malus>(Malus(x, y, 100, 5, MalusType::THORN, 10)));
+            break;
+        case MalusType::LANDMINE:
+            maluses.pushHead(new Node<Malus>(Malus(x, y, 100, 50, MalusType::LANDMINE, 1)));
+            break;
+        case MalusType::BARBED_WIRE:
+            maluses.pushHead(new Node<Malus>(Malus(x, y, 100, 1, MalusType::BARBED_WIRE, 20)));
+            if (!checkOverlap(x, y - 1, x, y - 1)) {
+                maluses.pushHead(new Node<Malus>(Malus(x, y - 1, 100, 1, MalusType::BARBED_WIRE, 20)));
+                if (!checkOverlap(x, y - 2, x, y - 2)) {
+                    maluses.pushHead(new Node<Malus>(Malus(x, y - 2, 100, 1, MalusType::BARBED_WIRE, 20)));
+                }
+            }
+            break;
+        }
+    }
+}
+
+void Level::spawnXp() {
+    for (int i = 0; i < 3; i++) {
+        int x, y;
+        findFreeSpace(x, y);
+        if (x == -1 || y == -1) break;
+        xps.pushHead(new Node<Object>(Object(x, y, TileType::XP)));
     }
 }

@@ -83,4 +83,5 @@ public:
     void spawnEnemies(int currentLevel);
     void spawnBonuses(int currentLevel);
     void spawnMaluses(int currentLevel);
+    void spawnXp();
 };
