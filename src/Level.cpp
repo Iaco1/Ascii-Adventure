@@ -31,7 +31,7 @@ Level::Level(int w, int h, int levelIndex) {
     maluses.pushHead(new Node<Malus>(Malus(w / 2 + 4, h - 2, 100, 1, MalusType::BARBED_WIRE, 20)));
     maluses.pushHead(new Node<Malus>(Malus(w / 2 + 4, h - 3, 100, 1, MalusType::BARBED_WIRE, 20)));
 
-    enemies.pushHead(new Node<Enemy>(Enemy(w - 1, h - 1, 100, 30, EnemyType::SENTRY)));
+    enemies.pushHead(new Node<Enemy>(Enemy(w - 1, h - 1, 100, 1, EnemyType::SENTRY)));
     xps.pushHead(new Node<Object>(Object(5, h - 4, TileType::XP)));
 
     generatePlatforms(vertBound - 4, horBound / 2, 0, horBound - 1, 1);

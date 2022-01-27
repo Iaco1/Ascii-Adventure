@@ -48,11 +48,12 @@ void Menu::printEndScreen() {
 }
 
 void Menu::initGame() {
-    mvprintw(0, 0, "The Game starts");
+    mvprintw(getmaxy(stdscr)/2, getmaxx(stdscr)/2-8, "The Game starts");
     refresh();
     sleep(1);
-    mvprintw(1, 0, "freak bitches");
+    mvprintw(getmaxy(stdscr)/2+1, getmaxx(stdscr)/2-18, "We wish for you to have a good time");
     refresh();
+    sleep(1);
     option = MenuOption::PLAY;
 }
 

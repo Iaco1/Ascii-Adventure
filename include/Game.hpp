@@ -17,17 +17,19 @@ public:
     void mainLoop();
     void createMap();
     void addLevel();
-    void draw(bool changeLevel);
-    void drawHero();
+    void draw(bool changeLevel, int hm);
+    void drawHero(int hm);
     void drawHUD(WINDOW* hud);
     void drawBullets();
     void drawDoors();
     template <class T>
     void drawLevelElements(LinkedList<T> list);
     void drawEnemies();
+    void drawBonuses();
+    void drawMaluses();
 
-    LinkedList<Action> input();
-    void logic(LinkedList<Action> proposedActions);
+    LinkedList<Action> input(int hm);
+    int logic(LinkedList<Action> proposedActions);
 
     Animation getCorrespondingAnimation(char userKey);
     Action getCorrespondingAction(Animation animation, Initiator initator, TileType ttAffected);
@@ -44,7 +46,7 @@ public:
     void moveBullets();
     void nextXyFor(int &x, int &y, Animation animation);
     int getCorrespondingDelay(Animation animation, TileType agent);
-    void delay(LinkedList<Action> *pa, Action al[], TileType );
+    void delay(LinkedList<Action> *pa, Action al[], TileType, int hm);
     
     //buries (deletes) the dead entities (currently Enemies, Bonuses, Maluses and the Hero if he happens to die)
     //call using mortician(TileType::ENEMY)

@@ -8,7 +8,7 @@ using namespace std;
 
 const int JUMP_HEIGHT = 4;
 const int targetFrameRate = 120;
-auto frameDelay =  std::chrono::milliseconds(1000/targetFrameRate); //max duration for a frame
+auto frameDelay = std::chrono::milliseconds(1000/targetFrameRate); //max duration for a frame
 
 
 Game::Game() {
@@ -37,7 +37,8 @@ void Game::addLevel(){
 }
 
 //handles the display of all of the level's elements and of the HUD
-void Game::draw(bool changeLevel){
+// hm = no. hero's generated moves in the last game-cycle
+void Game::draw(bool changeLevel, int hm){
 	if(changeLevel) {
 		wclear(levelWindow);
 		wrefresh(levelWindow);
@@ -51,13 +52,13 @@ void Game::draw(bool changeLevel){
 	delwin(hud);
 	
 	//hero drawing
-	drawHero();
+	drawHero(hm);
 	wrefresh(levelWindow);
 	//terrain, enemies, bonuses and maluses' drawing
 	
 	drawEnemies();
-	drawLevelElements(*map[currentLevel].getBonuses());
-	drawLevelElements(*map[currentLevel].getMaluses());
+	drawBonuses();
+	drawMaluses();
 	drawLevelElements(*map[currentLevel].getXps());
 	drawBullets();
 
@@ -65,44 +66,43 @@ void Game::draw(bool changeLevel){
 }
 
 //draws the current hero position and hides the last one with a ' ' char
-void Game::drawHero(){
+void Game::drawHero(int hm){
 	int x=0, y=0;
 	hero.getXY(x,y);
+	for(int i=0; i<hm; i++){
+		//this hides the previous' hero's position with a ' ' char
+		if(hero.getActionLog()[i].getTtAffected() != TileType::PL_DOOR
+		&& hero.getActionLog()[i].getTtAffected() != TileType::NL_DOOR){
+			switch(hero.getActionLog()[i].getAnimation()){
+				case Animation::LEFT:
+				mvwaddch(levelWindow, y, x+1, ' ');
+				break;
 
-	//this hides the previous' hero's position with a ' ' char
-	if(hero.getActionLog()[0].getAnimation() != Animation::STILL 
-	&& hero.getActionLog()[0].getTtAffected() != TileType::PL_DOOR
-	&& hero.getActionLog()[0].getTtAffected() != TileType::NL_DOOR){
-		switch(hero.getActionLog()[0].getAnimation()){
-			case Animation::LEFT:
-			mvwaddch(levelWindow, y, x+1, ' ');
-			break;
+				case Animation::RIGHT:
+				mvwaddch(levelWindow, y, x-1, ' ');
+				break;
 
-			case Animation::RIGHT:
-			mvwaddch(levelWindow, y, x-1, ' ');
-			break;
+				case Animation::CLIMB_DOWN:
+				//yet to decide a stairs character
+				break;
 
-			case Animation::CLIMB_DOWN:
-			//yet to decide a stairs character
-			break;
+				case Animation::FALLING:
+				mvwaddch(levelWindow, y-1,x,' ');
+				break;
 
-			case Animation::FALLING:
-			mvwaddch(levelWindow, y-1,x,' ');
-			break;
+				case Animation::CLIMB_UP:
+				break;
 
-			case Animation::CLIMB_UP:
-			break;
+				case Animation::JUMPING:
+				mvwaddch(levelWindow, y+1, x, ' ');
+				break;
 
-			case Animation::JUMPING:
-			mvwaddch(levelWindow, y+1, x, ' ');
-			break;
-
-			case Animation::STILL:
-			default:
-			break;
+				default:
+				break;
+			}
 		}
 	}
-	
+
 	init_pair(2, COLOR_YELLOW, COLOR_BLACK);
 	wattron(levelWindow, COLOR_PAIR(2));
 	mvwaddch(levelWindow, y, x, hero.getTileChar());
@@ -119,8 +119,36 @@ void Game::drawLevelElements(LinkedList<T> list){
 	}
 }
 
+void Game::drawBonuses(){
+	int x,y;
+	LinkedList<Bonus> bonuses = *map[currentLevel].getBonuses();
+	init_pair(4, COLOR_GREEN, COLOR_BLACK);
+	wattron(levelWindow, COLOR_PAIR(4));
+
+	for(int i=0; i < bonuses.getSize(); i++){
+		bonuses[i].getXY(x,y);
+		mvwaddch(levelWindow, y, x, bonuses[i].getTileChar());
+	}
+
+	wattroff(levelWindow, COLOR_PAIR(4));
+}
+
+void Game::drawMaluses(){
+	int x,y;
+	LinkedList<Malus> maluses = *map[currentLevel].getMaluses();
+	init_pair(5, COLOR_MAGENTA, COLOR_BLACK);
+	wattron(levelWindow, COLOR_PAIR(5));
+
+	for(int i=0; i < maluses.getSize(); i++){
+		maluses[i].getXY(x,y);
+		mvwaddch(levelWindow, y, x, maluses[i].getTileChar());
+	}
+
+	wattroff(levelWindow, COLOR_PAIR(5));
+}
+
 void Game::drawHUD(WINDOW* hud){
-	mvwprintw(hud, 0,0, "HP: %d/%d - SCORE: %d - LEVEL: %d - [Weapon: %s | Ammo: %d/%d]", 
+	mvwprintw(hud, 0,0, "HP: %d/%d - SCORE: %d - LEVEL: %d - [Weapon: %s | Ammo: %d/%d] - { %s }", 
 	hero.getHp(),hero.getMaxHp(), score, currentLevel, 
 	hero.getWeapon()->weaponTypeToStr(), hero.getWeapon()->getMagazineAmmo(), hero.getWeapon()->getMaxAmmo());
 	wrefresh(hud);
@@ -228,15 +256,17 @@ void Game::completeJump(Animation &proposedAnimation, Initiator &proposedInitiat
 		)
 		&& proposedAnimation == Animation::STILL
 	){
-		if(hero.countMoves(Animation::JUMPING) < JUMP_HEIGHT) {
+		if(hero.countMoves(Animation::JUMPING) < JUMP_HEIGHT && map[currentLevel].countObjectsAt(hero.getX(), hero.getY()-1) == 0)
 			proposedAnimation = Animation::JUMPING;
-			proposedInitiator = Initiator::LOGIC;
-		}else proposedAnimation = Animation::FALLING; // this line may be superfluous
+		else
+			proposedAnimation = Animation::FALLING; // this line may be superfluous
+		
+		proposedInitiator = Initiator::LOGIC;
 	}
 }
 
 //determines the Action to propose to Game::Logic() 
-LinkedList<Action> Game::input(){
+LinkedList<Action> Game::input(int hm){
 	nodelay(levelWindow, TRUE);
 	noecho();
 
@@ -248,7 +278,7 @@ LinkedList<Action> Game::input(){
 	LinkedList<Action> proposedActions;		//this tells us everything that should happen given the userLog[] and the user-initiated actions
 	
 	{
-		delay(&proposedActions, hero.getActionLog(), TileType::HERO);
+		delay(&proposedActions, hero.getActionLog(), TileType::HERO, hm);
 		if(!proposedActions.isEmpty()) return proposedActions;
 	}
 	
@@ -501,10 +531,11 @@ Action Game::goLeftRight(Action proposedAction, Enemy *enemy){
 				return proposedAction;
 				break;
 			}
-			case TileType::HERO:
-			//harm hero;
-			return Action(Animation::STILL, enemy->getX(), enemy->getY(), Initiator::LOGIC, TileType::ENEMY, 0); 
-			break;
+			case TileType::HERO:{
+				hero.setHp(hero.getHp() - enemy->getDp()); // harms hero
+				return Action(Animation::STILL, x, y, Initiator::ENEMY_PATTERN, TileType::HERO, 0);
+				break;
+			}
 
 			case TileType::ENEMY:
 			//move in the opposite direction
@@ -719,33 +750,34 @@ int Game::getCorrespondingDelay(Animation animation, TileType agent){
 	}else if(agent == TileType::ENEMY) {
 		int animationDelay[] = {0, 0, 10, 10, 0, 8, 5, 0, 0, SIGNIFICANT_MOVES/getmaxx(levelWindow)};
 		return animationDelay[(int)animation];
-	}
+	}else return 0;
 }
 //delay setting mechanism, proposedActions and entity's ActionLog
-void Game::delay(LinkedList<Action> *pa, Action al[], TileType agent){
-	
-	if(al[0].getDelay()>0) {
-		Action lastAction = al[0];
-		lastAction.setAnimation(Animation::STILL);
-		lastAction.setInitiator(Initiator::LOGIC);
-		lastAction.setTtAffected(agent);
+void Game::delay(LinkedList<Action> *pa, Action al[], TileType agent, int hm){
+	for(int i=0; i<hm; i++){
+		if(al[i].getDelay()>0) {
+			Action lastAction = al[i];
+			lastAction.setAnimation(Animation::STILL);
+			lastAction.setInitiator(Initiator::LOGIC);
+			lastAction.setTtAffected(agent);
 		
-		if(agent == TileType::HERO){
-			if(hero.countMoves(Animation::JUMPING) == 4 
-			&& hero.getActionLog()[0].getAnimation() == Animation::JUMPING){
-				//slowing down at the top to give the player time to move left or right
-				lastAction.setDelay(getCorrespondingDelay(Animation::JUMPING, TileType::HERO)*2);
-			}
-			else if(hero.countMoves(Animation::FALLING) == 4
-			&& hero.getActionLog()[0].getAnimation() == Animation::FALLING){
-				//speeding up at the bottom to give player the possibility of jumping again faster
-				lastAction.setDelay(0);
+			if(agent == TileType::HERO){
+				if(hero.countMoves(Animation::JUMPING) == 4 
+				&& hero.getActionLog()[i].getAnimation() == Animation::JUMPING){
+					//slowing down at the top to give the player time to move left or right
+					lastAction.setDelay(getCorrespondingDelay(Animation::JUMPING, TileType::HERO)*2);
+				}
+				else if(hero.countMoves(Animation::FALLING) == 4
+				&& hero.getActionLog()[i].getAnimation() == Animation::FALLING){
+					//speeding up at the bottom to give player the possibility of jumping again faster
+					lastAction.setDelay(0);
+				}
+				else lastAction.setDelay(lastAction.getDelay()-1);
 			}
 			else lastAction.setDelay(lastAction.getDelay()-1);
-		}
-		else lastAction.setDelay(lastAction.getDelay()-1);
 
-		pa->pushHead(new Node<Action>(lastAction));
+			pa->pushHead(new Node<Action>(lastAction));
+		}
 	}
 }
 
@@ -922,30 +954,34 @@ LinkedList<Action> Game::horizontalPattern(Enemy *enemy){
 void Game::moveEnemies(){
 	if(map[currentLevel].getEnemies()->getSize()>0){
 		Node<Enemy> *enemy_iter = map[currentLevel].getEnemies()->getHead();
+		while(enemy_iter!=NULL){
+			LinkedList<Action> pa;
 
-		LinkedList<Action> pa;
-
-		delay(&pa, enemy_iter->data.getActionLog(), TileType::ENEMY);
-		
-		if(pa.isEmpty()) pa.appendList(horizontalPattern(&enemy_iter->data));
+			delay(&pa, enemy_iter->data.getActionLog(), TileType::ENEMY, 1);
+			if(pa.isEmpty()) pa.appendList(horizontalPattern(&enemy_iter->data));
 		
 		
-		//moves' approval
-		while(!pa.isEmpty()){
-			LinkedList<Action> ea = getEngagedAction(pa.getHead()->data, &(enemy_iter->data));
-			while(!ea.isEmpty()){
-				if(ea.getHead()->data.getDelay() == 0) ea.getHead()->data.setDelay(getCorrespondingDelay(ea.getHead()->data.getAnimation(), TileType::ENEMY));
-				enemy_iter->data.registerMove(ea.getHead()->data);
-				ea.popHead();
+			//moves' approval
+			while(!pa.isEmpty()){
+				LinkedList<Action> ea = getEngagedAction(pa.getHead()->data, &enemy_iter->data);
+				while(!ea.isEmpty()){
+					if(ea.getHead()->data.getDelay() == 0) ea.getHead()->data.setDelay(getCorrespondingDelay(ea.getHead()->data.getAnimation(), TileType::ENEMY));
+					enemy_iter->data.registerMove(ea.getHead()->data);
+					ea.popHead();
+				}
+				pa.popHead();
 			}
-			pa.popHead();
+			
+			enemy_iter = enemy_iter->next;
 		}
 	}	
 }
 
 //poses constraints on what the user can do, mainly chosen from our own world
 //and registers the last Action
-void Game::logic(LinkedList<Action> proposedActions){
+int Game::logic(LinkedList<Action> proposedActions){
+	int c = 0; //counter for new hero moves
+
 	moveBullets();
 	moveEnemies();
 	while(!proposedActions.isEmpty()){
@@ -954,10 +990,12 @@ void Game::logic(LinkedList<Action> proposedActions){
 			if(ea.getHead()->data.getDelay() == 0) ea.getHead()->data.setDelay(getCorrespondingDelay(ea.getHead()->data.getAnimation(), TileType::HERO));
 			hero.registerMove(ea.getHead()->data);
 			ea.popHead();
+			c++;
 		}
 		proposedActions.popHead();
 	}
 	mortician(TileType::ENEMY);
+	return c;
 }
 
 void Game::mainLoop() {
@@ -991,6 +1029,7 @@ void Game::mainLoop() {
 		createMap();
 
 		bool changeLevel = true;
+		int hm = 1;
 		while(!gameOver){
 			using namespace std::chrono;
 			
@@ -1000,8 +1039,8 @@ void Game::mainLoop() {
 			frameStart = system_clock::now();
 			
 			
-			draw(changeLevel);
-			logic(input());
+			draw(changeLevel, hm);
+			hm = logic(input(hm));
 			
 			if(hero.getActionLog()[0].getTtAffected() == TileType::PL_DOOR ) {
 				changeLevel = true;
@@ -1028,6 +1067,16 @@ void Game::mainLoop() {
 
 	if(hero.getHp()<=0){
 		//insert some "UR DEAD PAL" message here
+		clear();
+		mvprintw(getmaxy(stdscr)/2, getmaxx(stdscr)/2-12, "Well that's unfortunate");
+		refresh();
+		std::this_thread::sleep_for(std::chrono::seconds(2));
+		mvprintw(getmaxy(stdscr)/2 +1, getmaxx(stdscr)/2-12, "how about one more try?");
+		refresh();
+		std::this_thread::sleep_for(std::chrono::seconds(2));
+		mvprintw(getmaxy(stdscr)/2 +3, getmaxx(stdscr)/2-6, "press space");
+		refresh();
+		while(getch() != ' ');
 	}
 	endwin();
 }
