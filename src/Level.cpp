@@ -17,27 +17,32 @@ Level::Level(int w, int h, int levelIndex) {
 
     //platform generation
     //creates one 3-character long platform
-    for (int i = 0; i < 6; i++) terrain.pushHead(new Node<Object>(Object(1 + i, h - 3, TileType::TERRAIN)));
+    //for (int i = 0; i < 6; i++) terrain.pushHead(new Node<Object>(Object(1 + i, h - 3, TileType::TERRAIN)));
 
-    bonuses.pushHead(new Node<Bonus>(Bonus(3, h - 1, 100, BonusType::HP, 100)));
-    bonuses.pushHead(new Node<Bonus>(Bonus(5, h - 1, 100, BonusType::AMMO, 10)));
-    bonuses.pushHead(new Node<Bonus>(Bonus(7, h - 1, 100, BonusType::MAXAMMO, 100)));
-    bonuses.pushHead(new Node<Bonus>(Bonus(9, h - 1, 100, BonusType::INSTAKILL, 1)));
+    //bonuses.pushHead(new Node<Bonus>(Bonus(3, h - 1, 100, BonusType::HP, 100)));
+    //bonuses.pushHead(new Node<Bonus>(Bonus(5, h - 1, 100, BonusType::AMMO, 10)));
+    //bonuses.pushHead(new Node<Bonus>(Bonus(7, h - 1, 100, BonusType::MAXAMMO, 100)));
+    //bonuses.pushHead(new Node<Bonus>(Bonus(9, h - 1, 100, BonusType::INSTAKILL, 1)));
 
-    maluses.pushHead(new Node<Malus>(Malus(w / 2, h - 1, 100, 5, MalusType::THORN, 10)));
-    maluses.pushHead(new Node<Malus>(Malus(w / 2 + 2, h - 1, 100, 50, MalusType::LANDMINE, 1)));
+    //maluses.pushHead(new Node<Malus>(Malus(w / 2, h - 1, 100, 5, MalusType::THORN, 10)));
+    //maluses.pushHead(new Node<Malus>(Malus(w / 2 + 2, h - 1, 100, 50, MalusType::LANDMINE, 1)));
 
-    maluses.pushHead(new Node<Malus>(Malus(w / 2 + 4, h - 1, 100, 1, MalusType::BARBED_WIRE, 20)));
-    maluses.pushHead(new Node<Malus>(Malus(w / 2 + 4, h - 2, 100, 1, MalusType::BARBED_WIRE, 20)));
-    maluses.pushHead(new Node<Malus>(Malus(w / 2 + 4, h - 3, 100, 1, MalusType::BARBED_WIRE, 20)));
+    //maluses.pushHead(new Node<Malus>(Malus(w / 2 + 4, h - 1, 100, 1, MalusType::BARBED_WIRE, 20)));
+    //maluses.pushHead(new Node<Malus>(Malus(w / 2 + 4, h - 2, 100, 1, MalusType::BARBED_WIRE, 20)));
+    //maluses.pushHead(new Node<Malus>(Malus(w / 2 + 4, h - 3, 100, 1, MalusType::BARBED_WIRE, 20)));
 
-    enemies.pushHead(new Node<Enemy>(Enemy(w - 1, h - 1, 100, 1, EnemyType::SENTRY)));
-    xps.pushHead(new Node<Object>(Object(5, h - 4, TileType::XP)));
+    //enemies.pushHead(new Node<Enemy>(Enemy(w - 1, h - 1, 100, 30, EnemyType::SENTRY)));
+    //xps.pushHead(new Node<Object>(Object(5, h - 4, TileType::XP)));
 
     generatePlatforms(vertBound - 4, horBound / 2, 0, horBound - 1, 1);
 
     //next level door placement
     generateNLDoor();
+    //nextLevelDoor = Object(5, h - 1, TileType::NL_DOOR);
+    spawnEnemies(levelIndex);
+    spawnBonuses(levelIndex);
+    spawnMaluses(levelIndex);
+    spawnXp();
 }
 
 LinkedList <Object>* Level::getTerrain() { return &terrain; }
@@ -125,11 +130,11 @@ bool Level::checkOverlap(int x1, int y1, int x2, int y2, TileType tile /*= TileT
         }
     }
     if (tile == TileType::EMPTY || tile == TileType::PL_DOOR) {
-        if (prevLevelDoor.getX() >= x1 && prevLevelDoor.getX() <= x2 && prevLevelDoor.getY() >= y1 && prevLevelDoor.getY() <= y2)
+        if (prevLevelDoor.getX() + 1 >= x1 && prevLevelDoor.getX() <= x2 && prevLevelDoor.getY() >= y1 && prevLevelDoor.getY() <= y2)
             return true;
     }
     if (tile == TileType::EMPTY || tile == TileType::NL_DOOR) {
-        if (nextLevelDoor.getX() >= x1 && nextLevelDoor.getX() <= x2 && nextLevelDoor.getY() >= y1 && nextLevelDoor.getY() <= y2)
+        if (nextLevelDoor.getX() >= x1 && nextLevelDoor.getX() - 1 <= x2 && nextLevelDoor.getY() >= y1 && nextLevelDoor.getY() <= y2)
             return true;
     }
     if (tile == TileType::EMPTY || tile == TileType::XP) {
@@ -259,8 +264,96 @@ void Level::generateNLDoor() {
     nextLevelDoor = Object(destX, destY, TileType::NL_DOOR);
 }
 
-/*
-void Level::spawnEnemies(int currentLevel) {
-
+void Level::findFreeSpace(int& x, int& y, int offset) {
+    x = -1;
+    y = -1;
+    int terrSize = terrain.getSize();
+    int index = Misc::randInt(0, terrSize - 1);
+    Node<Object>* iter = terrain.getHead();
+    for (int i = 0; i < index; i++) iter = iter->next;
+    for (int i = 0; i < terrSize; i++) {
+        int xIter = iter->data.getX(), yIter = iter->data.getY();
+        if (!checkOverlap(xIter - 1, yIter - 1 - offset, xIter + 1, yIter - 1)) {
+            x = xIter;
+            y = yIter - 1 - offset;
+            break;
+        }
+        if (iter->next == NULL) {
+            iter = terrain.getHead();
+        }
+        else {
+            iter = iter->next;
+        }
+    }
 }
-*/
+
+void Level::spawnEnemies(int currentLevel) {
+    int enemiesNum = Misc::diceDistribution(2, Misc::bound(currentLevel + 3, 4, 20), Misc::bound(currentLevel + 3, 4, 20) / 2, 3);
+    for (int i = 0; i < enemiesNum; i++) {
+        int x, y;
+        findFreeSpace(x, y);
+        if (x == -1 || y == -1) break;
+        enemies.pushHead(new Node<Enemy>(Enemy(x, y, 100, 30, (EnemyType)Misc::randInt(0, 1))));
+        //tba: make enemies stronger
+    }
+}
+
+void Level::spawnBonuses(int currentLevel) {
+    int bonusNum = Misc::diceDistribution(Misc::bound(10 - currentLevel, 3, 7), 10, Misc::bound(10 - currentLevel, 3, 7) / 2, 3);
+    for (int i = 0; i < bonusNum; i++) {
+        int x, y;
+        findFreeSpace(x, y, Misc::randInt(0, 2));
+        if (x == -1 || y == -1) break;
+        BonusType typeOfBonus = (BonusType)Misc::bound(Misc::diceDistribution(0, 4, 0, 2), 0, 3);
+        switch (typeOfBonus) {
+        case BonusType::HP:
+            bonuses.pushHead(new Node<Bonus>(Bonus(x, y, 100, BonusType::HP, 100)));
+            break;
+        case BonusType::AMMO:
+            bonuses.pushHead(new Node<Bonus>(Bonus(x, y, 100, BonusType::AMMO, 10)));
+            break;
+        case BonusType::MAXAMMO:
+            bonuses.pushHead(new Node<Bonus>(Bonus(x, y, 100, BonusType::MAXAMMO, 100)));
+            break;
+        case BonusType::INSTAKILL:
+            bonuses.pushHead(new Node<Bonus>(Bonus(x, y, 100, BonusType::INSTAKILL, 1)));
+            break;
+        }
+    }
+}
+
+void Level::spawnMaluses(int currentLevel) {
+    int malusNum = Misc::diceDistribution(2, Misc::bound(currentLevel + 3, 3, 7), Misc::bound(currentLevel + 3, 3, 7) / 2, 3);
+    for (int i = 0; i < malusNum; i++) {
+        int x, y;
+        findFreeSpace(x, y);
+        if (x == -1 || y == -1) break;
+        MalusType typeOfMalus = (MalusType)Misc::randInt(0, 2);
+        switch (typeOfMalus) {
+        case MalusType::THORN:
+            maluses.pushHead(new Node<Malus>(Malus(x, y, 100, 5, MalusType::THORN, 10)));
+            break;
+        case MalusType::LANDMINE:
+            maluses.pushHead(new Node<Malus>(Malus(x, y, 100, 50, MalusType::LANDMINE, 1)));
+            break;
+        case MalusType::BARBED_WIRE:
+            maluses.pushHead(new Node<Malus>(Malus(x, y, 100, 1, MalusType::BARBED_WIRE, 20)));
+            if (!checkOverlap(x, y - 1, x, y - 1)) {
+                maluses.pushHead(new Node<Malus>(Malus(x, y - 1, 100, 1, MalusType::BARBED_WIRE, 20)));
+                if (!checkOverlap(x, y - 2, x, y - 2)) {
+                    maluses.pushHead(new Node<Malus>(Malus(x, y - 2, 100, 1, MalusType::BARBED_WIRE, 20)));
+                }
+            }
+            break;
+        }
+    }
+}
+
+void Level::spawnXp() {
+    for (int i = 0; i < 3; i++) {
+        int x, y;
+        findFreeSpace(x, y);
+        if (x == -1 || y == -1) break;
+        xps.pushHead(new Node<Object>(Object(x, y, TileType::XP)));
+    }
+}
