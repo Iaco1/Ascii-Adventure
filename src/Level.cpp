@@ -317,6 +317,8 @@ void Level::spawnBonuses(int currentLevel) {
             break;
         case BonusType::INSTAKILL:
             bonuses.pushHead(new Node<Bonus>(Bonus(x, y, 100, BonusType::INSTAKILL, 1)));
+            break;    
+        default:
             break;
         }
     }
@@ -344,6 +346,8 @@ void Level::spawnMaluses(int currentLevel) {
                     maluses.pushHead(new Node<Malus>(Malus(x, y - 2, 100, 1, MalusType::BARBED_WIRE, 20)));
                 }
             }
+            break;
+        default:
             break;
         }
     }

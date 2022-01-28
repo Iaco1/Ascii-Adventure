@@ -1,7 +1,7 @@
 #include "Weapon.hpp"
 
 const int MAXDP = 100;
-const int MAX_MAXAMMO = 20;
+const int MAX_MAXAMMO = 1000;
 
 Weapon::Weapon(){}
 Weapon::Weapon(int dp, int maxAmmo, int magazineAmmo, WeaponType weaponType){
@@ -27,6 +27,7 @@ int Weapon::getMagazineAmmo(){ return magazineAmmo; }
 int Weapon::getDp(){ return dp; }
 void Weapon::setMagazineAmmo(int magazineAmmo){
     if(magazineAmmo <= maxAmmo && magazineAmmo >= 0) this->magazineAmmo = magazineAmmo;
+    else if(magazineAmmo >= maxAmmo) this->magazineAmmo = maxAmmo;
 }
 
 void Weapon::setMaxAmmo(int maxAmmo){
@@ -36,3 +37,7 @@ void Weapon::setMaxAmmo(int maxAmmo){
 void Weapon::setDp(int dp){
     if(dp>0) this->dp = dp;
 }
+
+bool Weapon::instakillOn(){ return instakill; }
+
+void Weapon::setInstakill(bool ik){ instakill = ik; }

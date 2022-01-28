@@ -8,6 +8,7 @@ class Weapon{
     int dp; //damage points per shot
     int maxAmmo;
     int magazineAmmo;
+    bool instakill;
     
     public:
     Weapon();
@@ -19,5 +20,7 @@ class Weapon{
     void setMagazineAmmo(int magazineAmmo);
     void setMaxAmmo(int maxAmmo);
     void setDp(int dp);
+    bool instakillOn();
+    void setInstakill(bool ik);
 
 };

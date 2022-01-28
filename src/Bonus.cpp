@@ -28,8 +28,11 @@ void Bonus::giveBonus(Hero *hero){
         }
         case BonusType::INSTAKILL:{
             hero->getWeapon()->setDp(hero->getWeapon()->getDp()*9000);
+            hero->getWeapon()->setInstakill(1);
             break;
         }
+        default:
+        break;
 
     }
     quantity = 0;

@@ -40,6 +40,7 @@ public:
     Action goLeftRight(Action proposedAction, Enemy *enemy);
     Action jump(Action proposedAction);
     Action fall(Action proposedAction);
+    Action fall(Action proposedAction, Enemy *enemy);
     Action shoot(Action proposedAction);
     LinkedList<Action> endOfFallingAction(Action proposedAction);
     

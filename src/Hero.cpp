@@ -3,7 +3,7 @@
 Hero::Hero(){}
 Hero::Hero(int x, int y, int hp, int basicAttackDP, Weapon weapon) : Entity(x,y, TileType::HERO, hp, basicAttackDP, Direction::RIGHT){
     this->weapon = weapon;
-    this->maxHp = hp;
+    this->maxHp = 100;
 }
 
 Weapon* Hero::getWeapon(){ return &weapon; }

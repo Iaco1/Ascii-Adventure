@@ -148,7 +148,7 @@ void Game::drawMaluses(){
 }
 
 void Game::drawHUD(WINDOW* hud){
-	mvwprintw(hud, 0,0, "HP: %d/%d - SCORE: %d - LEVEL: %d - [Weapon: %s | Ammo: %d/%d] - { %s }", 
+	mvwprintw(hud, 0,0, "HP: %d/%d - SCORE: %d - LEVEL: %d - [Weapon: %s | Ammo: %d/%d]", 
 	hero.getHp(),hero.getMaxHp(), score, currentLevel, 
 	hero.getWeapon()->weaponTypeToStr(), hero.getWeapon()->getMagazineAmmo(), hero.getWeapon()->getMaxAmmo());
 	wrefresh(hud);
@@ -197,9 +197,9 @@ void Game::drawDoors(){
 }
 
 void Game::drawEnemies(){
-	LinkedList<Enemy> enemies = *map[currentLevel].getEnemies();
-	while(!enemies.isEmpty()){
-		Enemy enemy = enemies.getHead()->data;
+	Node <Enemy> *iter = map[currentLevel].getEnemies()->getHead();
+	while(iter!=NULL){
+		Enemy enemy = iter->data;
 		int x=0, y=0;
 		enemy.getXY(x,y);
 
@@ -242,7 +242,7 @@ void Game::drawEnemies(){
 		mvwaddch(levelWindow, y, x, enemy.getTileChar());
 		wattroff(levelWindow, COLOR_PAIR(3));
 		
-		enemies.popHead();
+		iter = iter->next;
 	}
 }
 
@@ -256,12 +256,39 @@ void Game::completeJump(Animation &proposedAnimation, Initiator &proposedInitiat
 		)
 		&& proposedAnimation == Animation::STILL
 	){
-		if(hero.countMoves(Animation::JUMPING) < JUMP_HEIGHT && map[currentLevel].countObjectsAt(hero.getX(), hero.getY()-1) == 0)
-			proposedAnimation = Animation::JUMPING;
-		else
-			proposedAnimation = Animation::FALLING; // this line may be superfluous
-		
-		proposedInitiator = Initiator::LOGIC;
+		if(hero.countMoves(Animation::JUMPING) < JUMP_HEIGHT){
+			if(map[currentLevel].getListOfTileTypesAt(hero.getX(), hero.getY()-1).isEmpty()) proposedAnimation = Animation::JUMPING;
+			else{
+				switch(map[currentLevel].getListOfTileTypesAt(hero.getX(), hero.getY()-1).getHead()->data){
+					case TileType::BONUS:{
+						grabBonusAt(hero.getX(), hero.getY()-1);
+						proposedAnimation = Animation::JUMPING;
+						break;
+					}
+					case TileType::XP:{
+						gainXpAt(hero.getX(), hero.getY()-1);
+						proposedAnimation = Animation::JUMPING;
+						break;
+					}
+					case TileType::MALUS:{
+						inflictMalusAt(hero.getX(), hero.getY()-1);
+						proposedAnimation = Animation::JUMPING;
+						break;
+					}
+					case TileType::BULLET:{
+						proposedAnimation = Animation::JUMPING;
+						break;
+					}
+					case TileType::TERRAIN:{
+						proposedAnimation = Animation::FALLING;
+						break;
+					}
+					default:
+					break;
+				}
+				proposedInitiator = Initiator::LOGIC;
+			}
+		}
 	}
 }
 
@@ -438,7 +465,7 @@ LinkedList<Action> Game::getEngagedAction(Action proposedAction, Enemy *enemy){
 		break;
 
 		case Animation::FALLING:
-		//ea.pushHead(new Node<Action>(fall(proposedAction)));
+		ea.pushHead(new Node<Action>(fall(proposedAction, enemy)));
 		break;
 		
 		case Animation::SHOOTING:
@@ -561,10 +588,42 @@ Action Game::goLeftRight(Action proposedAction, Enemy *enemy){
 Action Game::jump(Action proposedAction){
 	int h = getmaxy(levelWindow), y = proposedAction.getY(), x = proposedAction.getX();
 	if(y>0 && y <= h){
-		if(map[currentLevel].countObjectsAt(x, y) == 0){
-			if(hero.countMoves(Animation::JUMPING) < JUMP_HEIGHT && hero.countMoves(Animation::FALLING) == 0){
-				hero.setXY(x, y);
+		if(hero.countMoves(Animation::JUMPING) < JUMP_HEIGHT && hero.countMoves(Animation::FALLING) == 0){
+			if(map[currentLevel].getListOfTileTypesAt(x,y).isEmpty()){
+				hero.setXY(x,y);
 				return proposedAction;
+			}else{
+				switch(map[currentLevel].getListOfTileTypesAt(x,y).getHead()->data){
+					case TileType::BONUS:{
+						grabBonusAt(x,y);
+						hero.setXY(x,y);
+						return proposedAction;
+						break;
+					}
+					case TileType::XP:{
+						gainXpAt(hero.getX(), hero.getY()-1);
+						hero.setXY(x,y);
+						return proposedAction;
+						break;
+					}
+					case TileType::MALUS:{
+						inflictMalusAt(hero.getX(), hero.getY()-1);
+						hero.setXY(x,y);
+						return proposedAction;
+						break;
+					}
+					case TileType::BULLET:{
+						hero.setXY(x,y);
+						return proposedAction;
+						break;
+					}
+					case TileType::TERRAIN:{
+						return Action(Animation::STILL, x, y+1, Initiator::LOGIC, TileType::HERO, 0);
+						break;
+					}
+					default:
+					break;
+				}
 			}
 		}
 	}
@@ -581,6 +640,19 @@ Action Game::fall(Action proposedAction){
 		return proposedAction;
 	}else {
 		return Action(Animation::STILL, hero.getX(), hero.getY(), Initiator::LOGIC, TileType::HERO, 0);
+	}
+}
+
+//accepts or rejects falling for the enemy
+Action Game::fall(Action proposedAction, Enemy *enemy){
+	int h = getmaxy(levelWindow), y = proposedAction.getY(), x = proposedAction.getX();
+	LinkedList<TileType> list = map[currentLevel].getListOfTileTypesAt(x,y);
+	
+	if(y >= 0 && y < h && list.isEmpty()){
+		enemy->setXY(x,y);
+		return proposedAction;
+	}else {
+		return Action(Animation::STILL, enemy->getX(), enemy->getY(), Initiator::LOGIC, TileType::ENEMY, 0);
 	}
 }
 
@@ -958,6 +1030,10 @@ void Game::moveEnemies(){
 			LinkedList<Action> pa;
 
 			delay(&pa, enemy_iter->data.getActionLog(), TileType::ENEMY, 1);
+			//falling mechanich for the enemies
+			if(pa.isEmpty() && map[currentLevel].countObjectsAt(enemy_iter->data.getX(), enemy_iter->data.getY()+1) == 0){
+				pa.pushHead(new Node<Action>(Action(Animation::FALLING, enemy_iter->data.getX(), enemy_iter->data.getY()+1, Initiator::LOGIC, TileType::EMPTY, 0)));
+			}
 			if(pa.isEmpty()) pa.appendList(horizontalPattern(&enemy_iter->data));
 		
 		
@@ -1029,7 +1105,7 @@ void Game::mainLoop() {
 		createMap();
 
 		bool changeLevel = true;
-		int hm = 1;
+		int hm = 1, refreshTimer = 240;
 		while(!gameOver){
 			using namespace std::chrono;
 			
@@ -1041,18 +1117,31 @@ void Game::mainLoop() {
 			
 			draw(changeLevel, hm);
 			hm = logic(input(hm));
-			
+
 			if(hero.getActionLog()[0].getTtAffected() == TileType::PL_DOOR ) {
 				changeLevel = true;
 				currentLevel--;
 				int x,y;
 				map[currentLevel].getNextLevelDoor().getXY(x,y);
 				hero.setXY(x-1,y);
+				if(hero.getWeapon()->instakillOn()){
+					hero.getWeapon()->setInstakill(0);
+					hero.getWeapon()->setDp(hero.getWeapon()->getDp()/9000);
+				}
 			}else if(hero.getActionLog()[0].getTtAffected() == TileType::NL_DOOR){
 				changeLevel = true;
 				addLevel();
+				if(hero.getWeapon()->instakillOn()){
+					hero.getWeapon()->setInstakill(0);
+					hero.getWeapon()->setDp(hero.getWeapon()->getDp()/9000);
+				}
 			}
 			else changeLevel = false;
+
+			if(refreshTimer <= 0){
+				changeLevel = true;
+				refreshTimer = 120;
+			}else refreshTimer--;
 
 			frameDelta = system_clock::now() - frameStart;
 	
