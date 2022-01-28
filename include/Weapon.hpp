@@ -2,6 +2,12 @@
 
 enum class WeaponType{ HANDGUN};
 
+/*
+representation of a weapon of type WeaponType that inflicts a certain dp damage 
+and that has magazineAmmo / maxAmmo
+the flag has the purpose of removing a bonus once the hero moves in between levels
+*/
+
 class Weapon{
     protected:
     WeaponType weaponType;

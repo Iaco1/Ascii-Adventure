@@ -7,11 +7,13 @@ Malus::Malus(int x, int y, int hp, int dp, MalusType mt, int quantity) : Item(x,
     this->quantity = quantity;
 }
 
+//on-screen representation for each MalusType
 char Malus::getTileChar(){
     char malusChar[]{'|', 'm', 'W'};
     return malusChar[(int)mt];
 }
 
+//gives effect to the Maluses that the player has intersected with
 void Malus::inflictMalusTo(Hero *hero){
     switch(mt){
         case MalusType::THORN:{

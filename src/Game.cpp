@@ -16,7 +16,7 @@ Game::Game() {
 	score = 0;
 }
 
-//inserts a newly generated level into the map and generates the hero
+//inserts a the first level into the map and generates the hero
 void Game::createMap(){
 	int h, w;
 	getmaxyx(levelWindow, h,w);
@@ -27,6 +27,7 @@ void Game::createMap(){
     currentLevel = 0;
 }
 
+//adds a level to the map and resets the hero's position
 void Game::addLevel(){
 	currentLevel++;
 	int h, w;
@@ -43,7 +44,6 @@ void Game::draw(bool changeLevel, int hm){
 		wclear(levelWindow);
 		wrefresh(levelWindow);
 		drawLevelElements(*map[currentLevel].getTerrain());
-		
 	}
 	drawDoors();
 	int HUD_h = 1;
@@ -51,10 +51,8 @@ void Game::draw(bool changeLevel, int hm){
 	drawHUD(hud);
 	delwin(hud);
 	
-	//hero drawing
 	drawHero(hm);
 	wrefresh(levelWindow);
-	//terrain, enemies, bonuses and maluses' drawing
 	
 	drawEnemies();
 	drawBonuses();
@@ -147,6 +145,7 @@ void Game::drawMaluses(){
 	wattroff(levelWindow, COLOR_PAIR(5));
 }
 
+//draws an interface that displays live info about the hero
 void Game::drawHUD(WINDOW* hud){
 	mvwprintw(hud, 0,0, "HP: %d/%d - SCORE: %d - LEVEL: %d - [Weapon: %s | Ammo: %d/%d]", 
 	hero.getHp(),hero.getMaxHp(), score, currentLevel, 
@@ -184,6 +183,7 @@ void Game::drawBullets(){
 	}
 }
 
+//draws the doors with which you can access different levels
 void Game::drawDoors(){
 	int x,y;
 	Object prevDoor = map[currentLevel].getPrevLevelDoor();
@@ -196,6 +196,7 @@ void Game::drawDoors(){
 	wrefresh(levelWindow);
 }
 
+//draws the enemies in their current position and deletes their representation in the previous position
 void Game::drawEnemies(){
 	Node <Enemy> *iter = map[currentLevel].getEnemies()->getHead();
 	while(iter!=NULL){
@@ -246,6 +247,8 @@ void Game::drawEnemies(){
 	}
 }
 
+//sets the animation and initiators right for the jump to keep on going
+//based on where the player is at and how much he jumped already
 void Game::completeJump(Animation &proposedAnimation, Initiator &proposedInitiator){
 	//keep jumping till you reached JUMP_HEIGHT even if the user presses left or right keys to jump diagonally
 	// (the user initiated a jump some time ago && the hero din't move JUMP_HEIGHT units up yet) && (the user didn't ask to make a new move yet)
@@ -292,7 +295,8 @@ void Game::completeJump(Animation &proposedAnimation, Initiator &proposedInitiat
 	}
 }
 
-//determines the Action to propose to Game::Logic() 
+//determines the Action to propose to Game::Logic()
+// checks if the hero should fall or keep jumping or wait
 LinkedList<Action> Game::input(int hm){
 	nodelay(levelWindow, TRUE);
 	noecho();
@@ -355,6 +359,7 @@ LinkedList<Action> Game::input(int hm){
 	return proposedActions;
 }
 
+//returns the animation corresponding to which key the user pressed
 Animation Game::getCorrespondingAnimation(char userKey){
 	switch(userKey){
 			case 'w':
@@ -449,7 +454,7 @@ LinkedList<Action> Game::getEngagedAction(Action proposedAction){
 	return ea;
 }
 
-//either accepts the action proposed by the user or forces an action by logic  
+//either accepts the action proposed by the enemy pattern methods or forces an action by logic  
 LinkedList<Action> Game::getEngagedAction(Action proposedAction, Enemy *enemy){	
 	LinkedList<Action> ea;
 	
@@ -489,8 +494,7 @@ LinkedList<Action> Game::getEngagedAction(Action proposedAction, Enemy *enemy){
 	return ea;
 }
 
-
-//accepts or rejects left/right movement
+//accepts or rejects left/right movement for the hero
 Action Game::goLeftRight(Action proposedAction){
 	int w = getmaxx(levelWindow), x = proposedAction.getX(), y = proposedAction.getY();
 	w--;
@@ -538,11 +542,9 @@ Action Game::goLeftRight(Action proposedAction){
 			return Action(Animation::STILL, hero.getX(), hero.getY(), Initiator::LOGIC, TileType::HERO, 0); 
 		}
 	}else return Action(Animation::STILL, hero.getX(), hero.getY(), Initiator::LOGIC, TileType::HERO, 0);
-	
-	//probably need to generalize these functions to take the acting entity as a parameter
 }
 
-//method overload to handle enemies' movements
+//method overload to handle enemies' movements and their reaction to bumping into things
 Action Game::goLeftRight(Action proposedAction, Enemy *enemy){
 	int w = getmaxx(levelWindow), x = proposedAction.getX(), y = proposedAction.getY();
 	w--;
@@ -582,7 +584,6 @@ Action Game::goLeftRight(Action proposedAction, Enemy *enemy){
 		}
 	}else return Action(Animation::STILL, enemy->getX(), enemy->getY(), Initiator::LOGIC, TileType::ENEMY, 0);
 }
-
 
 //accepts or rejects jumps
 Action Game::jump(Action proposedAction){
@@ -630,7 +631,7 @@ Action Game::jump(Action proposedAction){
 	return Action(Animation::STILL, hero.getX(), hero.getY(), Initiator::LOGIC, TileType::HERO, 0);
 }
 
-//accepts or rejects falling
+//accepts or rejects falling for the hero
 Action Game::fall(Action proposedAction){
 	int h = getmaxy(levelWindow), y = proposedAction.getY(), x = proposedAction.getX();
 	LinkedList<TileType> list = map[currentLevel].getListOfTileTypesAt(x,y);
@@ -656,7 +657,7 @@ Action Game::fall(Action proposedAction, Enemy *enemy){
 	}
 }
 
-//accept or rejects shooting
+//accept or rejects shooting for the hero
 Action Game::shoot(Action proposedAction){
 	int x = proposedAction.getX(), y = proposedAction.getY();
 	if (hero.getWeapon()->getMagazineAmmo() > 0){
@@ -690,6 +691,7 @@ Action Game::shoot(Action proposedAction){
 	return Action(Animation::STILL, hero.getX(), hero.getY(), Initiator::LOGIC, TileType::HERO, 0);
 }
 
+//moves bullets horizontally once they've been shot
 void Game::moveBullets(){
 	int w = getmaxx(levelWindow);
 
@@ -753,11 +755,10 @@ void Game::moveBullets(){
 								Node<Enemy>* enemy = map[currentLevel].getNodeAtIn(nextX, y, map[currentLevel].getEnemies());
 								enemy->data.setHp(enemy->data.getHp()-hero.getWeapon()->getDp());
 								iter->data.setXY(nextX, y);
-								//hurt the enemy
 								break;
 							}
 					
-							case TileType::HERO: //this ain't happening (till i get the enemies to shoot)
+							case TileType::HERO:
 							default:
 							break;
 						}
@@ -771,13 +772,10 @@ void Game::moveBullets(){
 			}
 			
 		}
-		
-		//move the bullet in its current direction until it hits something
-		//then decide what it does to each tileType
-
 	}
 }
 
+//returns the next position for an object if the animation was to happen
 void Game::nextXyFor(int &x, int &y, Animation animation){
 	switch(animation){
 		case Animation::JUMPING:
@@ -811,6 +809,7 @@ void Game::nextXyFor(int &x, int &y, Animation animation){
 	}
 }
 
+//returns the no. of actions the entity will have to wait before being able to move again
 int Game::getCorrespondingDelay(Animation animation, TileType agent){
 	//enum class Animation{CLIMB_UP, CLIMB_DOWN, LEFT, RIGHT, STILL, JUMPING, FALLING, QUIT, PAUSE, SHOOTING};
 	//int animationDelay[] = {0, 0, 12, 12, 0, 168, 112, 0, 0, 10}; //milliseconds unit
@@ -824,7 +823,8 @@ int Game::getCorrespondingDelay(Animation animation, TileType agent){
 		return animationDelay[(int)animation];
 	}else return 0;
 }
-//delay setting mechanism, proposedActions and entity's ActionLog
+
+//delay setting mechanism, pa: proposedActions, al[]: entity's ActionLog
 void Game::delay(LinkedList<Action> *pa, Action al[], TileType agent, int hm){
 	for(int i=0; i<hm; i++){
 		if(al[i].getDelay()>0) {
@@ -853,7 +853,7 @@ void Game::delay(LinkedList<Action> *pa, Action al[], TileType agent, int hm){
 	}
 }
 
-//i.e. what do you do when the block underneat you is ...?
+//returns which actions to perform based on which TileType is beneath the hero
 LinkedList<Action> Game::endOfFallingAction(Action proposedAction){
 	//be mindful that this will be called when the Hero is still and has something beneath him
 	int x = proposedAction.getX(), y = proposedAction.getY();
@@ -928,6 +928,7 @@ void Game::fallingAttack(int x, int y){
 	enemy->data.setHp(enemy->data.getHp()-hero.getDp());
 }
 
+//verifies that whether the hero should fall given its position
 void Game::fallingMechanic(Animation &proposedAnimation, Initiator &proposedInitiator){
 	if(proposedAnimation == Animation::STILL && map[currentLevel].countObjectsAt(hero.getX(), hero.getY()+1) == 0){
 		proposedAnimation = Animation::FALLING;
@@ -947,12 +948,14 @@ void Game::inflictMalusAt(int x, int y){
 	malus->inflictMalusTo(&hero);
 }
 
+// increases score, retrieves the bonus for the corresponding position and then deletes it
 void Game::gainXpAt(int x, int y){
 	score++;
 	Node<Object>* p = map[currentLevel].getNodeAtIn(x,y, map[currentLevel].getXps());
 	map[currentLevel].getXps()->popNode(p);
 }
 
+//deletes dead level elements
 void Game::mortician(TileType tt /*= TileType::ENEMY*/){
     switch(tt){
 	    case TileType::ENEMY:{
@@ -985,7 +988,7 @@ void Game::mortician(TileType tt /*= TileType::ENEMY*/){
     }
 }
 
-
+//proposeds a fixed-length left-right moving pattern
 LinkedList<Action> Game::horizontalPattern(Enemy *enemy){
 	int propX, propY;
 	enemy->getXY(propX, propY);
@@ -1023,6 +1026,7 @@ LinkedList<Action> Game::horizontalPattern(Enemy *enemy){
 	return pa;
 }
 
+//the equivalent logic() for the enemies
 void Game::moveEnemies(){
 	if(map[currentLevel].getEnemies()->getSize()>0){
 		Node<Enemy> *enemy_iter = map[currentLevel].getEnemies()->getHead();
@@ -1074,9 +1078,11 @@ int Game::logic(LinkedList<Action> proposedActions){
 	return c;
 }
 
+//main driver method for the game
 void Game::mainLoop() {
 	srand(time(NULL));
 
+	//color initialization
 	initscr();
 	start_color();
 	init_color(COLOR_BLACK, 0,0,0);
@@ -1090,26 +1096,30 @@ void Game::mainLoop() {
 
 	int w, h;
 
+	//menu loop
 	menu = Menu();
 	menu.menuLoop();
 
 	if(menu.getOption() == MenuOption::PLAY){
+		//levelWindow initialization
 		getmaxyx(stdscr, h, w);
 		int HUD_h = 1;
 		h = h - HUD_h;
 		levelWindow = newwin(h,w, HUD_h,0);
 		
+		//on-screen color initialization
 		init_pair(1, COLOR_WHITE, COLOR_BLACK);
 		wbkgd(levelWindow, COLOR_PAIR(1));
 		
 		createMap();
 
-		bool changeLevel = true;
-		int hm = 1, refreshTimer = 240;
+		//flags and counters intialization
+		bool changeLevel = true;	//this unlocks some additional refreshing in draw()
+		int hm = 1, refreshTimer = 240; // no. of new hero's actions and no. of cycles to wait before full level refresh
 		while(!gameOver){
 			using namespace std::chrono;
 			
-
+			//timer intialization to eventually delay actions if they're performed too quickly 
 			time_point<system_clock> frameStart;
 			duration<double> frameDelta; // indicates how much time the current frame has taken
 			frameStart = system_clock::now();
@@ -1118,12 +1128,15 @@ void Game::mainLoop() {
 			draw(changeLevel, hm);
 			hm = logic(input(hm));
 
+			//level changing detection mechanism to access the previous or subsequent level 
 			if(hero.getActionLog()[0].getTtAffected() == TileType::PL_DOOR ) {
 				changeLevel = true;
 				currentLevel--;
 				int x,y;
 				map[currentLevel].getNextLevelDoor().getXY(x,y);
 				hero.setXY(x-1,y);
+
+				//instakill bonus removal mechanism
 				if(hero.getWeapon()->instakillOn()){
 					hero.getWeapon()->setInstakill(0);
 					hero.getWeapon()->setDp(hero.getWeapon()->getDp()/9000);
@@ -1138,19 +1151,18 @@ void Game::mainLoop() {
 			}
 			else changeLevel = false;
 
+			//periodical whole-level refresh mechanism 
 			if(refreshTimer <= 0){
 				changeLevel = true;
 				refreshTimer = 120;
 			}else refreshTimer--;
 
 			frameDelta = system_clock::now() - frameStart;
-	
+			
+			//time delay when cycles are executed too quickly
 			if(frameDelay > frameDelta){
 				std::this_thread::sleep_for(frameDelay - frameDelta);
-			}
-
-		
-			
+			}	
 		}
 	}
 
@@ -1171,26 +1183,3 @@ void Game::mainLoop() {
 }
 
 Menu Game::getMenu(){ return menu; }
-
-void Game::saveMapToFile(){
-	ofstream file;
-	file.open("/home/user/projects/project-X-githubClone/projectX/output/map.txt",  ofstream::out);
-
-	for(int i=0; i<map.getSize(); i++){
-		for(int y=0; y<=map[i].getVertBound(); y++){
-			for(int x=0; x<=map[i].getHorBound(); x++){
-				LinkedList<TileType> list = map[i].getListOfTileTypesAt(x,y);
-				if(list.isEmpty()) file.put(' ');
-				else file.put(getTTchar(list.getHead()->data));
-			}
-			file.put('\n');
-		}
-		file.put('\n');file.put('!');file.put('\n');
-	}
-	file.close();
-}
-
-char Game::getTTchar(TileType tt){
-	char tileChar[]{ ' ', '#', 'H', 'E', 'B', 'M', 'o', '&', '&','$'};
-    return tileChar[(int)tt];
-}

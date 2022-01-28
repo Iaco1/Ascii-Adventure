@@ -7,11 +7,13 @@ Bonus::Bonus(int x, int y, int hp, BonusType bt, int quantity) : Item(x,y,TileTy
     this->quantity = quantity;
 }
 
+//on-screen representation of each BonusType bonus
 char Bonus::getTileChar(){
     char bonusChar[]{ '+', 'a', 'A', 'K'};
     return bonusChar[(int)bt];
 }
 
+//gives effect to the bonuses the player has picked up
 void Bonus::giveBonus(Hero *hero){
     switch(bt){
         case BonusType::HP:{

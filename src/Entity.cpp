@@ -52,7 +52,7 @@ int Entity::countMoves(Action action){
 	return count;
 }
 
-//counts the no. of nodes that have matching data (animation)
+//counts the no. of nodes that have matching data (animation) in the last n positions of actionLog[]
 int Entity::countMoves(Animation animation, int n){
 	int count = 0;
     if(n>SIGNIFICANT_MOVES || n<=0) n = SIGNIFICANT_MOVES;
@@ -63,7 +63,7 @@ int Entity::countMoves(Animation animation, int n){
 	return count;
 }
 
-//counts the no. of nodes that have matching data (animation and initiator)
+//counts the no. of nodes that have matching data (animation and initiator) in the last n positions of actionLog[]
 int Entity::countMoves(Animation animation, Initiator initiator, int n){
 	int count = 0;
     if(n>SIGNIFICANT_MOVES || n<=0) n = SIGNIFICANT_MOVES;

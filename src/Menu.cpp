@@ -9,15 +9,14 @@ Menu::Menu(){
     
 }
 
+//prints the title
 WINDOW* Menu::printStartScreen(){
     int title_w = 24;
     int h, w;
     getmaxyx(stdscr, h, w);
     WINDOW* title = newwin(3, title_w+2, (h/2)-3,w/2 - title_w/2);
-    //wborder(title, '|','|','-','-','+','+','+','+');
     WINDOW* belowTitle = newwin(3,30+2, h-4,w/2-16); // used to write the press space to play
-    //wborder(belowTitle, '|','|','-','-','+','+','+','+');
-    
+
     mvwprintw(title,1,1, "Basic 2D ASCII Platform");
     wrefresh(title);
     
@@ -31,6 +30,7 @@ WINDOW* Menu::printStartScreen(){
     return belowTitle;
 }
 
+//prints the main menu
 void Menu::printMenu() {
     clear();
     mvprintw(0,0, "B2DAP");
@@ -39,6 +39,7 @@ void Menu::printMenu() {
     refresh();
 }
 
+//prints option 0 of the main menu
 void Menu::printEndScreen() {
     mvprintw(0, 0, "Bon Voyage");
     refresh();
@@ -47,6 +48,7 @@ void Menu::printEndScreen() {
     system("reset");
 }
 
+//prints a start game message
 void Menu::initGame() {
     mvprintw(getmaxy(stdscr)/2, getmaxx(stdscr)/2-8, "The Game starts");
     refresh();
@@ -57,6 +59,7 @@ void Menu::initGame() {
     option = MenuOption::PLAY;
 }
 
+//menu loop logic
 void Menu::menuLoop() {
     char choice;
     WINDOW* bt = printStartScreen();
@@ -89,6 +92,7 @@ void Menu::menuLoop() {
     sleep(3);
 }
 
+//prints commands and a description of the game elements
 void Menu::printHelpScreen(){
     clear();
     refresh();
@@ -111,14 +115,20 @@ void Menu::printHelpScreen(){
     attron(COLOR_PAIR(8));
     mvprintw(getmaxy(stdscr)/8+7, getmaxx(stdscr)/8, "| m W");
     attroff(COLOR_PAIR(8));
-    mvprintw(getmaxy(stdscr)/8+7, getmaxx(stdscr)/8+10, "Traps, ");
+    mvprintw(getmaxy(stdscr)/8+7, getmaxx(stdscr)/8+10, "Traps");
 
     attron(COLOR_PAIR(9));
     mvprintw(getmaxy(stdscr)/8+9, getmaxx(stdscr)/8, "$");
     attroff(COLOR_PAIR(8));
     mvprintw(getmaxy(stdscr)/8+9, getmaxx(stdscr)/8+10, "XP points");
     
-    mvprintw(getmaxy(stdscr)/8+11, getmaxx(stdscr)/8, "press space to continue");
+    mvprintw(getmaxy(stdscr)/8+14, getmaxx(stdscr)/2-12, "press space to continue");
+
+    mvprintw(getmaxy(stdscr)/8, getmaxx(stdscr)*3/4-29, "COMMANDS                    ");
+    mvprintw(getmaxy(stdscr)/8+3, getmaxx(stdscr)*3/4-29, "left-right movement:    a, d");
+    mvprintw(getmaxy(stdscr)/8+5, getmaxx(stdscr)*3/4-29, "jump:                  space");
+    mvprintw(getmaxy(stdscr)/8+7, getmaxx(stdscr)*3/4-29, "shoot:                     f");
+    mvprintw(getmaxy(stdscr)/8+9, getmaxx(stdscr)*3/4-29, "return to main screen:     0");
     refresh();
     while(getch()!=' ');
     clear();

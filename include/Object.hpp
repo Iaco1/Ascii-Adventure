@@ -1,7 +1,9 @@
 #pragma once
 
 enum class TileType{ EMPTY, TERRAIN, HERO, ENEMY, BONUS, MALUS, BULLET, PL_DOOR, NL_DOOR, XP, SIZE};
-
+/*
+base class for all in-game objects
+*/
 class Object{
     protected:
     int x, y;

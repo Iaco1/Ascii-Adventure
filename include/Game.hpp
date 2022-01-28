@@ -2,6 +2,20 @@
 #include "Menu.hpp"
 #include "Level.hpp"
 
+/*
+    this is the game's main class where things are being drawn, the laws of physics being applied (kind of)
+    and the Hero's triumphs and losses happen
+
+    - the gameOver flag determines whether to stop the game loop and go back to the main title screen
+    - the menu object is a container for methods related to drawing the menu and to remember the user's choice in the menu 
+    - the map is a doubly-linked list containing all of the in-game objects that are visible on the map except for the hero
+    - the hero is the character the player controls
+    - currentlevel is the index indicating what level the player is in
+    - levelWindow is an ncurses WINDOW object thay is slightly smaller than the full stdscr WINDOW to accomodate the HUD
+      it's where the map is drawn
+    - score is a counter for the number of user collected XP objects
+*/
+
 class Game {
 protected:
     bool gameOver;
@@ -79,6 +93,4 @@ public:
     void moveEnemies();
     LinkedList<Action> horizontalPattern(Enemy *enemy);
     Menu getMenu();
-    void saveMapToFile();
-    char getTTchar(TileType tt);
 };

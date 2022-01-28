@@ -2,6 +2,11 @@
 #include "Entity.hpp"
 #include "Weapon.hpp"
 
+
+/*
+    this class describes the character that the user can control
+    the hero has a weapon and a maxHp which change during the game
+*/
 class Hero : public Entity{
     protected:
     Weapon weapon;

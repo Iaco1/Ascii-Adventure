@@ -3,6 +3,10 @@
 
 enum class EnemyType{ SENTRY, BOMBER, SIZE};
 
+/*
+    this class describes the EnemyType of the in-game enemies
+    each EnemyType has a different on-screen representation
+*/
 class Enemy : public Entity{
     private:
     EnemyType et;

@@ -4,6 +4,9 @@
 
 enum class MenuOption{ PLAY, EXIT };
 
+/*
+class containing methods to draw what you see on screen while in the menu
+*/
 class Menu{
     protected:
     MenuOption option;

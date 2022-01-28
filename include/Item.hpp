@@ -1,5 +1,11 @@
 #pragma once
 #include "Object.hpp"
+/*
+item is a class in between Object and Entity
+that serves the purpose of being a base class for Entity, Bonus and Malus
+
+an item has health points and damage points
+*/
 
 class Item : public Object{
     protected:

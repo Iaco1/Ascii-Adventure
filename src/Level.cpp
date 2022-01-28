@@ -52,6 +52,7 @@ LinkedList <Malus>* Level::getMaluses() { return &maluses; }
 LinkedList <Entity>* Level::getBullets() { return &bullets; }
 LinkedList <Object>* Level::getXps() { return &xps; }
 
+//returns the no. of objects at (x,y)
 int Level::countObjectsAt(int x, int y) {
     return countObjectsAtIn(x, y, terrain)
         + countObjectsAtIn(x, y, enemies)
@@ -63,6 +64,7 @@ int Level::countObjectsAt(int x, int y) {
         + (nextLevelDoor.getX() == x && nextLevelDoor.getY() == y);
 }
 
+//returns a list of TileTypes corresponding to the ones present at (x,y)
 LinkedList<TileType> Level::getListOfTileTypesAt(int x, int y) {
     LinkedList<TileType> list;
     for (int i = 0; i < countObjectsAtIn(x, y, terrain); i++) list.pushHead(new Node<TileType>(TileType::TERRAIN));

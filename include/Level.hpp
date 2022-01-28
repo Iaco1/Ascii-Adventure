@@ -6,6 +6,12 @@
 #include "Malus.hpp"
 #include "Enemy.hpp"
 
+
+/*
+this class contains all of the objects being drawn to the screen (except the hero) for the current level
+- terrain contains the '#' represented elements, these are the platforms
+- enemies, bonuses, maluses, bullets, xps, prevLevelDoor, nextLevelDoor contain exactly whay you would expect
+*/
 class Level {
 protected:
     LinkedList <Object> terrain;
@@ -40,6 +46,7 @@ public:
 
     2) If you want to keep it separate, move it into a different header which you include in your original header:
     */
+   //returns the no. of objects of type T at coordinates (x,y) 
     template <class T>
     int countObjectsAtIn(int x, int y, LinkedList<T> list) {
         int i = 0;
@@ -54,7 +61,7 @@ public:
         return i;
     }
 
-    //doesn't deal with the possibility of having 2 objects of the same TileType intersecting but we can arrange for it to not happen
+    //returns the Node of Type T at coordinates (x,y)
     template <class T>
     Node<T>* getNodeAtIn(int x, int y, LinkedList<T>* list) {
         Node<T>* iter = list->getHead();
