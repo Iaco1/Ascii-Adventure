@@ -79,6 +79,7 @@ void Menu::menuLoop() {
 
     case '1':
         initGame();
+        printHelpScreen();
         break;
 
     default:
@@ -86,6 +87,41 @@ void Menu::menuLoop() {
 
     }
     sleep(3);
+}
+
+void Menu::printHelpScreen(){
+    clear();
+    refresh();
+    init_pair(6, COLOR_YELLOW, COLOR_BLACK);
+    init_pair(7, COLOR_GREEN, COLOR_BLACK);
+    init_pair(8, COLOR_MAGENTA, COLOR_BLACK);
+    init_pair(9, COLOR_RED, COLOR_BLACK);
+    
+    mvprintw(getmaxy(stdscr)/8, getmaxx(stdscr)/8, "HELP LOG");
+    attron(COLOR_PAIR(6));
+    mvaddch(getmaxy(stdscr)/8+3, getmaxx(stdscr)/8, 'H');
+    attroff(COLOR_PAIR(6));
+    mvprintw(getmaxy(stdscr)/8+3, getmaxx(stdscr)/8+10, "this is you, the hero");
+
+    attron(COLOR_PAIR(7));
+    mvprintw(getmaxy(stdscr)/8+5, getmaxx(stdscr)/8, "+ a A K");
+    attroff(COLOR_PAIR(7));
+    mvprintw(getmaxy(stdscr)/8+5, getmaxx(stdscr)/8+10, "bonuses");
+
+    attron(COLOR_PAIR(8));
+    mvprintw(getmaxy(stdscr)/8+7, getmaxx(stdscr)/8, "| m W");
+    attroff(COLOR_PAIR(8));
+    mvprintw(getmaxy(stdscr)/8+7, getmaxx(stdscr)/8+10, "Traps, ");
+
+    attron(COLOR_PAIR(9));
+    mvprintw(getmaxy(stdscr)/8+9, getmaxx(stdscr)/8, "$");
+    attroff(COLOR_PAIR(8));
+    mvprintw(getmaxy(stdscr)/8+9, getmaxx(stdscr)/8+10, "XP points");
+    
+    mvprintw(getmaxy(stdscr)/8+11, getmaxx(stdscr)/8, "press space to continue");
+    refresh();
+    while(getch()!=' ');
+    clear();
 }
 
 MenuOption Menu::getOption() { return option; }

@@ -15,5 +15,6 @@ public:
     void printMenu();
     void printEndScreen();
     void initGame();
+    void printHelpScreen();
     MenuOption getOption();
 };

@@ -8,7 +8,7 @@ Malus::Malus(int x, int y, int hp, int dp, MalusType mt, int quantity) : Item(x,
 }
 
 char Malus::getTileChar(){
-    char malusChar[]{'w', 'm', 'W'};
+    char malusChar[]{'|', 'm', 'W'};
     return malusChar[(int)mt];
 }
 
@@ -30,6 +30,8 @@ void Malus::inflictMalusTo(Hero *hero){
             quantity--;
             break;
         }
+        default:
+        break;
     }
     if(quantity<=0) hp = 0;
 }
