@@ -110,7 +110,10 @@ void Menu::printMenu() {
 
 //prints option 0 of the main menu
 void Menu::printEndScreen() {
-    mvprintw(0, 0, "Bon Voyage");
+    init_pair(1, COLOR_BLUE, COLOR_BLACK);
+    attron(COLOR_PAIR(1));
+    mvprintw(getmaxy(stdscr) / 2 - 1, getmaxx(stdscr) / 2 - 7, "See you soon!");
+    attroff(COLOR_PAIR(1));
     refresh();
     option = MenuOption::EXIT;
     sleep(2);
@@ -182,26 +185,30 @@ void Menu::printHelpScreen() {
     attroff(COLOR_PAIR(6));
     mvprintw(getmaxy(stdscr) / 8 + 3, getmaxx(stdscr) / 8 + 10, "this is you, the hero");
 
+    attron(COLOR_PAIR(9));
+    mvprintw(getmaxy(stdscr) / 8 + 5, getmaxx(stdscr) / 8, "S B");
+    attroff(COLOR_PAIR(9));
+    mvprintw(getmaxy(stdscr) / 8 + 5, getmaxx(stdscr) / 8 + 10, "enemies");
+
+
     attron(COLOR_PAIR(7));
-    mvprintw(getmaxy(stdscr) / 8 + 5, getmaxx(stdscr) / 8, "+ a A K");
+    mvprintw(getmaxy(stdscr) / 8 + 7, getmaxx(stdscr) / 8, "+ a A K");
     attroff(COLOR_PAIR(7));
-    mvprintw(getmaxy(stdscr) / 8 + 5, getmaxx(stdscr) / 8 + 10, "bonuses");
+    mvprintw(getmaxy(stdscr) / 8 + 7, getmaxx(stdscr) / 8 + 10, "bonuses");
 
     attron(COLOR_PAIR(8));
-    mvprintw(getmaxy(stdscr) / 8 + 7, getmaxx(stdscr) / 8, "| m W");
+    mvprintw(getmaxy(stdscr) / 8 + 9, getmaxx(stdscr) / 8, "| m W");
     attroff(COLOR_PAIR(8));
-    mvprintw(getmaxy(stdscr) / 8 + 7, getmaxx(stdscr) / 8 + 10, "traps");
+    mvprintw(getmaxy(stdscr) / 8 + 9, getmaxx(stdscr) / 8 + 10, "traps");
 
-    attron(COLOR_PAIR(9));
-    mvprintw(getmaxy(stdscr) / 8 + 9, getmaxx(stdscr) / 8, "$");
-    attroff(COLOR_PAIR(8));
-    mvprintw(getmaxy(stdscr) / 8 + 9, getmaxx(stdscr) / 8 + 10, "XP points");
+    mvprintw(getmaxy(stdscr) / 8 + 11, getmaxx(stdscr) / 8, "$");
+    mvprintw(getmaxy(stdscr) / 8 + 11, getmaxx(stdscr) / 8 + 10, "XP points");
 
-    mvprintw(getmaxy(stdscr) / 8 + 11, getmaxx(stdscr) / 8, "&");
-    mvprintw(getmaxy(stdscr) / 8 + 11, getmaxx(stdscr) / 8 + 10, "door to next level");
+    mvprintw(getmaxy(stdscr) / 8 + 13, getmaxx(stdscr) / 8, "&");
+    mvprintw(getmaxy(stdscr) / 8 + 13, getmaxx(stdscr) / 8 + 10, "door to next level");
 
     attron(COLOR_PAIR(6));
-    mvprintw(getmaxy(stdscr) / 8 + 14, getmaxx(stdscr) / 2 - 12, "Press SPACE to continue");
+    mvprintw(getmaxy(stdscr) / 8 + 16, getmaxx(stdscr) / 2 - 12, "Press SPACE to continue");
     attroff(COLOR_PAIR(6));
 
     attron(COLOR_PAIR(1));
