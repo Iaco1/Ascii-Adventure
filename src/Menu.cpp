@@ -15,7 +15,7 @@ WINDOW* Menu::printStartScreen() {
     refresh();
     init_pair(1, COLOR_BLUE, COLOR_BLACK);
     init_pair(2, COLOR_YELLOW, COLOR_BLACK);
-    int title_h = 15;
+    int title_h = 14;
     int title_w = 52;
     int h, w;
     getmaxyx(stdscr, h, w);
@@ -74,7 +74,6 @@ WINDOW* Menu::printStartScreen() {
     sleep(1);
     wattroff(title, COLOR_PAIR(1));
     mvwprintw(title, 13, 0, "     [ by Davide Iacomino & Leonardo Mancini ]");
-    mvwprintw(title, 14, 0, "               !! WORKING TITLE !!");
     wrefresh(title);
     refresh();
 
