@@ -72,7 +72,7 @@ public:
         return iter;
     }
 
-    int countObjectsAt(int x, int y);
+    int countObjectsAt(int x, int y); //returns the number of objects at (x,y)
     LinkedList<TileType> getListOfTileTypesAt(int x, int y);
     Object getPrevLevelDoor();
     Object getNextLevelDoor();
@@ -81,13 +81,13 @@ public:
     int getVertBound();
 
 
-    bool checkOverlap(int x1, int y1, int x2, int y2, TileType tile = TileType::EMPTY);
-    void placePlatform(int height, int leftBound, int rightBound);
-    int findClosestTerrain(int height, int xPosition, bool left);
-    void generatePlatforms(int height, int averageXPosition, int leftBound, int rightBound, int currentIteration);
-    void generateNLDoor();
-    void findFreeSpace(int& x, int& y, int offset = 0);
-    void spawnEnemies(int currentLevel);
+    bool checkOverlap(int x1, int y1, int x2, int y2, TileType tile = TileType::EMPTY); //checks if there are tiles between the specified coordinates
+    void placePlatform(int height, int leftBound, int rightBound);                      //places a row of terrain tiles between left and rightBound
+    int findClosestTerrain(int height, int xPosition, bool left);                       //looks for the closest terrain tile
+    void generatePlatforms(int height, int averageXPosition, int leftBound, int rightBound, int currentIteration);  //random generator of platforms
+    void generateNLDoor();                                                              //places door for next level
+    void findFreeSpace(int& x, int& y, int offset = 0);                                 //looks for free spaces above terrain tiles
+    void spawnEnemies(int currentLevel);        //random generators of objects
     void spawnBonuses(int currentLevel);
     void spawnMaluses(int currentLevel);
     void spawnXp();

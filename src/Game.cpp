@@ -1159,14 +1159,20 @@ void Game::mainLoop() {
 
 	if(hero.getHp()<=0){
 		//insert some "UR DEAD PAL" message here
+    	init_pair(1, COLOR_BLUE, COLOR_BLACK);
+    	init_pair(2, COLOR_YELLOW, COLOR_BLACK);
 		clear();
-		mvprintw(getmaxy(stdscr)/2, getmaxx(stdscr)/2-12, "Well that's unfortunate");
+		attron(COLOR_PAIR(1));
+		mvprintw(getmaxy(stdscr)/2 - 4, getmaxx(stdscr)/2-12, "Well that's unfortunate");
 		refresh();
 		std::this_thread::sleep_for(std::chrono::seconds(2));
-		mvprintw(getmaxy(stdscr)/2 +1, getmaxx(stdscr)/2-12, "how about one more try?");
+		mvprintw(getmaxy(stdscr)/2 - 3, getmaxx(stdscr)/2-12, "How about one more try?");
+		attroff(COLOR_PAIR(1));
 		refresh();
 		std::this_thread::sleep_for(std::chrono::seconds(2));
-		mvprintw(getmaxy(stdscr)/2 +3, getmaxx(stdscr)/2-6, "press space");
+		attron(COLOR_PAIR(2));
+		mvprintw(getmaxy(stdscr)/2 +3, getmaxx(stdscr)/2-6, "Press SPACE");
+		attroff(COLOR_PAIR(2));
 		refresh();
 		while(getch() != ' ');
 	}
