@@ -1,0 +1,19 @@
+ASCII Adventure
+
+
+
+Overview
+
+ASCII Adventure is a platfrom c++ game with ASCII-graphics, built with the gcc/make toolchain, that relies on ncurses 6.2 to run.
+The makefile compiles files in /src and /include and produces an executable "main" in /output.
+
+
+Building and running
+
+To compile, run: "make" in /projectX
+To execute, run: "./main" in /projectX/output
+
+
+Credits
+
+Code written by Davide Iacomino and Leornardo Mancini

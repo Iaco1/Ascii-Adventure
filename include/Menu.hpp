@@ -1,22 +1,23 @@
-#include "Window.hpp"
-#include "Title.hpp"
+#pragma once
+#include <ncurses.h>
+#include <panel.h>
 
 enum class MenuOption{ PLAY, EXIT };
 
+/*
+class containing methods to draw what you see on screen while in the menu
+*/
 class Menu{
     protected:
-    Title title;
     MenuOption option;
 
 public:
     Menu();
-    Menu(Window window);
-    void printTitle(); //prints the titleString at the center of the window 
-    void printStartScreen(Window window);
-    void menuLoop(Window window);
-    void printFrame(Window window);
+    WINDOW* printStartScreen();
+    void menuLoop();
     void printMenu();
     void printEndScreen();
     void initGame();
+    void printHelpScreen();
     MenuOption getOption();
 };

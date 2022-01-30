@@ -1,5 +1,11 @@
+#pragma once
 #include <iostream>
+#include <cstdarg>
 using namespace std;
+
+/*
+doubly-linked list data structure class
+*/
 
 template <class T>
 class Node{
@@ -32,6 +38,10 @@ class LinkedList{
 		tail = NULL;
 		size = 0;
 	}
+	Node<T>* getHead(){ return head; }
+	Node<T>* getTail(){ return tail; }
+	
+	//inserts node in the head
 	void pushHead(Node<T> *n){
 		if(head == NULL) {
 			head = n;
@@ -47,6 +57,8 @@ class LinkedList{
 		}
 		size++;
 	}
+	
+	//inserts node in the tail
 	void pushTail(Node<T> *n){
 		if(tail==NULL){
 			head = n;
@@ -62,6 +74,8 @@ class LinkedList{
 		}
 		size++;
 	}
+	
+	//inserts node at index i
 	void pushIndex(Node<T> *n, int i){
 		Node<T> *iter = head;
 		if(i==0) pushHead(n);
@@ -79,18 +93,8 @@ class LinkedList{
 			size++;
 		}
 	}
-	void printList(){
-		Node<T> *iter=head;
-		cout<<endl<<"NULL<-";
-		while(iter != NULL){
-			char str[24];
-			iter->data.toString(str);
-			printf("[%s]", str);
-			iter = iter->next;
-			if(iter!=NULL) cout<<"<->";
-		}
-		cout<<"->NULL"<<endl;
-	}
+	
+	//deletes the node in head
 	void popHead(){
 		if(size>1){
 			head = head->next;
@@ -102,6 +106,8 @@ class LinkedList{
 			size--;
 		}
 	}
+	
+	// deletes the node in tail 
 	void popTail(){
 		if(size>1){
 			tail = tail->prev;
@@ -113,6 +119,8 @@ class LinkedList{
 			size--;
 		}
 	}
+	
+	//deletes the node at index i
 	void popIndex(int i){
 		Node<T> *iter = head;
 		if(size>0){
@@ -133,6 +141,8 @@ class LinkedList{
 			}
 		}
 	}
+	
+	//returns the node at index i
 	Node<T>* getNodeAt(int i){
 		if((i>0 || i==0) && i<size){
 			if(i==0) return head;
@@ -147,6 +157,8 @@ class LinkedList{
 			}
 		}else return NULL;
 	}
+	
+	//returns whether the list contains node n or not
 	bool contains(Node<T> *n){
 		Node<T> *iter = head;
 		while(iter!=NULL){
@@ -155,6 +167,26 @@ class LinkedList{
 		}
 		return false;
 	}
+	
+	//returns whether the list contains any nodes that have that matches at least one of the argn no. of arguments 
+	bool containsAnyData(int argn, ...){
+		va_list list;
+  		va_start(list, argn);
+		
+		for(int i=0; i<argn; i++){
+			Node<T> *iter = head;
+			while(iter!=NULL){
+				if(iter->data == va_arg(list, T)) {
+					va_end(list);
+					return true;
+				}
+				else iter = iter->next;
+			}
+		}
+		return false;
+	}
+	
+	//returns the index for node n
 	int getIndex(Node<T> *n){
 		int i=0;
 		if(contains(n)){
@@ -168,7 +200,9 @@ class LinkedList{
 			}
 		}else return -1;
 	}
+
 	int getSize(){ return size; }
+	
 	T& operator[](int index) {
 		if (index >= size || index < 0) {
 			cout << "Error: index out of bounds" << endl;
@@ -185,6 +219,43 @@ class LinkedList{
 		}
 		return iter->data;
 	}
+	
+	bool isEmpty(){
+		return head == NULL;
+	}
+
+	//deltes the node
+	void popNode(Node<T> *n){
+		if(n == head) popHead();
+		else if(n == tail) popTail();
+		else{
+			Node<T>* iter = head;
+			while(iter!=NULL){
+				if(iter == n){
+					Node<T>* iter_prev = iter->prev;
+					Node<T>* iter_next = iter->next;
+					iter_prev->next = iter_next;
+					iter_next->prev = iter_prev;
+					n->prev = NULL;
+					n->next = NULL;
+					delete n;
+					size--;
+					break;
+				}
+				iter = iter->next;
+			}
+		}
+	}	
+	
+	//appends the nodes of ll to this->tail
+	void appendList(LinkedList<T> ll){
+		Node<T> *n = ll.getHead();
+		while(n!=NULL){
+			pushTail(n);
+			n = n->next;
+		}
+	}
+	
 	~LinkedList(){
 		head = NULL;
 		tail = NULL;
