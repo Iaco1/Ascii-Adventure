@@ -2,7 +2,6 @@
 #include <iostream>
 #include <chrono>
 #include <thread>
-#include <fstream>
 
 using namespace std;
 
@@ -386,17 +385,9 @@ Animation Game::getCorrespondingAnimation(char userKey){
 
 			case '0':{
 				gameOver = true;
-				//saveMapToFile();
 				return Animation::STILL;
 				break;
 			}
-			
-
-			case 'p':
-			//here code to stop all moving entities 
-			//and to display some sort of PAUSE label somewhere
-			return Animation::STILL;
-			break;
 
 			case 'f':
 			return Animation::SHOOTING;
