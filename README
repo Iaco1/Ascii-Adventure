@@ -1,10 +1,10 @@
-B2DAP - Basic 2D ASCII Platform
+ASCII Adventure
 
 
 
 Overview
 
-B2DAP is a platfrom c++ game with ASCII-graphics, built with the gcc/make toolchain, that relies on ncurses 6.2 to run.
+ASCII Adventure is a platfrom c++ game with ASCII-graphics, built with the gcc/make toolchain, that relies on ncurses 6.2 to run.
 The makefile compiles files in /src and /include and produces an executable "main" in /output.
 
 
