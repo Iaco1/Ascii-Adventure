@@ -51,9 +51,9 @@
 
 ASCII Adventure è un videogame platfrom in grafica ASCII con una mappa dinamica di livelli generati proceduralmente scritto in C++.
 Il protagonista controllato dall'utente può muoversi lateralmente, saltare e attaccare i nemici piombando su di loro dall'alto o sparando.
-L'accesso ai livelli successivi avviene tramite delle porte che sono poste sulle piattaforme più alte del livello, mentre quelle precedenti sono sempre nell'angolo sud-ovest.
-La Mappa contiene bonus che migliorano le caratteristiche del protagonista o ne incrementano le capacità quali: incremento dei punti vita, incremento delle munizioni dell'arma equipaggiata, incremento della quantità di munizioni trasportabili, capacità di eliminare i nemici con un solo proiettile; contiene anche delle trappole che infliggono danno al protagonista e che sono logorate dal contatto con esso fino a rompersi.
-Il punteggio è aumentato raccogliendo i punti esperienza disseminati nella mappa.
+L'accesso ai livelli successivi avviene tramite delle porte che sono poste sulle piattaforme più alte del livello, mentre quelle precedenti sono sempre nell'angolo in basso a sinistra.
+La mappa contiene bonus che incrementano gli attributi del protagonista o ne migliorano le capacità quali: incremento dei punti vita, incremento delle munizioni dell'arma equipaggiata, incremento della quantità di munizioni trasportabili, capacità di eliminare i nemici con un solo proiettile; contiene anche delle trappole che infliggono danno al protagonista e che sono logorate dal contatto con esso fino a rompersi.
+Il punteggio viene aumentato raccogliendo i punti esperienza disseminati nella mappa.
 
 
 
@@ -69,40 +69,41 @@ Il lavoro è stato diviso in:
 \subsubsection{Game}
 Il fulcro del gioco è contenuto in Game, che valuta la legalità delle azioni proposte dalla logica di gioco e dall'utente e le mette in atto, disegna e colora gli elementi che compongono la mappa e gestisce la velocità dei movimenti.
 \subsubsection{Action}
-Le azioni degli oggetti che hanno movimento sono caratterizzate in Action. Ogni azione contiene informazioni su come muovere il personaggio, chi è l'autore del moviemento, qual'è la rappresentazione grafica dell'oggetto su cui si è agito, le coordinate in cui è avvenuta l'azione e quanti cicli aspettare prima di rispondere nuovamente alle azioni proposte dall'utente o dalla logica di gioco, cosi da rendere visibili alcune animazioni.
+Le azioni degli oggetti che hanno movimento sono caratterizzate in Action. Ogni azione contiene informazioni su come muovere il personaggio, chi è l'autore del moviemento, qual è la rappresentazione grafica dell'oggetto su cui si è agito, le coordinate in cui è avvenuta l'azione e quanti cicli aspettare prima di rispondere nuovamente alle azioni proposte dall'utente o dalla logica di gioco, così da rendere visibili alcune animazioni.
 \pagebreak
 
 \subsection{Caratterizzazione degli elementi della mappa}
-La mappa è una Doubly Linked List che contiene i livelli e ogni livello contiene elementi statici o dinamici, contenuti a loro volta in delle Doubly Linked List.
+La mappa è una Doubly Linked List che contiene i livelli; ogni livello contiene elementi statici o dinamici, contenuti a loro volta in delle Doubly Linked List.
 
 \subsubsection{Elementi statici}
-Tra questi figurano le piattaforme e le porte di accesso ai livelli che sono inamovibili, dopodiche ci sono gli elementi raccoglibili dal giocatore quali: gli XP che sono semplici oggetti della classe Object aventi una posizione e una rappresentazione logico-grafica (enum class TileType), gli oggetti bonus e malus delle rispettive classi che hanno un tipo indicante quale bonus/malus attribuire al giocatore e in che quantità.
+Tra questi figurano le piattaforme e le porte di accesso ai livelli che sono inamovibili, dopodiché ci sono gli elementi raccoglibili dal giocatore quali: gli XP che sono semplici oggetti della classe Object aventi una posizione e una rappresentazione logico-grafica (enum class TileType), gli oggetti bonus e malus delle rispettive classi che hanno un tipo indicante quale bonus/malus attribuire al giocatore e in che quantità.
 
 \subsubsection{Elementi dinamici}
 Tra questi i proiettili che si muovono orizzontalmente e interagiscono con gli elementi di gioco statici o dinamici all'imaptto oppure escono dalla visuale.
 Ci sono poi i nemici che hanno un pattern di movimento orizzontale, possono danneggiare il protagonista entrando in contatto con esso e possono essere eliminati dai proiettili o da un contatto diretto con il protagonista.
-E infine c'è il protagonista che possiede una arma da fuoco, può muoversi liberamente e interagire con gli elementi dinamici della mappa.
+Infine c'è il protagonista che possiede un'arma da fuoco, può muoversi liberamente e interagire con gli elementi dinamici della mappa.
 In comune tra i nemici e il protagonista c'è un array che registra le ultime mosse di questi ultimi e che viene consultato da Game::logic() per determinare la prossima azione mostrata a schermo.
 
 \section*{Generazione procedurale della mappa e strutture dati}
 \subsection{Generazione procedurale della mappa}
 \subsection{Level}
     Level si appoggia a cmath, LinkedList, MiscFunctions e le classi che rappresentano elementi del gioco (Hero, Enemy ecc.)
-    La classe genera randomicamente e contiene un livello del gioco; tutte le operazioni di generazione random vengono chiamate all'interno del costruttore, senza manipolazione esterna alla classe
-    Gli elementi del livello tranne l'eroe vengono memorizzati in LinkedList all'interno della classe
-    I metodi che generano terreno ed entità fanno uso delle funzioni di MiscFunctions, principalmente diceDistribution(), per calcolare, tra altre cose, la lunghezza delle piattaforme, la loro posizione, la probabilità che hanno di essere generate, il numero di entità e la loro posizione all'interno del livello
+    La classe genera randomicamente e contiene un livello del gioco; tutte le operazioni di generazione random vengono chiamate all'interno del costruttore, senza necessitare di manipolazione esterna alla classe.
+    Tutti gli elementi del livello tranne l'eroe sono memorizzati in delle Linked List all'interno della classe.
+    I metodi che generano terreno ed entità fanno uso delle funzioni di MiscFunctions, principalmente diceDistribution(), per calcolare, tra altre cose, la lunghezza delle piattaforme, la loro posizione, la probabilità che hanno di essere generate, il numero totale di entità e la loro posizione all'interno del livello.
     Il generatore delle piattaforme parte da una piattaforma radice a metà del livello, immediatamente sopra il terreno, e continua a generare figli ricorsivamente accanto alle piattaforme preesistenti; la probabilità che venga generata una piattaforma figlia diminuisce ad ogni iterazione.
+    I generatori delle entità selezionano randomicamente terreno all'interno del livello sopra il quale posizionare gli oggetti; nel caso in cui lo spazio sopra il terreno selezionato sia ostruito, il generatore procede scorrendo sequenzialmente la lista del terreno finché non viene trovato un luogo adeguato.
 
 \subsubsection{MiscFunctions}
-    MiscFunctions è un namespace di funzioni per generare numeri random che usa la libreria <cmath>.
-    La funzione diceThrows() genera numeri random secondo la distribuzione di probabilità di lanci di dadi, diceDistribution() utilizza diceThrows() e aggiunge la possibilità di manipolare la moda della distribuzione
+    Misc è un namespace di funzioni per generare numeri random che utilizza la libreria <cmath>.
+    La funzione diceThrows() genera numeri random tra 0 e un reale positivo secondo la distribuzione di probabilità di lanci di dadi; diceDistribution() estende diceThrows() aggiungendo la possibilità di manipolare la moda della distribuzione e di selezionare intervalli con estremo inferiore diverso da 0.
 
 \subsection{Strutture dati}
 
 \subsubsection{LinkedList}
     LinkedList è l'implementazione di una linked list con doppi puntatori al nodo precedente e successivo.
-    Il tipo dei campi data è un template, in modo che, nel momento in cui viene istanziato un oggetto lista, possa essere scelto qualsiasi tipo di dato da memorizzare. 
-    Essendo un template l'implementazione dei metodi della classe LinkedList deve essere contenuta in un file header, siccome il compilatore deve essere in grado di vedere l'implementazione del metodo che usa un template per generare codice per tutti i casi d'uso.
+    Il tipo dei campi data è un template, in modo che, nel momento in cui viene istanziato un oggetto LinkedList, possa essere scelto qualsiasi tipo di dato da memorizzare. 
+    Essendo un template, l'implementazione dei metodi della classe LinkedList deve essere contenuta in un file header, siccome il compilatore deve essere in grado di vedere l'implementazione del metodo che usa un template per generare codice per tutti i casi d'uso.
     La lista memorizza il numero di nodi che contiene; inoltre permette la manipolazione dei nodi anche tramite l'operatore [], comportandosi come se fosse un array.
 
 
