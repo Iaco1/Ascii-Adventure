@@ -35,7 +35,6 @@ LinkedList <Malus>* Level::getMaluses() { return &maluses; }
 LinkedList <Entity>* Level::getBullets() { return &bullets; }
 LinkedList <Object>* Level::getXps() { return &xps; }
 
-//returns the no. of objects at (x,y)
 int Level::countObjectsAt(int x, int y) {
     return countObjectsAtIn(x, y, terrain)
         + countObjectsAtIn(x, y, enemies)
@@ -47,7 +46,6 @@ int Level::countObjectsAt(int x, int y) {
         + (nextLevelDoor.getX() == x && nextLevelDoor.getY() == y);
 }
 
-//returns a list of TileTypes corresponding to the ones present at (x,y)
 LinkedList<TileType> Level::getListOfTileTypesAt(int x, int y) {
     LinkedList<TileType> list;
     for (int i = 0; i < countObjectsAtIn(x, y, terrain); i++) list.pushHead(new Node<TileType>(TileType::TERRAIN));
@@ -70,8 +68,8 @@ int Level::getVertBound() { return vertBound; }
 
 bool Level::checkOverlap(int x1, int y1, int x2, int y2, TileType tile /*= TileType::EMPTY*/) {
     if (x1 < 0 || y1 < 0 || x2 > horBound || y2 > vertBound || x1 > x2 || y1 > y2) return true;
-    if (tile == TileType::EMPTY || tile == TileType::TERRAIN) {
-        Node<Object>* iter = terrain.getHead();
+    if (tile == TileType::EMPTY || tile == TileType::TERRAIN) {     //iterates through the objects' lists
+        Node<Object>* iter = terrain.getHead();                     //and checks for tiles between the specified coordinates
         while (iter != NULL) {
             if (iter->data.getX() >= x1 && iter->data.getX() <= x2 && iter->data.getY() >= y1 && iter->data.getY() <= y2)
                 return true;
@@ -155,18 +153,18 @@ int Level::findClosestTerrain(int height, int xPosition, bool left) {
 
 void Level::generatePlatforms(int height, int averageXPosition, int leftBound, int rightBound, int currentIteration) {
     if (leftBound > rightBound || leftBound < 0 || rightBound > horBound || height < 0 || height > vertBound) return;
-    int platformLength = Misc::diceDistribution(2, min((horBound + 1) / 4, rightBound - leftBound + 1), 5, round(2 + currentIteration / 3));
-    int minOffset = max(0, averageXPosition - leftBound - platformLength + 1);
+    int platformLength = Misc::diceDistribution(2, min((horBound + 1) / 4, rightBound - leftBound + 1), 5, round(2 + currentIteration / 3));    //randomization of platform's length
+    int minOffset = max(0, averageXPosition - leftBound - platformLength + 1);                          //calculates maximum and minimum possible offset of platform
     int maxOffset = min(averageXPosition - leftBound, rightBound - leftBound - platformLength + 1);
-    int platformOffset = Misc::randInt(minOffset, maxOffset);
+    int platformOffset = Misc::randInt(minOffset, maxOffset);                                           //randomization of platform's offset
     int xPos1 = leftBound + platformOffset;
     int xPos2 = xPos1 + platformLength - 1;
     placePlatform(height, xPos1, xPos2);
 
-    double generateChance = 0.7 - 0.05 * currentIteration;
+    double generateChance = 0.7 - 0.05 * currentIteration;  //chance to generate a child platform; decreases with iterations
 
-    int order[6] = { 1, 2, 3, 4, 5, 6 };
-    Misc::shuffle(order, 6);
+    int order[6] = { 1, 2, 3, 4, 5, 6 };    //random order in which child platforms are generated
+    Misc::shuffle(order, 6);                //new platforms can be generated up-left, up-right, down-left, down-right, left and right of the original platform
 
     for (int i = 0; i < 6; i++) {
 
@@ -239,7 +237,7 @@ void Level::generatePlatforms(int height, int averageXPosition, int leftBound, i
 
 void Level::generateNLDoor() {
     int destX = horBound, destY = vertBound + 1;
-    for (int i = 1; i <= vertBound; i++) {
+    for (int i = 1; i <= vertBound; i++) {              //searches for the highest terrain in the right half of the map and places the door there
         if (checkOverlap(horBound / 2 + 1, i, horBound, i, TileType::TERRAIN)) {
             destY = i - 1;
             destX = findClosestTerrain(i - 2, horBound + 1, true);
@@ -252,8 +250,8 @@ void Level::generateNLDoor() {
 void Level::findFreeSpace(int& x, int& y, int offset) {
     x = -1;
     y = -1;
-    int terrSize = terrain.getSize();
-    int index = Misc::randInt(0, terrSize - 1);
+    int terrSize = terrain.getSize();               //searches for a random terrain tile
+    int index = Misc::randInt(0, terrSize - 1);     //if the spot above said terrain is already occupied, it looks at the next terrain in the list
     Node<Object>* iter = terrain.getHead();
     for (int i = 0; i < index; i++) iter = iter->next;
     for (int i = 0; i < terrSize; i++) {
@@ -273,12 +271,12 @@ void Level::findFreeSpace(int& x, int& y, int offset) {
 }
 
 void Level::spawnEnemies(int currentLevel) {
-    int enemiesNum = Misc::diceDistribution(3, Misc::bound(currentLevel + 5, 6, 20), Misc::bound(currentLevel + 5, 6, 20) / 2, 3);
-    for (int i = 0; i < enemiesNum; i++) {
+    int enemiesNum = Misc::diceDistribution(3, Misc::bound(currentLevel + 5, 6, 20), Misc::bound(currentLevel + 5, 6, 20) / 2, 3);  //randomly generated number of enemies
+    for (int i = 0; i < enemiesNum; i++) {                                                                                          //number increases with level
         int x, y;
         findFreeSpace(x, y);
         if (x == -1 || y == -1) break;
-        enemies.pushHead(new Node<Enemy>(Enemy(x, y, 100, 30, (EnemyType)Misc::randInt(0, 1))));
+        enemies.pushHead(new Node<Enemy>(Enemy(x, y, Misc::randInt(100, 150), 30, (EnemyType)Misc::randInt(0, 1))));    //enemy strength is randomized
     }
 }
 
